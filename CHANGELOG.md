@@ -1,3 +1,8 @@
+## 0.5.3
+
+- Make native profile-right registration idempotent to prevent duplicate-key errors during installation and upgrades.
+- Preserve existing profile permission values and add only missing rights.
+
 ## 0.5.2
 
 - Fix rendering of the Informe Técnico tab in GLPI profiles.
