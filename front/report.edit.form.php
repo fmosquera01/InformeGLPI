@@ -8,8 +8,15 @@ use GlpiPlugin\Informeglopi\ReportTab;
 include('../../../inc/includes.php');
 Session::checkLoginUser();
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $reportId = (int) ($_GET['id'] ?? 0);
+    Html::header(__('Editar informe técnico', 'informeglpi'), $_SERVER['PHP_SELF'], 'assets');
+    ReportTab::renderEditPage($reportId);
+    Html::footer();
+    exit;
+}
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    Html::displayErrorAndDie(__('La edición debe realizarse desde la pestaña del activo.', 'informeglpi'));
+    Html::displayErrorAndDie(__('Método no permitido.', 'informeglpi'));
 }
 $reportId = (int) ($_POST['id'] ?? 0);
 $report = new Report();
