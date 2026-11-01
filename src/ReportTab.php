@@ -46,10 +46,20 @@ final class ReportTab extends CommonGLPI
             .ig-report-tabs #ig-tab-new:checked ~ .ig-report-panels #ig-panel-new,
             .ig-report-tabs #ig-tab-drafts:checked ~ .ig-report-panels #ig-panel-drafts,
             .ig-report-tabs #ig-tab-approved:checked ~ .ig-report-panels #ig-panel-approved{display:block}
+            .ig-report-tabs ul.nav{display:flex;gap:.35rem;flex-wrap:wrap;border-bottom:1px solid var(--bs-border-color);padding-bottom:.45rem;margin-bottom:.85rem}
+            .ig-report-tabs ul label{cursor:pointer;margin:0;border:1px solid transparent;border-radius:.45rem;padding:.5rem .9rem;font-weight:600;color:var(--bs-secondary-color);transition:background .15s ease,color .15s ease}
             .ig-report-tabs #ig-tab-new:checked ~ ul label[for=ig-tab-new],
             .ig-report-tabs #ig-tab-drafts:checked ~ ul label[for=ig-tab-drafts],
-            .ig-report-tabs #ig-tab-approved:checked ~ ul label[for=ig-tab-approved]{color:var(--bs-nav-tabs-link-active-color);background:var(--bs-nav-tabs-link-active-bg);border-color:var(--bs-nav-tabs-link-active-border-color)}
-            .ig-report-tabs ul label{cursor:pointer;margin-bottom:-1px}
+            .ig-report-tabs #ig-tab-approved:checked ~ ul label[for=ig-tab-approved]{color:var(--bs-primary-text-emphasis);background:var(--bs-primary-bg-subtle);border-color:var(--bs-primary-border-subtle);box-shadow:inset 0 -2px 0 var(--bs-primary)}
+            .ig-report-tabs ul label:hover{background:var(--bs-tertiary-bg);color:var(--bs-emphasis-color)}
+            .ig-report-form .ig-document-number{display:flex;justify-content:flex-end;align-items:center;gap:.6rem;padding:.35rem .75rem;margin:0 0 .65rem;border:1px solid var(--bs-border-color);border-radius:.45rem;background:var(--bs-tertiary-bg);font-weight:700}
+            .ig-report-form .ig-document-number strong{font-size:1.05rem;color:var(--bs-emphasis-color)}
+            .ig-report-form .ig-section-title{margin:.7rem 0 .35rem;padding:.25rem;text-align:center;font-weight:700;border-bottom:1px solid var(--bs-border-color)}
+            .ig-report-form .ig-row{grid-template-columns:minmax(190px,30%) minmax(0,1fr)}
+            .ig-report-form .ig-label{padding:.3rem .5rem}
+            .ig-report-form .ig-value{padding:.2rem .4rem}
+            .ig-report-form .form-control{min-height:30px;padding:.22rem .45rem}
+            .ig-report-form textarea.form-control{min-height:54px}
         </style>";
         echo "<div class='ig-report-tabs'>";
         foreach (['new', 'drafts', 'approved'] as $tabKey) {
@@ -72,15 +82,9 @@ final class ReportTab extends CommonGLPI
         echo '</div>';
         echo "<div id='ig-panel-drafts' class='ig-report-panel'>";
         self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature']);
-        if ($view === 'drafts' && $reportId > 0) {
-            self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
-        }
         echo '</div>';
         echo "<div id='ig-panel-approved' class='ig-report-panel'>";
         self::renderReportList($itemtype, $itemsId, $tabUrl, ['finalized']);
-        if ($view === 'approved' && $reportId > 0) {
-            self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
-        }
         echo '</div></div>';
 
         echo '</div></div>';
@@ -118,7 +122,7 @@ final class ReportTab extends CommonGLPI
             @media(max-width:650px){.ig-report-form .ig-row{grid-template-columns:1fr}.ig-report-form .ig-label{padding-bottom:0}.ig-report-form .ig-value{padding-top:.15rem}}
         </style>";
         echo "<div class='ig-report-form'>";
-        echo "<div class='alert alert-info py-2 mb-2'>" . self::e(__('Los datos del activo se cargan automáticamente. El valor en libros y la información técnica se ingresan manualmente.', 'informeglpi')) . '</div>';
+        self::renderDocumentNumber($values['report_number'] ?? '');
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN DEL ACTIVO', 'informeglpi')) . '</div>';
         echo "<div class='ig-asset-table'>";
         $typeField = strtolower((new \ReflectionClass($item))->getShortName()) . 'types_id';
@@ -206,6 +210,49 @@ final class ReportTab extends CommonGLPI
         echo '</div>';
     }
 
+    private static function renderDocumentNumber($number): void
+    {
+        echo "<div class='ig-document-number'><span>" . self::e(__('NÚMERO DE DOCUMENTO', 'informeglpi')) . "</span><strong>" . self::e($number !== '' ? $number : __('Pendiente', 'informeglpi')) . "</strong></div>";
+    }
+
+    public static function renderEditPage(int $reportId): void
+    {
+        $report = new Report();
+        if ($reportId < 1 || !$report->getFromDB($reportId)) {
+            Html::displayNotFoundError();
+        }
+        $itemtype = (string) ($report->fields['itemtype'] ?? '');
+        $itemsId = (int) ($report->fields['items_id'] ?? 0);
+        if (!class_exists($itemtype) || !AssetTypeRegistry::isSupported($itemtype)
+            || !Session::haveRight(Report::$rightname, READ)
+            || !Session::haveAccessToEntity((int) ($report->fields['entities_id'] ?? -1), (bool) ($report->fields['is_recursive'] ?? false))) {
+            Html::displayRightError();
+        }
+        $item = new $itemtype();
+        if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
+            Html::displayRightError();
+        }
+        $userId = (int) Session::getLoginUserID();
+        $isEditable = ($report->fields['status'] ?? '') === 'draft'
+            && ($userId === (int) ($report->fields['users_id'] ?? 0) || Session::haveRight(Report::$rightname, UPDATE));
+
+        echo "<div class='container-fluid mt-3'><div class='d-flex justify-content-between align-items-center mb-3'>";
+        echo "<h2 class='h4 mb-0'>" . self::e(__('Editar informe técnico', 'informeglpi')) . "</h2>";
+        echo "<a class='btn btn-outline-secondary btn-sm' href='" . self::e($item->getFormURLWithID($itemsId)) . "'>" . self::e(__('Volver al activo', 'informeglpi')) . "</a></div>";
+        echo "<div class='border rounded p-3'>";
+        self::renderDocumentNumber($report->fields['report_number'] ?? '');
+        echo "<div class='mb-2 text-muted'>" . self::e($item->getTypeName() . ' · ' . ($item->fields['name'] ?? '')) . "</div>";
+        if ($isEditable) {
+            self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
+                '_glpi_csrf_token' => Session::getNewCSRFToken(true),
+                'id' => $reportId,
+            ], $report->fields);
+        } else {
+            echo "<div class='alert alert-warning mb-0'>" . self::e(__('Este informe no está disponible para edición con su usuario o su estado actual.', 'informeglpi')) . "</div>";
+        }
+        echo '</div></div>';
+    }
+
     private static function renderFieldsForm(string $action, array $hidden, array $values): void
     {
         echo "<form class='ig-report-form' method='post' enctype='multipart/form-data' action='" . self::e($action) . "'>";
@@ -226,7 +273,6 @@ final class ReportTab extends CommonGLPI
         $dateLabel = count($parts) === 3 ? sprintf('%s – %s - %s', $parts[2], $months[(int) $parts[1]] ?? '', $parts[0]) : $reportDate;
         echo '<div class="ig-section-title">' . self::e(__('ENCABEZADO DEL DOCUMENTO', 'informeglpi')) . '</div>';
         echo "<div class='ig-asset-table'>";
-        echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('NÚMERO:', 'informeglpi')) . "</div><div class='ig-value'>" . self::e($values['report_number'] ?? __('Se asigna al guardar', 'informeglpi')) . "</div></div>";
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('FECHA:', 'informeglpi')) . "</div><div class='ig-value'><input class='form-control' value='" . self::e($dateLabel) . "' readonly></div></div>";
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('PARA:', 'informeglpi')) . "</div><div class='ig-value'>";
         echo \Dropdown::showFromArray('recipients_ids', $users, [
@@ -315,7 +361,7 @@ final class ReportTab extends CommonGLPI
         foreach ($reports as $row) {
             $id = (int) $row['id'];
             $view = in_array('draft', $statuses, true) ? 'drafts' : 'approved';
-            $openUrl = $tabUrl . '&report_view=' . $view . '&report_id=' . $id;
+            $openUrl = '/plugins/informeglpi/front/report.edit.form.php?id=' . $id;
             echo '<tr><td>' . self::e($row['report_number']) . '</td>';
             echo '<td>' . self::e($row['date_creation']) . '</td>';
             echo '<td>' . self::e(self::statusLabel((string) $row['status'])) . '</td>';
