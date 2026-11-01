@@ -11,7 +11,7 @@ use CommonDBTM;
 final class Report extends CommonDBTM
 {
     // CommonGLPI declares $rightname without a type; keep the same declaration.
-    public static $rightname = 'plugin_informeglopi';
+    public static $rightname = 'plugin_informeglpi';
 
     public static function getTable($classname = null): string
     {
@@ -20,6 +20,6 @@ final class Report extends CommonDBTM
 
     public static function getTypeName($nb = 0): string
     {
-        return _n('Informe técnico', 'Informes técnicos', $nb, 'informeglopi');
+        return _n('Informe técnico', 'Informes técnicos', $nb, 'informeglpi');
     }
 }
