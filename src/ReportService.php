@@ -17,17 +17,44 @@ final class ReportService
         if (!Session::haveRight(Report::$rightname, CREATE)) {
             throw new RuntimeException(__('No tiene permisos para crear informes técnicos.', 'informeglpi'));
         }
-        if (!AssetTypeRegistry::isSupported($itemtype) || !class_exists($itemtype)) {
+        $isManualPhone = $itemtype === 'ManualCellphone' && $itemsId === 0;
+        if (!$isManualPhone && (!AssetTypeRegistry::isSupported($itemtype) || !class_exists($itemtype))) {
             throw new RuntimeException(__('Tipo de activo no permitido.', 'informeglpi'));
         }
 
-        /** @var CommonDBTM $item */
-        $item = new $itemtype();
-        if (!$item->getFromDB($itemsId)) {
-            throw new RuntimeException(__('No se encontró el activo seleccionado.', 'informeglpi'));
-        }
-        if (!$item->can($itemsId, READ)) {
-            throw new RuntimeException(__('No tiene permisos para consultar este activo.', 'informeglpi'));
+        $item = null;
+        if ($isManualPhone) {
+            $manual = is_array($input['manual_asset'] ?? null) ? $input['manual_asset'] : [];
+            foreach (['asset_code', 'manufacturer', 'model', 'serial', 'responsible', 'area'] as $required) {
+                if (trim((string) ($manual[$required] ?? '')) === '') {
+                    throw new RuntimeException(__('Complete código de activo, marca, modelo, IMEI, usuario responsable y área.', 'informeglpi'));
+                }
+            }
+            $imei = trim((string) $manual['serial']);
+            if (!preg_match('/^[0-9]{14,16}$/', $imei)) {
+                throw new RuntimeException(__('La serie debe corresponder al IMEI numérico del celular (14 a 16 dígitos).', 'informeglpi'));
+            }
+            if ($DB->tableExists('glpi_phones') && $DB->request([
+                'SELECT' => ['id'], 'FROM' => 'glpi_phones',
+                'WHERE' => ['serial' => $imei], 'LIMIT' => 1,
+            ])->count() > 0) {
+                throw new RuntimeException(__('Este IMEI ya está registrado en GLPI. Debe crear el informe desde la ficha del celular.', 'informeglpi'));
+            }
+            $entityId = (int) Session::getActiveEntity();
+            $isRecursive = 0;
+            $snapshot = self::buildManualCellphoneSnapshot($manual);
+        } else {
+            /** @var CommonDBTM $item */
+            $item = new $itemtype();
+            if (!$item->getFromDB($itemsId)) {
+                throw new RuntimeException(__('No se encontró el activo seleccionado.', 'informeglpi'));
+            }
+            if (!$item->can($itemsId, READ)) {
+                throw new RuntimeException(__('No tiene permisos para consultar este activo.', 'informeglpi'));
+            }
+            $entityId = (int) ($item->fields['entities_id'] ?? Session::getActiveEntity());
+            $isRecursive = (int) ($item->fields['is_recursive'] ?? 0);
+            $snapshot = AssetSnapshotBuilder::build($item);
         }
 
         $userId = (int) Session::getLoginUserID();
@@ -55,10 +82,6 @@ final class ReportService
         }
 
         $year = (int) date('Y');
-        $entityId = (int) ($item->fields['entities_id'] ?? Session::getActiveEntity());
-        $isRecursive = (int) ($item->fields['is_recursive'] ?? 0);
-
-        $snapshot = AssetSnapshotBuilder::build($item);
         $snapshotJson = json_encode(
             $snapshot,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
