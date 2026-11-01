@@ -132,17 +132,17 @@ final class AssetSnapshotBuilder
     {
         global $DB;
 
-        if (!class_exists('Item_Disk')) {
+        if (!class_exists(\Item_Disk::class)) {
             return [];
         }
 
         $records = [];
         foreach ($DB->request([
             'SELECT' => '*',
-            'FROM'   => Item_Disk::getTable(),
+            'FROM'   => \Item_Disk::getTable(),
             'WHERE'  => [
-                (Item_Disk::$itemtype ?? 'itemtype') => $itemtype,
-                (Item_Disk::$items_id ?? 'items_id') => $itemsId,
+                (\Item_Disk::$itemtype ?? 'itemtype') => $itemtype,
+                (\Item_Disk::$items_id ?? 'items_id') => $itemsId,
             ],
         ]) as $disk) {
             $records[] = self::scalarFields($disk);
