@@ -276,7 +276,7 @@ final class ReportTab extends CommonGLPI
         } else {
             echo "<div class='alert alert-warning mb-0'>" . self::e(__('Este informe no está disponible para edición con su usuario o su estado actual.', 'informeglpi')) . "</div>";
         }
-        echo '</div>';
+        echo '</div></div>';
     }
 
     private static function renderFieldsForm(string $action, array $hidden, array $values, string $assetHtml = ''): void
