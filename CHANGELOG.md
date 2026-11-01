@@ -1,3 +1,8 @@
+## 0.5.6
+
+- Load profile rights using a native GLPI Profile instance, avoiding queries against a nonexistent plugin-specific profiles table.
+- Render the rights matrix from the loaded native profile data.
+
 ## 0.5.5
 
 - Load the selected GLPI profile and its saved rights before rendering the plugin permission matrix, preventing saved selections from appearing unchecked.
