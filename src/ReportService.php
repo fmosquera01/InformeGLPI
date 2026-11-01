@@ -42,7 +42,7 @@ final class ReportService
         foreach ($recipients as $recipientId) {
             self::assertActiveUser($recipientId);
         }
-        $preparedBy = (int) ($input['prepared_by_users_id'] ?? 0);
+        $preparedBy = $userId;
         $reviewer = (int) ($input['reviewer_users_id'] ?? 0);
         self::assertActiveUser($preparedBy);
         self::assertActiveUser($reviewer);
@@ -219,7 +219,7 @@ final class ReportService
             self::assertActiveUser($recipientId);
         }
 
-        $preparedBy = (int) ($input['prepared_by_users_id'] ?? 0);
+        $preparedBy = (int) ($report->fields['prepared_by_users_id'] ?? 0);
         $reviewer = (int) ($input['reviewer_users_id'] ?? 0);
         self::assertActiveUser($preparedBy);
         self::assertActiveUser($reviewer);
