@@ -46,7 +46,11 @@ Las relaciones se gestionan desde el plugin y no se crean claves foráneas hacia
 
 ## Estado de desarrollo
 
-**Versión 0.5.12 — formulario compacto alineado visualmente al Word (en desarrollo).**
+**Versión 0.5.13 — encabezado institucional y datos automáticos del activo (en desarrollo).**
+
+El formulario incorpora número correlativo, fecha automática de creación no editable, destinatarios múltiples de GLPI, técnico elaborador, revisor y asunto editable. Los usuarios se validan contra usuarios activos de GLPI. Código de activo usa el número de inventario; tipo, marca, modelo, serie, responsable, ubicación y fecha de compra se consultan desde el activo. El valor en libros permanece manual.
+
+Las fotografías con cámara móvil, firmas, flujo de aprobación y PDF institucional todavía están pendientes de implementación.
 
 El formulario en la pestaña del activo presenta etiquetas a la izquierda y valores a la derecha, conserva los títulos del documento institucional y adapta su distribución a pantallas móviles. Esta versión todavía no completa fotografías, cámara, firmas ni PDF final.
 
