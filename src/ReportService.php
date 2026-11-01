@@ -192,6 +192,36 @@ final class ReportService
         }
     }
 
+    private static function buildManualCellphoneSnapshot(array $manual): array
+    {
+        $value = static fn(string $key): string => trim((string) ($manual[$key] ?? ''));
+        $purchaseDate = $value('purchase_date');
+        if ($purchaseDate !== '') {
+            $parsed = \\DateTime::createFromFormat('Y-m-d', $purchaseDate);
+            if (!$parsed || $parsed->format('Y-m-d') !== $purchaseDate) {
+                throw new RuntimeException(__('La fecha de compra no es válida.', 'informeglpi'));
+            }
+            $purchaseDate = $parsed->format('d/m/Y');
+        }
+        return [
+            'schema_version' => 1,
+            'itemtype' => 'CELULAR (NO REGISTRADO EN GLPI)',
+            'items_id' => 0,
+            'fields' => [
+                'CÓDIGO DE ACTIVO' => $value('asset_code'),
+                'TIPO' => 'CELULAR',
+                'DESCRIPCIÓN DEL ACTIVO' => $value('description'),
+                'FECHA DE COMPRA' => $purchaseDate,
+                'MARCA' => $value('manufacturer'),
+                'MODELO' => $value('model'),
+                'SERIE' => $value('serial'),
+                'USUARIO RESPONSABLE' => $value('responsible'),
+                'ÁREA DONDE SE ENCONTRABA EL EQUIPO' => $value('area'),
+            ],
+            'components' => [],
+        ];
+    }
+
     /** Return a non-reserving preview of the next annual document number. */
     public static function previewNextReportNumber(?int $year = null): string
     {
