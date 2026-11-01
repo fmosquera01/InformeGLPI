@@ -27,7 +27,7 @@ final class Profile extends \Profile
 
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
-        if ($item instanceof self) {
+        if ($item instanceof \\Profile) {
             $profile = new self();
             $profile->showFormInformeTecnico((int) $item->getID());
         }
@@ -37,11 +37,14 @@ final class Profile extends \Profile
 
     private function showFormInformeTecnico(int $profiles_id): void
     {
-        if (!$this->can($profiles_id, READ)) {
+        $targetProfile = new \\Profile();
+        if (!$targetProfile->can($profiles_id, UPDATE)) {
             return;
         }
 
-        $canEdit = Session::haveRight(self::$rightname, UPDATE);
+        // Permission to administer profiles is the authority to edit this rights tab.
+        // Do not gate this screen on the plugin right being configured already.
+        $canEdit = Session::haveRight('profile', UPDATE);
         echo "<div class='spaced'>";
 
         if ($canEdit) {
