@@ -110,11 +110,37 @@ function plugin_informeglpi_install(): bool
 
     $migration->executeMigration();
 
-    // Register native GLPI profile rights. New rights default to no access.
-    ProfileRight::addProfileRights([
+    // Register native GLPI profile rights idempotently.
+    // ProfileRight::addProfileRights() inserts every row unconditionally in GLPI 11,
+    // so calling it again during an upgrade causes duplicate-key errors.
+    $rights = [
         'plugin_informeglpi',
         'plugin_informeglpi_validate',
+    ];
+
+    $profiles = $DB->request([
+        'SELECT' => ['id'],
+        'FROM'   => Profile::getTable(),
     ]);
+
+    foreach ($profiles as $profile) {
+        $profiles_id = (int) $profile['id'];
+        $existingRights = ProfileRight::getProfileRights($profiles_id, $rights);
+
+        foreach ($rights as $rightName) {
+            if (!array_key_exists($rightName, $existingRights)) {
+                $DB->insert(
+                    ProfileRight::getTable(),
+                    [
+                        'profiles_id' => $profiles_id,
+                        'name'        => $rightName,
+                    ]
+                );
+            }
+        }
+    }
+
+    ProfileRight::cleanAllPossibleRights();
 
     return true;
 }
