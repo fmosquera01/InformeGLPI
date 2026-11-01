@@ -1,3 +1,7 @@
+## 0.5.16
+
+- Make the asset report tabs work with native CSS radio controls, without relying on JavaScript execution inside GLPI's AJAX-loaded tab content.
+
 ## 0.5.15
 
 - Replace server-navigation report tabs with in-place tab panels so all three views work inside the GLPI asset tab.
