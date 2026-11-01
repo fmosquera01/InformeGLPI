@@ -5,7 +5,7 @@ namespace GlpiPlugin\Informeglopi;
 
 use CommonGLPI;
 
-/** Informe Técnico tab. Creation, editing and history stay inside the asset form. */
+/** Informe Técnico: three views kept inside the asset tab. */
 final class ReportTab extends CommonGLPI
 {
     public static function getTypeName($nb = 0): string
@@ -35,47 +35,148 @@ final class ReportTab extends CommonGLPI
         $itemsId = (int) $item->getID();
         $assetUrl = $item->getFormURLWithID($itemsId);
         $tabUrl = $assetUrl . '&forcetab=' . rawurlencode(self::class . '$1');
-        $reports = self::loadReports($itemtype, $itemsId);
-
-        echo "<div class='card mb-3'><div class='card-header d-flex justify-content-between align-items-center'>";
-        echo '<strong>' . self::e(__('Informes técnicos del activo', 'informeglpi')) . '</strong>';
-        if (\Session::haveRight(Report::$rightname, CREATE)) {
-            echo "<form method='post' action='" . self::e('/plugins/informeglpi/front/report.form.php') . "' class='m-0'>";
-            echo \Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
-            echo \Html::hidden('itemtype', ['value' => $itemtype]);
-            echo \Html::hidden('items_id', ['value' => $itemsId]);
-            echo "<button type='submit' class='btn btn-primary btn-sm' onclick=\"this.disabled=true;this.form.submit();\">" . self::e(__('Crear informe', 'informeglpi')) . '</button>';
-            echo '</form>';
-        }
-        echo '</div><div class="card-body">';
-
-        $selectedReportId = (int) ($_GET['report_id'] ?? 0);
-        if ($selectedReportId > 0) {
-            self::renderSelectedReport($selectedReportId, $itemtype, $itemsId, $tabUrl);
+        $view = (string) ($_GET['report_view'] ?? 'new');
+        if (!in_array($view, ['new', 'drafts', 'approved'], true)) {
+            $view = 'new';
         }
 
-        if ($reports === []) {
-            echo "<div class='alert alert-info mb-0'>" . self::e(__('Este activo todavía no tiene informes técnicos.', 'informeglpi')) . '</div>';
+        echo "<div class='card mb-3'><div class='card-header'><strong>" . self::e(__('Informes técnicos', 'informeglpi')) . '</strong></div><div class="card-body">';
+        echo "<ul class='nav nav-tabs mb-3'>";
+        self::navLink($tabUrl, 'new', __('Nuevo', 'informeglpi'), $view);
+        self::navLink($tabUrl, 'drafts', __('Borradores', 'informeglpi'), $view);
+        self::navLink($tabUrl, 'approved', __('Aprobados', 'informeglpi'), $view);
+        echo '</ul>';
+
+        if ($view === 'new') {
+            if (\Session::haveRight(Report::$rightname, CREATE)) {
+                self::renderNewForm($itemtype, $itemsId);
+            } else {
+                echo "<div class='alert alert-warning mb-0'>" . self::e(__('No tiene permisos para crear informes técnicos.', 'informeglpi')) . '</div>';
+            }
+        } elseif ($view === 'drafts') {
+            self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft']);
+            $reportId = (int) ($_GET['report_id'] ?? 0);
+            if ($reportId > 0) {
+                self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
+            }
         } else {
-            echo "<div class='table-responsive'><table class='table table-hover table-sm'>";
-            echo '<thead><tr>';
-            foreach ([__('Número', 'informeglpi'), __('Fecha', 'informeglpi'), __('Estado', 'informeglpi'), __('Creado por', 'informeglpi'), __('Acción', 'informeglpi')] as $heading) {
-                echo '<th>' . self::e($heading) . '</th>';
+            self::renderReportList($itemtype, $itemsId, $tabUrl, ['pending_technical_signature', 'pending_supervisor_signature', 'finalized']);
+            $reportId = (int) ($_GET['report_id'] ?? 0);
+            if ($reportId > 0) {
+                self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
             }
-            echo '</tr></thead><tbody>';
-            foreach ($reports as $row) {
-                $id = (int) $row['id'];
-                $openUrl = $tabUrl . '&report_id=' . $id;
-                echo '<tr><td>' . self::e($row['report_number']) . '</td>';
-                echo '<td>' . self::e($row['date_creation']) . '</td>';
-                echo '<td>' . self::e(self::statusLabel((string) $row['status'])) . '</td>';
-                echo '<td>' . self::e($row['creator_name'] ?? '—') . '</td>';
-                echo "<td><a class='btn btn-sm btn-outline-primary' href='" . self::e($openUrl) . "'>" . self::e(__('Abrir', 'informeglpi')) . '</a></td></tr>';
-            }
-            echo '</tbody></table></div>';
         }
+
         echo '</div></div>';
         return true;
+    }
+
+    private static function navLink(string $tabUrl, string $key, string $label, string $active): void
+    {
+        $url = $tabUrl . '&report_view=' . rawurlencode($key);
+        $class = $active === $key ? 'nav-link active' : 'nav-link';
+        echo "<li class='nav-item'><a class='" . $class . "' href='" . self::e($url) . "'>" . self::e($label) . '</a></li>';
+    }
+
+    private static function renderNewForm(string $itemtype, int $itemsId): void
+    {
+        if (!class_exists($itemtype)) {
+            return;
+        }
+        $item = new $itemtype();
+        if (!$item->getFromDB($itemsId)) {
+            echo "<div class='alert alert-danger'>" . self::e(__('No se pudo cargar el activo.', 'informeglpi')) . '</div>';
+            return;
+        }
+        $snapshot = AssetSnapshotBuilder::build($item);
+        $assetFields = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
+
+        echo "<div class='alert alert-info'>" . self::e(__('Complete la información técnica. Los datos del activo se capturan automáticamente al guardar y no se pueden modificar desde este informe.', 'informeglpi')) . '</div>';
+        echo '<h5>' . self::e(__('Información del activo', 'informeglpi')) . '</h5>';
+        echo "<div class='table-responsive'><table class='table table-sm table-bordered'><tbody>";
+        echo '<tr><th style="width:28%">' . self::e(__('Tipo', 'informeglpi')) . '</th><td>' . self::e($itemtype) . '</td></tr>';
+        foreach ([
+            'name' => __('Código / nombre', 'informeglpi'),
+            'serial' => __('Serie', 'informeglpi'),
+            'otherserial' => __('Activo fijo', 'informeglpi'),
+            'buy_date' => __('Fecha de compra', 'informeglpi'),
+            'comment' => __('Descripción', 'informeglpi'),
+        ] as $key => $label) {
+            if (isset($assetFields[$key]) && !is_array($assetFields[$key])) {
+                echo '<tr><th>' . self::e($label) . '</th><td>' . nl2br(self::e($assetFields[$key])) . '</td></tr>';
+            }
+        }
+        echo '</tbody></table></div>';
+        self::renderFieldsForm('/plugins/informeglpi/front/report.form.php', [
+            '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
+            'itemtype' => $itemtype,
+            'items_id' => $itemsId,
+        ], []);
+    }
+
+    private static function renderFieldsForm(string $action, array $hidden, array $values): void
+    {
+        echo '<h5 class="mt-4">' . self::e(__('Información técnica del informe', 'informeglpi')) . '</h5>';
+        echo "<form method='post' action='" . self::e($action) . "'>";
+        foreach ($hidden as $name => $value) {
+            echo "<input type='hidden' name='" . self::e($name) . "' value='" . self::e($value) . "'>";
+        }
+        $fields = [
+            'book_value' => __('Valor en libros (USD)', 'informeglpi'),
+            'background' => __('ANTECEDENTES', 'informeglpi'),
+            'diagnosis' => __('DIAGNÓSTICO', 'informeglpi'),
+            'cause' => __('CAUSA', 'informeglpi'),
+            'activities' => __('ACTIVIDADES / OBSERVACIONES', 'informeglpi'),
+            'recommendations' => __('RECOMENDACIONES', 'informeglpi'),
+            'observations' => __('OBSERVACIONES ADICIONALES', 'informeglpi'),
+        ];
+        foreach ($fields as $field => $label) {
+            $value = $values[$field] ?? '';
+            echo "<div class='mb-3'><label class='form-label' for='field_" . self::e($field) . "'>" . self::e($label) . '</label>';
+            if ($field === 'book_value') {
+                echo "<input class='form-control' type='number' min='0' step='0.01' name='book_value' id='field_book_value' value='" . self::e($value) . "'></div>";
+            } else {
+                echo "<textarea class='form-control' rows='3' id='field_" . self::e($field) . "' name='" . self::e($field) . "'>" . self::e($value) . '</textarea></div>';
+            }
+        }
+        $damage = (string) ($values['damage_type'] ?? '');
+        echo '<fieldset class="mb-3"><legend class="fs-6">' . self::e(__('TIPO DE DAÑO', 'informeglpi')) . '</legend>';
+        foreach (['wear' => __('Desgaste', 'informeglpi'), 'property_damage' => __('Daño a la propiedad / mal uso', 'informeglpi')] as $value => $label) {
+            echo "<div class='form-check form-check-inline'><input class='form-check-input' type='radio' name='damage_type' id='damage_" . self::e($value) . "' value='" . self::e($value) . "' " . ($damage === $value ? 'checked' : '') . '>';
+            echo "<label class='form-check-label' for='damage_" . self::e($value) . "'>" . self::e($label) . '</label></div>';
+        }
+        echo '</fieldset>';
+        echo "<button type='submit' class='btn btn-primary'>" . self::e(__('Guardar borrador', 'informeglpi')) . '</button>';
+        echo '</form>';
+    }
+
+    private static function renderReportList(string $itemtype, int $itemsId, string $tabUrl, array $statuses): void
+    {
+        $reports = self::loadReports($itemtype, $itemsId, $statuses);
+        if ($reports === []) {
+            $message = in_array('draft', $statuses, true)
+                ? __('No hay borradores para este activo.', 'informeglpi')
+                : __('No hay informes aprobados o pendientes de firma para este activo.', 'informeglpi');
+            echo "<div class='alert alert-info mb-0'>" . self::e($message) . '</div>';
+            return;
+        }
+        echo "<div class='table-responsive'><table class='table table-hover table-sm'>";
+        echo '<thead><tr>';
+        foreach ([__('Número', 'informeglpi'), __('Fecha', 'informeglpi'), __('Estado', 'informeglpi'), __('Creado por', 'informeglpi'), __('Acción', 'informeglpi')] as $heading) {
+            echo '<th>' . self::e($heading) . '</th>';
+        }
+        echo '</tr></thead><tbody>';
+        foreach ($reports as $row) {
+            $id = (int) $row['id'];
+            $view = in_array('draft', $statuses, true) ? 'drafts' : 'approved';
+            $openUrl = $tabUrl . '&report_view=' . $view . '&report_id=' . $id;
+            echo '<tr><td>' . self::e($row['report_number']) . '</td>';
+            echo '<td>' . self::e($row['date_creation']) . '</td>';
+            echo '<td>' . self::e(self::statusLabel((string) $row['status'])) . '</td>';
+            echo '<td>' . self::e($row['creator_name'] ?? '—') . '</td>';
+            echo "<td><a class='btn btn-sm btn-outline-primary' href='" . self::e($openUrl) . "'>" . self::e(__('Editar / ver', 'informeglpi')) . '</a></td></tr>';
+        }
+        echo '</tbody></table></div>';
     }
 
     private static function renderSelectedReport(int $reportId, string $itemtype, int $itemsId, string $tabUrl): void
@@ -100,59 +201,35 @@ final class ReportTab extends CommonGLPI
         echo "<section class='border rounded p-3 mt-3'>";
         echo "<div class='d-flex justify-content-between align-items-center mb-3'><h4 class='mb-0'>" . self::e($report->fields['report_number'] ?? '') . '</h4>';
         echo "<span class='badge bg-secondary'>" . self::e(self::statusLabel((string) ($report->fields['status'] ?? ''))) . '</span></div>';
-        echo "<div class='alert alert-info'>" . self::e(__('Los datos identificativos se recuperan de GLPI y no se pueden modificar desde este formulario. Complete únicamente la información técnica.', 'informeglpi')) . '</div>';
-        echo '<h5>' . self::e(__('INFORMACIÓN DEL ACTIVO', 'informeglpi')) . '</h5>';
-        $autoFields = [
-            'name' => __('Código / nombre del activo', 'informeglpi'),
-            'buy_date' => __('Fecha de compra', 'informeglpi'),
-            'serial' => __('Serie', 'informeglpi'),
-            'otherserial' => __('Activo fijo', 'informeglpi'),
-            'comment' => __('Descripción', 'informeglpi'),
-        ];
+        echo '<h5>' . self::e(__('Datos del activo (snapshot)', 'informeglpi')) . '</h5>';
         echo "<div class='table-responsive'><table class='table table-sm table-bordered'><tbody>";
-        echo '<tr><th style="width:28%">' . self::e(__('Tipo', 'informeglpi')) . '</th><td>' . self::e($itemtype) . '</td></tr>';
-        foreach ($autoFields as $key => $label) {
-            if (!array_key_exists($key, $assetFields) || is_array($assetFields[$key])) {
+        foreach ($assetFields as $key => $value) {
+            if (is_array($value) || is_object($value)) {
                 continue;
             }
-            echo '<tr><th>' . self::e($label) . '</th><td>' . nl2br(self::e($assetFields[$key])) . '</td></tr>';
+            echo '<tr><th style="width:28%">' . self::e($key) . '</th><td>' . self::e($value) . '</td></tr>';
         }
         echo '</tbody></table></div>';
 
-        echo '<h5 class="mt-4">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO', 'informeglpi')) . '</h5>';
         if ($isEditable) {
-            $action = '/plugins/informeglpi/front/report.edit.form.php';
-            echo "<form method='post' action='" . self::e($action) . "'>";
-            echo \Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
-            echo \Html::hidden('id', ['value' => $reportId]);
-            $fields = [
-                'book_value' => __('Valor en libros (USD)', 'informeglpi'),
-                'background' => __('ANTECEDENTES', 'informeglpi'),
-                'diagnosis' => __('DIAGNÓSTICO', 'informeglpi'),
-                'cause' => __('CAUSA', 'informeglpi'),
-                'activities' => __('ACTIVIDADES / OBSERVACIONES', 'informeglpi'),
-                'recommendations' => __('RECOMENDACIONES', 'informeglpi'),
-            ];
-            foreach ($fields as $field => $label) {
-                echo "<div class='mb-3'><label class='form-label' for='field_" . self::e($field) . "'>" . self::e($label) . '</label>';
-                if ($field === 'book_value') {
-                    echo "<input class='form-control' type='number' min='0' step='0.01' name='book_value' id='field_book_value' value='" . self::e($report->fields['book_value'] ?? '') . "'></div>";
-                } else {
-                    echo "<textarea class='form-control' rows='3' id='field_" . self::e($field) . "' name='" . self::e($field) . "'>" . self::e($report->fields[$field] ?? '') . '</textarea></div>';
+            self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
+                '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
+                'id' => $reportId,
+            ], $report->fields);
+        } else {
+            echo "<div class='alert alert-secondary'>" . self::e(__('Este informe ya no está en edición. Su consulta y descarga se habilitarán según el flujo de aprobación y finalización.', 'informeglpi')) . '</div>';
+            foreach ([
+                'background' => __('Antecedentes', 'informeglpi'),
+                'diagnosis' => __('Diagnóstico', 'informeglpi'),
+                'cause' => __('Causa', 'informeglpi'),
+                'activities' => __('Actividades / observaciones', 'informeglpi'),
+                'recommendations' => __('Recomendaciones', 'informeglpi'),
+            ] as $field => $label) {
+                $value = trim((string) ($report->fields[$field] ?? ''));
+                if ($value !== '') {
+                    echo "<div class='mb-3'><strong>" . self::e($label) . '</strong><div class="border rounded p-2">' . nl2br(self::e($value)) . '</div></div>';
                 }
             }
-            $damage = (string) ($report->fields['damage_type'] ?? '');
-            echo '<fieldset class="mb-3"><legend class="fs-6">' . self::e(__('TIPO DE DAÑO', 'informeglpi')) . '</legend>';
-            foreach (['wear' => __('Desgaste', 'informeglpi'), 'property_damage' => __('Daño a la propiedad / mal uso', 'informeglpi')] as $value => $label) {
-                echo "<div class='form-check form-check-inline'><input class='form-check-input' type='radio' name='damage_type' id='damage_" . self::e($value) . "' value='" . self::e($value) . "' " . ($damage === $value ? 'checked' : '') . '>';
-                echo "<label class='form-check-label' for='damage_" . self::e($value) . "'>" . self::e($label) . '</label></div>';
-            }
-            echo '</fieldset>';
-            echo "<button type='submit' class='btn btn-primary'>" . self::e(__('Guardar informe', 'informeglpi')) . '</button> ';
-            echo "<a class='btn btn-secondary' href='" . self::e($tabUrl) . "'>" . self::e(__('Cerrar formulario', 'informeglpi')) . '</a>';
-            echo '</form>';
-        } else {
-            echo "<div class='alert alert-secondary'>" . self::e(__('Este informe ya no está en edición. La descarga PDF estará disponible cuando haya sido firmado y finalizado.', 'informeglpi')) . '</div>';
         }
         echo '</section>';
     }
@@ -173,14 +250,18 @@ final class ReportTab extends CommonGLPI
         return htmlspecialchars((string) ($value ?? '—'), ENT_QUOTES, 'UTF-8');
     }
 
-    private static function loadReports(string $itemtype, int $itemsId): array
+    private static function loadReports(string $itemtype, int $itemsId, array $statuses): array
     {
         global $DB;
         $result = [];
         foreach ($DB->request([
             'SELECT' => ['id', 'report_number', 'status', 'date_creation', 'users_id', 'entities_id', 'is_recursive'],
             'FROM' => 'glpi_plugin_informeglopi_reports',
-            'WHERE' => ['itemtype' => $itemtype, 'items_id' => $itemsId],
+            'WHERE' => [
+                'itemtype' => $itemtype,
+                'items_id' => $itemsId,
+                'status' => $statuses,
+            ],
             'ORDER' => ['id DESC'],
         ]) as $row) {
             if (!\Session::haveAccessToEntity((int) ($row['entities_id'] ?? -1), (bool) ($row['is_recursive'] ?? false))) {
