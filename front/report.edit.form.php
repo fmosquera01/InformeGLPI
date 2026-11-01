@@ -29,5 +29,5 @@ try {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
 }
 $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class);
-Html::redirect($CFG_GLPI['root_doc'] . $tabUrl . '&report_id=' . $reportId);
+Html::redirect($tabUrl . '&report_id=' . $reportId);
 exit;
