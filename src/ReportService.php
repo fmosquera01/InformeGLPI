@@ -169,6 +169,26 @@ final class ReportService
         }
     }
 
+    /** Return a non-reserving preview of the next annual document number. */
+    public static function previewNextReportNumber(?int $year = null): string
+    {
+        global $DB;
+
+        $year = $year ?? (int) date('Y');
+        $lastNumber = 0;
+        foreach ($DB->request([
+            'SELECT' => ['last_number'],
+            'FROM' => 'glpi_plugin_informeglopi_sequences',
+            'WHERE' => ['year' => $year],
+            'LIMIT' => 1,
+        ]) as $row) {
+            $lastNumber = (int) ($row['last_number'] ?? 0);
+            break;
+        }
+
+        return 'ITSIS' . $year . '-' . str_pad((string) ($lastNumber + 1), 3, '0', STR_PAD_LEFT);
+    }
+
     private static function assertActiveUser(int $userId): void
     {
         global $DB;
