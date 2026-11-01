@@ -149,12 +149,17 @@ final class ReportTab extends CommonGLPI
             '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
             'itemtype' => $itemtype,
             'items_id' => $itemsId,
-        ], []);
+        ], [
+            'report_date' => date('Y-m-d'),
+            'prepared_by_users_id' => (int) \\Session::getLoginUserID(),
+            'subject' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.',
+        ]);
         echo '</div>';
     }
 
     private static function renderFieldsForm(string $action, array $hidden, array $values): void
     {
+        echo "<form class='ig-report-form' method='post' action='" . self::e($action) . "'>";
         global $DB;
         $users = [];
         foreach ($DB->request(['SELECT' => ['id', 'name', 'realname', 'firstname'], 'FROM' => 'glpi_users', 'WHERE' => ['is_active' => 1], 'ORDER' => ['realname ASC', 'firstname ASC']]) as $user) {
@@ -191,7 +196,6 @@ final class ReportTab extends CommonGLPI
         echo "<div class='ig-row'><label class='ig-label' for='ig_subject'>" . self::e(__('ASUNTO:', 'informeglpi')) . "</label><div class='ig-value'><input class='form-control' type='text' id='ig_subject' name='subject' required value='" . self::e($subject) . "'></div></div>";
         echo '</div>';
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO', 'informeglpi')) . '</div>';
-        echo "<form class='ig-report-form' method='post' action='" . self::e($action) . "'>";
         foreach ($hidden as $name => $value) {
             echo "<input type='hidden' name='" . self::e($name) . "' value='" . self::e($value) . "'>";
         }
