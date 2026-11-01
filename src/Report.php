@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GlpiPlugin\Informeglopi;
+namespace GlpiPlugin\\Informeglopi;
 
 use CommonDBTM;
 
@@ -10,7 +10,8 @@ use CommonDBTM;
  */
 final class Report extends CommonDBTM
 {
-    public static string $rightname = 'plugin_informeglopi';
+    // CommonGLPI declares $rightname without a type; keep the same declaration.
+    public static $rightname = 'plugin_informeglopi';
 
     public static function getTable($classname = null): string
     {
