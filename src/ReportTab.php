@@ -107,15 +107,36 @@ final class ReportTab extends CommonGLPI
         echo "<div class='alert alert-info py-2 mb-2'>" . self::e(__('Los datos del activo se cargan automáticamente. El valor en libros y la información técnica se ingresan manualmente.', 'informeglpi')) . '</div>';
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN DEL ACTIVO', 'informeglpi')) . '</div>';
         echo "<div class='ig-asset-table'>";
+        $typeField = strtolower((new \ReflectionClass($item))->getShortName()) . 'types_id';
+        $modelField = strtolower((new \ReflectionClass($item))->getShortName()) . 'models_id';
+        $typeClass = (new \ReflectionClass($item))->getShortName() . 'Type';
+        $modelClass = (new \ReflectionClass($item))->getShortName() . 'Model';
+        $typeValue = isset($fields[$typeField]) && class_exists($typeClass)
+            ? \Dropdown::getDropdownName($typeClass::getTable(), (int) $fields[$typeField])
+            : '';
+        $modelValue = isset($fields[$modelField]) && class_exists($modelClass)
+            ? \Dropdown::getDropdownName($modelClass::getTable(), (int) $fields[$modelField])
+            : '';
+        $manufacturerValue = !empty($fields['manufacturers_id'])
+            ? \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $fields['manufacturers_id'])
+            : '';
+        $userValue = !empty($fields['users_id']) ? getUserName((int) $fields['users_id']) : '';
+        $locationValue = !empty($fields['locations_id'])
+            ? \Dropdown::getDropdownName(\Location::getTable(), (int) $fields['locations_id'])
+            : '';
+        $description = trim((string) ($fields['name'] ?? '') . ((string) ($fields['comment'] ?? '') !== '' ? "\n" . $fields['comment'] : ''));
+        if (!empty($fields['date_buy'])) {
+            $description .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . \Html::convDate($fields['date_buy']);
+        }
         $assetRows = [
-            __('CÓDIGO DE ACTIVO:', 'informeglpi') => $fields['otherserial'] ?? $fields['name'] ?? '',
-            __('TIPO:', 'informeglpi') => $itemtype,
-            __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi') => $fields['comment'] ?? $fields['name'] ?? '',
-            __('MARCA:', 'informeglpi') => $fields['manufacturers_id'] ?? '',
-            __('MODELO:', 'informeglpi') => $fields['computermodels_id'] ?? $fields['phonemodels_id'] ?? $fields['models_id'] ?? '',
+            __('CÓDIGO DE ACTIVO:', 'informeglpi') => $fields['otherserial'] ?? '',
+            __('TIPO:', 'informeglpi') => $typeValue,
+            __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi') => $description,
+            __('MARCA:', 'informeglpi') => $manufacturerValue,
+            __('MODELO:', 'informeglpi') => $modelValue,
             __('SERIE:', 'informeglpi') => $fields['serial'] ?? '',
-            __('USUARIO RESPONSABLE:', 'informeglpi') => $fields['users_id'] ?? '',
-            __('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', 'informeglpi') => $fields['locations_id'] ?? '',
+            __('USUARIO RESPONSABLE:', 'informeglpi') => $userValue,
+            __('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', 'informeglpi') => $locationValue,
         ];
         foreach ($assetRows as $label => $value) {
             if (is_array($value) || is_object($value) || trim((string) $value) === '' || (string) $value === '0') {
