@@ -454,9 +454,26 @@ final class ReportTab extends CommonGLPI
         $snapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
         $snapshot = is_array($snapshot) ? $snapshot : [];
         $assetFields = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
-        $assetHtml = $isManualPhone
-            ? self::renderManualPhoneInformation($assetFields, true)
-            : self::renderAssetInformation($itemtype, $assetFields, is_array($snapshot['components'] ?? null) ? $snapshot['components'] : []);
+        if ($isManualPhone) {
+            $manualValues = [
+                'asset_code' => $assetFields['CÓDIGO DE ACTIVO'] ?? '',
+                'description' => $assetFields['DESCRIPCIÓN DEL ACTIVO'] ?? '',
+                'purchase_date' => '',
+                'manufacturer' => $assetFields['MARCA'] ?? '',
+                'model' => $assetFields['MODELO'] ?? '',
+                'serial' => $assetFields['SERIE'] ?? '',
+                'responsible' => $assetFields['USUARIO RESPONSABLE'] ?? '',
+                'area' => $assetFields['ÁREA DONDE SE ENCONTRABA EL EQUIPO'] ?? '',
+            ];
+            $purchaseDate = (string) ($assetFields['FECHA DE COMPRA'] ?? '');
+            if ($purchaseDate !== '') {
+                $parsedDate = \\DateTime::createFromFormat('d/m/Y', $purchaseDate);
+                $manualValues['purchase_date'] = $parsedDate ? $parsedDate->format('Y-m-d') : '';
+            }
+            $assetHtml = self::renderManualPhoneInformation($manualValues, true);
+        } else {
+            $assetHtml = self::renderAssetInformation($itemtype, $assetFields, is_array($snapshot['components'] ?? null) ? $snapshot['components'] : []);
+        }
         if ($isEditable) {
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
