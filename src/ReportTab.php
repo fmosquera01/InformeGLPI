@@ -34,13 +34,13 @@ final class ReportTab extends CommonGLPI
         $itemtype = $item::class;
         $itemsId = (int) $item->getID();
         $assetUrl = $item->getFormURLWithID($itemsId);
-        $tabUrl = $assetUrl . '&forcetab=' . rawurlencode(self::class);
+        $tabUrl = $assetUrl . '&forcetab=' . rawurlencode(self::class . '$1');
         $reports = self::loadReports($itemtype, $itemsId);
 
         echo "<div class='card mb-3'><div class='card-header d-flex justify-content-between align-items-center'>";
         echo '<strong>' . self::e(__('Informes técnicos del activo', 'informeglpi')) . '</strong>';
         if (\Session::haveRight(Report::$rightname, CREATE)) {
-            echo "<form method='post' action='" . self::e('/' . \Plugin::getWebDir('informeglpi', false) . '/front/report.form.php') . "' class='m-0'>";
+            echo "<form method='post' action='" . self::e('/plugins/informeglpi/front/report.form.php') . "' class='m-0'>";
             echo \Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
             echo \Html::hidden('itemtype', ['value' => $itemtype]);
             echo \Html::hidden('items_id', ['value' => $itemsId]);
@@ -121,7 +121,7 @@ final class ReportTab extends CommonGLPI
 
         echo '<h5 class="mt-4">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO', 'informeglpi')) . '</h5>';
         if ($isEditable) {
-            $action = '/' . \Plugin::getWebDir('informeglpi', false) . '/front/report.edit.form.php';
+            $action = '/plugins/informeglpi/front/report.edit.form.php';
             echo "<form method='post' action='" . self::e($action) . "'>";
             echo \Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
             echo \Html::hidden('id', ['value' => $reportId]);
