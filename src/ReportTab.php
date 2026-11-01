@@ -222,14 +222,14 @@ final class ReportTab extends CommonGLPI
             'width' => '100%',
         ]);
         echo "<small class='text-muted'>" . self::e(__('Seleccione uno o varios destinatarios; mínimo uno obligatorio.', 'informeglpi')) . "</small></div></div>";
-        $preparedById = (int) ($values['prepared_by_users_id'] ?? \\Session::getLoginUserID());
+        $preparedById = (int) ($values['prepared_by_users_id'] ?? \Session::getLoginUserID());
         $preparedByName = $preparedById > 0 ? getUserName($preparedById) : '';
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('DE: TÉCNICO QUE ELABORA:', 'informeglpi')) . "</div><div class='ig-value'>" . self::e($preparedByName) . "</div></div>";
         $field = 'reviewer_users_id';
         $label = __('DE: RESPONSABLE QUE REVISA:', 'informeglpi');
         $selected = (int) ($values[$field] ?? 0);
         echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>";
-        echo \\Dropdown::showFromArray($field, $users, [
+        echo \Dropdown::showFromArray($field, $users, [
             'value' => $selected,
             'display' => false,
             'class' => 'form-select',
