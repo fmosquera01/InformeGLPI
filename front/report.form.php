@@ -24,6 +24,7 @@ if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
 try {
     $reportId = ReportService::createDraft($itemtype, $itemsId, $_POST);
     ReportService::updateDraft($reportId, $_POST);
+    ReportService::addEvidence($reportId, $_FILES['evidence_files'] ?? []);
     Session::addMessageAfterRedirect(__('Borrador guardado correctamente.', 'informeglpi'), true, INFO);
     $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class . '$1');
     Html::redirect($tabUrl . '&report_view=drafts&report_id=' . $reportId);
