@@ -453,11 +453,10 @@ final class ReportTab extends CommonGLPI
         echo "<div class='ig-edit-paper border rounded p-3'>";
         $snapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
         $snapshot = is_array($snapshot) ? $snapshot : [];
-        $assetHtml = self::renderAssetInformation(
-            $itemtype,
-            is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [],
-            is_array($snapshot['components'] ?? null) ? $snapshot['components'] : []
-        );
+        $assetFields = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
+        $assetHtml = $isManualPhone
+            ? self::renderManualPhoneInformation($assetFields, true)
+            : self::renderAssetInformation($itemtype, $assetFields, is_array($snapshot['components'] ?? null) ? $snapshot['components'] : []);
         if ($isEditable) {
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
