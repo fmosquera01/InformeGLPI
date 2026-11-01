@@ -14,12 +14,16 @@ require_once __DIR__ . '/src/Profile.php';
 require_once __DIR__ . '/src/ReportTab.php';
 require_once __DIR__ . '/src/AssetSnapshotBuilder.php';
 require_once __DIR__ . '/src/ReportService.php';
+require_once __DIR__ . '/src/ManualPhoneMenu.php';
 
 function plugin_init_informeglpi(): void
 {
     global $PLUGIN_HOOKS;
 
     $PLUGIN_HOOKS['csrf_compliant']['informeglpi'] = true;
+    $PLUGIN_HOOKS['menu_entry']['informeglpi'] = true;
+    $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => ManualPhoneMenu::class];
+    Plugin::registerClass(ManualPhoneMenu::class);
 
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
