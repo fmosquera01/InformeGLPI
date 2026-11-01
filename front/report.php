@@ -46,7 +46,7 @@ $e = static fn($value): string => htmlspecialchars((string) ($value ?? '—'), E
 
 echo "<div class='card mb-3'><div class='card-header d-flex justify-content-between align-items-center'><h3 class='card-title mb-0'>" . $e($report->fields['report_number'] ?? '') . "</h3>";
 if ($canEditDraft) {
-    $editUrl = $CFG_GLPI['root_doc'] . '/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId;
+    $editUrl = '/' . Plugin::getWebDir('informeglpi', false) . '/front/report.edit.form.php?id=' . $reportId;
     echo "<a class='btn btn-primary btn-sm' href='" . $e($editUrl) . "'>" . $e(__('Editar borrador', 'informeglpi')) . '</a>';
 }
 echo '</div><div class="card-body">';
@@ -95,7 +95,7 @@ $itemtype = (string) ($report->fields['itemtype'] ?? '');
 $itemsId = (int) ($report->fields['items_id'] ?? 0);
 if ($itemtype !== '' && $itemsId > 0) {
     $assetUrl = '/front/' . strtolower($itemtype) . '.form.php?id=' . $itemsId;
-    echo "<a class='btn btn-secondary' href='" . $e($CFG_GLPI['root_doc'] . $assetUrl) . "'>" . $e(__('Volver al activo', 'informeglpi')) . "</a>";
+    echo "<a class='btn btn-secondary' href='" . $e($assetUrl) . "'>" . $e(__('Volver al activo', 'informeglpi')) . "</a>";
 }
 echo "</div></div>";
 
