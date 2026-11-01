@@ -146,47 +146,88 @@ final class ReportTab extends CommonGLPI
             __('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', 'informeglpi') => $locationValue,
         ];
         foreach ($assetRows as $label => $value) {
-            if (is_array($value) || is_object($value) || trim((string) $value) === '' || (string) $value === '0') {
+            if (is_array($value) || is_object($value) || trim((string) $value) === '' || (string) $value === '0' || in_array(mb_strtolower(trim((string) $value)), ['no asset information', 'n/a', 'not available'], true)) {
                 continue;
             }
             echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>" . nl2br(self::e($value)) . '</div></div>';
         }
         if ($itemtype === 'Computer') {
-            foreach ([
-                'processors' => __('PROCESADOR:', 'informeglpi'),
-                'memories' => __('RAM:', 'informeglpi'),
-                'hard_drives' => __('DISCO DURO:', 'informeglpi'),
-                'network_cards' => __('TARJETAS DE RED:', 'informeglpi'),
-            ] as $key => $label) {
-                $entries = $components[$key] ?? [];
-                $lines = [];
-                foreach ($entries as $entry) {
-                    $device = $entry['device'] ?? [];
-                    $description = [];
-                    foreach ($device as $deviceField => $deviceValue) {
-                        if (!is_scalar($deviceValue) || trim((string) $deviceValue) === '' || (string) $deviceValue === '0') {
-                            continue;
-                        }
-                        if (in_array($deviceField, ['id', 'entities_id', 'is_recursive', 'is_deleted', 'is_template', 'date_creation', 'date_mod'], true)
-                            || str_ends_with((string) $deviceField, '_id')) {
-                            continue;
-                        }
-                        $description[] = (string) $deviceValue;
-                    }
-                    if (!empty($device['manufacturers_id'])) {
-                        $description[] = \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $device['manufacturers_id']);
-                    }
-                    if ($description !== []) {
-                        $lines[] = implode(' · ', array_unique($description));
-                    }
-                }
-                if ($lines !== []) {
-                    echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>" . nl2br(self::e(implode("\n", $lines))) . '</div></div>';
-                }
-            }
+            self::renderComputerComponents($components);
         }
         echo '</div>';
         return (string) ob_get_clean();
+    }
+
+    /**
+     * Render only the hardware details that meaningfully describe a computer.
+     * Network adapters are intentionally excluded: GLPI often exposes generic
+     * adapter labels that add noise to the institutional report.
+     */
+    private static function renderComputerComponents(array $components): void
+    {
+        $definitions = [
+            'processors' => [
+                'label' => __('PROCESADOR:', 'informeglpi'),
+                'fields' => ['designation', 'name', 'frequency', 'nbcores', 'nbthreads'],
+            ],
+            'memories' => [
+                'label' => __('RAM:', 'informeglpi'),
+                'fields' => ['designation', 'name', 'size', 'frequency'],
+            ],
+            'hard_drives' => [
+                'label' => __('DISCO DURO:', 'informeglpi'),
+                'fields' => ['designation', 'name', 'capacity', 'interface', 'rpm'],
+            ],
+        ];
+
+        foreach ($definitions as $key => $definition) {
+            $lines = [];
+            foreach (($components[$key] ?? []) as $entry) {
+                $device = is_array($entry['device'] ?? null) ? $entry['device'] : [];
+                $relation = is_array($entry['relation'] ?? null) ? $entry['relation'] : [];
+                $parts = [];
+
+                // GLPI's designation is usually the most readable inventory value.
+                foreach (['designation', 'name'] as $preferred) {
+                    $value = trim((string) ($device[$preferred] ?? ''));
+                    if ($value !== '' && $value !== '0') {
+                        $parts[] = $value;
+                        break;
+                    }
+                }
+
+                // If no designation exists, build a concise description from
+                // the relevant technical attributes rather than dumping DB fields.
+                if ($parts === []) {
+                    foreach (array_slice($definition['fields'], 2) as $field) {
+                        $value = trim((string) ($device[$field] ?? $relation[$field] ?? ''));
+                        if ($value !== '' && $value !== '0') {
+                            $parts[] = $value;
+                        }
+                    }
+                }
+
+                if (!empty($device['manufacturers_id'])) {
+                    $manufacturer = \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $device['manufacturers_id']);
+                    if ($manufacturer !== '' && !in_array($manufacturer, $parts, true)) {
+                        $parts[] = $manufacturer;
+                    }
+                }
+
+                $line = trim(implode(' ', array_unique($parts)));
+                if ($line !== '' && !in_array($line, $lines, true)) {
+                    $lines[] = $line;
+                }
+            }
+
+            if ($lines !== []) {
+                echo "<div class='ig-row'><div class='ig-label'>" . self::e($definition['label']) . "</div><div class='ig-value'>";
+                foreach ($lines as $line) {
+                    echo "<div class='ig-component-line'>" . self::e($line) . '</div>';
+                }
+                echo '</div></div>';
+            }
+        }
     }
 
     private static function renderDocumentHeader($number): void
@@ -237,6 +278,8 @@ final class ReportTab extends CommonGLPI
         .ig-report-form .ig-section-title{margin:1rem 0 .4rem;padding:.48rem .65rem;text-align:left;border-left-width:5px}
         .ig-report-form .ig-row{grid-template-columns:minmax(205px,29%) minmax(0,1fr)}
         .ig-report-form .ig-label{display:flex;align-items:center}
+        .ig-report-form .ig-component-line{padding:.12rem 0 .12rem .15rem;line-height:1.45}
+        .ig-report-form .ig-component-line+ .ig-component-line{border-top:1px dashed #e5e7eb}
         .ig-edit-paper{max-width:1180px;margin:0 auto;background:#fdfdfd}
         .ig-report-shell .table{font-size:.86rem}
         .ig-report-shell .table thead th{background:#f2f3f5;color:#3b414b;font-weight:700;white-space:nowrap}
