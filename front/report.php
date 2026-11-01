@@ -64,7 +64,7 @@ foreach ($assetFields as $key => $value) {
     if (is_array($value) || is_object($value)) {
         continue;
     }
-    echo "<tr><th style='width:30%'>" . $e($key) . "</th><td>" . $e($value) . "</td></tr>";
+    echo "<tr><th style='width:30%'>" . $e($key) . "</th><td>" . nl2br($e($value)) . "</td></tr>";
 }
 echo "</tbody></table></div>";
 
