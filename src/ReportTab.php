@@ -219,22 +219,22 @@ final class ReportTab extends CommonGLPI
     {
         $report = new Report();
         if ($reportId < 1 || !$report->getFromDB($reportId)) {
-            Html::displayNotFoundError();
+            \Html::displayNotFoundError();
         }
         $itemtype = (string) ($report->fields['itemtype'] ?? '');
         $itemsId = (int) ($report->fields['items_id'] ?? 0);
         if (!class_exists($itemtype) || !AssetTypeRegistry::isSupported($itemtype)
-            || !Session::haveRight(Report::$rightname, READ)
-            || !Session::haveAccessToEntity((int) ($report->fields['entities_id'] ?? -1), (bool) ($report->fields['is_recursive'] ?? false))) {
-            Html::displayRightError();
+            || !\Session::haveRight(Report::$rightname, READ)
+            || !\Session::haveAccessToEntity((int) ($report->fields['entities_id'] ?? -1), (bool) ($report->fields['is_recursive'] ?? false))) {
+            \Html::displayRightError();
         }
         $item = new $itemtype();
         if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
-            Html::displayRightError();
+            \Html::displayRightError();
         }
-        $userId = (int) Session::getLoginUserID();
+        $userId = (int) \Session::getLoginUserID();
         $isEditable = ($report->fields['status'] ?? '') === 'draft'
-            && ($userId === (int) ($report->fields['users_id'] ?? 0) || Session::haveRight(Report::$rightname, UPDATE));
+            && ($userId === (int) ($report->fields['users_id'] ?? 0) || \Session::haveRight(Report::$rightname, UPDATE));
 
         echo "<div class='container-fluid mt-3'><div class='d-flex justify-content-between align-items-center mb-3'>";
         echo "<h2 class='h4 mb-0'>" . self::e(__('Editar informe técnico', 'informeglpi')) . "</h2>";
@@ -244,7 +244,7 @@ final class ReportTab extends CommonGLPI
         echo "<div class='mb-2 text-muted'>" . self::e($item->getTypeName() . ' · ' . ($item->fields['name'] ?? '')) . "</div>";
         if ($isEditable) {
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
-                '_glpi_csrf_token' => Session::getNewCSRFToken(true),
+                '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
                 'id' => $reportId,
             ], $report->fields);
         } else {
