@@ -112,7 +112,7 @@ final class ReportTab extends CommonGLPI
             'purchase_date' => __('FECHA DE COMPRA:', 'informeglpi'),
             'manufacturer' => __('MARCA:', 'informeglpi'),
             'model' => __('MODELO:', 'informeglpi'),
-            'serial' => __('SERIE (IMEI):', 'informeglpi'),
+            'serial' => __('SERIE:', 'informeglpi'),
             'responsible' => __('USUARIO RESPONSABLE:', 'informeglpi'),
             'area' => __('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', 'informeglpi'),
         ];
