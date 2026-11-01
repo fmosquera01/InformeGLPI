@@ -46,7 +46,11 @@ Las relaciones se gestionan desde el plugin y no se crean claves foráneas hacia
 
 ## Estado de desarrollo
 
-**Versión 0.3.0 — creación inicial de borradores.**
+**Versión 0.5.12 — formulario compacto alineado visualmente al Word (en desarrollo).**
+
+El formulario en la pestaña del activo presenta etiquetas a la izquierda y valores a la derecha, conserva los títulos del documento institucional y adapta su distribución a pantallas móviles. Esta versión todavía no completa fotografías, cámara, firmas ni PDF final.
+
+
 
 Implementado en repositorio:
 - Registro de pestaña de informes para Computer, Phone, Printer, Monitor y NetworkEquipment.
