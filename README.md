@@ -1,6 +1,6 @@
 # Informe Técnico - Songa
 
-Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.23.**
+Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.24.**
 
 ## Objetivo
 
@@ -26,7 +26,7 @@ Gestionar el ciclo de vida del documento institucional **Informe Técnico de Ít
 - `hook.php`: creación idempotente de tablas y registro de derechos nativos.
 - `src/Profile.php`: pestaña de derechos en Administración → Perfiles.
 - `src/Report.php`: entidad CommonDBTM del informe.
-- `src/AssetSnapshotBuilder.php`: captura los campos escalares del activo y, para computadores, procesadores, memorias, discos, tarjetas de red/MAC, gráficos, sonido, controladoras, baterías y sistemas operativos relacionados.
+- `src/AssetSnapshotBuilder.php`: captura los campos escalares del activo y, para computadores, procesadores, memorias, discos, tarjetas de red/MAC, gráficos, sonido, controladoras, baterías y sistemas operativos relacionados; para teléfonos de tipo Hand Held y Tablet, procesadores, memorias y almacenamiento.
 - `src/ReportService.php`: creación transaccional, correlativo anual y snapshot histórico del activo y sus componentes.
 - `front/report.form.php`: guarda el nuevo informe al enviar el formulario visible en la pestaña Nuevo.
 - `front/report.edit.form.php`: actualización de los campos técnicos mientras el informe está en borrador.
@@ -46,7 +46,7 @@ Las relaciones se gestionan desde el plugin y no se crean claves foráneas hacia
 
 ## Estado de desarrollo
 
-**Versión 0.5.21 — ajuste de presentación compartida en edición y creación conforme al Word.**
+**Versión 0.5.24 — datos técnicos específicos para computadores, Hand Held y Tablet.**
 
 El formulario incorpora número correlativo, fecha automática de creación no editable, destinatarios múltiples de GLPI, técnico elaborador, revisor y asunto editable. Los usuarios se validan contra usuarios activos de GLPI. Código de activo usa el número de inventario; tipo, marca, modelo, serie, responsable, ubicación y fecha de compra se consultan desde el activo. El valor en libros permanece manual.
 
