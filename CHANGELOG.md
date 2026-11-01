@@ -1,3 +1,9 @@
+## 0.5.17
+
+- Fix Computer asset snapshot when resolving the global GLPI `Item_Disk` class.
+- Preserve the selected pending-review view after editing a report.
+- Display a non-reserving preview of the next annual report number in the New form.
+
 ## 0.5.16
 
 - Make the asset report tabs work with native CSS radio controls, without relying on JavaScript execution inside GLPI's AJAX-loaded tab content.
