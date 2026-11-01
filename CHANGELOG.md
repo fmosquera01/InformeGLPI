@@ -1,3 +1,7 @@
+## 0.5.5
+
+- Load the selected GLPI profile and its saved rights before rendering the plugin permission matrix, preventing saved selections from appearing unchecked.
+
 ## 0.5.4
 
 - Submit the plugin profile-rights matrix to GLPI's native Profile form endpoint instead of resolving the plugin subclass form URL.
