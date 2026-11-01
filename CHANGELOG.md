@@ -1,3 +1,9 @@
+## 0.5.19
+
+- Redesign the report form to more closely follow the institutional Word document, with a formal document heading, cleaner metadata rows, section bands, and refined spacing/typography.
+- Highlight the active asset-tab view in yellow and match the Edit/View action button to the same accent.
+- Apply the same visual system to both new and edit pages; fix the new-form document-number preview to use the report-number service directly.
+
 ## 0.5.18
 
 - Open existing draft reports in a dedicated edit view so GLPI tab AJAX cannot drop the selected report ID and show a blank New form.
