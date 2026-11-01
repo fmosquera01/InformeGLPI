@@ -108,6 +108,20 @@ function plugin_informeglpi_install(): bool
         }
     }
 
+    // Add document header fields without altering existing reports.
+    $reportTable = 'glpi_plugin_informeglopi_reports';
+    $newFields = [
+        'recipients_json' => ['longtext', ['value' => null]],
+        'prepared_by_users_id' => ['integer', ['value' => 0]],
+        'reviewer_users_id' => ['integer', ['value' => 0]],
+        'subject' => ['string', ['value' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.']],
+    ];
+    foreach ($newFields as $field => [$type, $options]) {
+        if ($DB->tableExists($reportTable) && !$DB->fieldExists($reportTable, $field)) {
+            $migration->addField($reportTable, $field, $type, $options);
+        }
+    }
+
     $migration->executeMigration();
 
     // Register native GLPI profile rights idempotently.
