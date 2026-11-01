@@ -8,7 +8,7 @@ include('../../../inc/includes.php');
 Session::checkLoginUser();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    Html::displayErrorAndDie(__('La creación debe realizarse desde la pestaña del activo.', 'informeglpi'));
+    Html::displayErrorAndDie(__('La creación debe realizarse desde la pestaña Nuevo del activo.', 'informeglpi'));
 }
 
 $itemtype = (string) ($_POST['itemtype'] ?? '');
@@ -23,13 +23,14 @@ if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
 
 try {
     $reportId = ReportService::createDraft($itemtype, $itemsId);
+    ReportService::updateDraft($reportId, $_POST);
+    Session::addMessageAfterRedirect(__('Borrador guardado correctamente.', 'informeglpi'), true, INFO);
     $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class . '$1');
-    Session::addMessageAfterRedirect(__('Informe creado. Complete la información técnica en esta misma ficha.', 'informeglpi'), true, INFO);
-    Html::redirect($tabUrl . '&report_id=' . $reportId);
+    Html::redirect($tabUrl . '&report_view=drafts&report_id=' . $reportId);
     exit;
 } catch (Throwable $e) {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
     $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class . '$1');
-    Html::redirect($tabUrl);
+    Html::redirect($tabUrl . '&report_view=new');
     exit;
 }
