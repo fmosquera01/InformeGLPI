@@ -120,9 +120,14 @@ final class ReportTab extends CommonGLPI
             $value = (string) ($fields[$key] ?? '');
             echo "<div class='ig-row'><label class='ig-label' for='manual_asset_" . self::e($key) . "'>" . self::e($label) . "</label><div class='ig-value'>";
             if ($editable) {
-                $type = $key === 'purchase_date' ? 'date' : 'text';
-                $required = in_array($key, ['asset_code', 'manufacturer', 'model', 'serial', 'responsible', 'area'], true) ? ' required' : '';
-                echo "<input class='form-control' type='" . $type . "' id='manual_asset_" . self::e($key) . "' name='manual_asset[" . self::e($key) . "]' value='" . self::e($value) . "'" . $required . ">";
+                $required = in_array($key, ['asset_code', 'description', 'manufacturer', 'model', 'serial', 'responsible', 'area'], true) ? ' required' : '';
+                if ($key === 'description') {
+                    echo "<textarea class='form-control' rows='2' maxlength='255' id='manual_asset_description' name='manual_asset[description]' placeholder='" . self::e(__('Ejemplo: TELEFONO CELULAR A24', 'informeglpi')) . "'" . $required . ">" . self::e($value) . "</textarea>";
+                    echo "<small class='form-text text-muted'>" . self::e(__('Describa el activo de forma clara, por ejemplo: TELEFONO CELULAR A24.', 'informeglpi')) . "</small>";
+                } else {
+                    $type = $key === 'purchase_date' ? 'date' : 'text';
+                    echo "<input class='form-control' type='" . $type . "' id='manual_asset_" . self::e($key) . "' name='manual_asset[" . self::e($key) . "]' value='" . self::e($value) . "'" . $required . ">";
+                }
             } else {
                 echo nl2br(self::e($value !== '' ? $value : '—'));
             }
