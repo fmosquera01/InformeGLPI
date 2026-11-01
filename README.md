@@ -1,0 +1,94 @@
+# Informe Técnico - Songa
+
+Plugin nativo para GLPI 11. Directorio interno: `informeglopi`.
+
+## Objetivo
+
+Gestionar el ciclo de vida del documento institucional **Informe Técnico de Ítems de Propiedad, Planta y Equipos**, vinculado al activo GLPI. Cada informe es un registro independiente y conserva una fotografía histórica de los datos del activo al momento de su elaboración.
+
+## Reglas funcionales acordadas
+
+- Un activo puede tener múltiples informes; el historial no sobrescribe documentos anteriores.
+- El formato institucional aprobado debe reproducirse sin alterar encabezados, títulos, distribución, firmas ni estructura.
+- Los datos del activo y sus componentes se guardan como snapshot histórico.
+- El valor en libros se ingresa manualmente por el personal autorizado y conserva usuario y fecha de registro.
+- Tipo de daño: **Daño a la propiedad** o **Desgaste**. Puede cambiarse durante el borrador y se bloquea al finalizar.
+- Evidencias fotográficas múltiples, con categoría, autor y checksum.
+- Firmas de técnico y supervisor/administrador, con usuario, fecha y checksum de la imagen.
+- Flujo previsto: Borrador → Firma técnico → Firma supervisor/administrador → Finalizado.
+- El PDF final se conserva con SHA-256 y no debe regenerarse ni modificarse después de finalizar.
+- Los permisos se integran exclusivamente con perfiles y derechos nativos de GLPI; no existe ACL paralela.
+- La desinstalación del plugin no elimina los informes ni sus tablas.
+
+## Estructura actual
+
+- `setup.php`: metadatos, inicialización y registro de pestañas.
+- `hook.php`: creación idempotente de tablas y registro de derechos nativos.
+- `src/Profile.php`: pestaña de derechos en Administración → Perfiles.
+- `src/Report.php`: entidad CommonDBTM del informe.
+- `src/AssetSnapshotBuilder.php`: captura los campos escalares del activo y, para computadores, procesadores, memorias, discos, tarjetas de red/MAC, gráficos, sonido, controladoras, baterías y sistemas operativos relacionados.
+- `src/ReportService.php`: creación transaccional, correlativo anual y snapshot histórico del activo y sus componentes.
+- `front/report.form.php`: formulario para iniciar un borrador desde la ficha del activo.
+- `front/report.edit.form.php`: edición de los campos técnicos mientras el informe está en borrador.
+- `src/ReportTab.php`: pestaña de historial en activos compatibles.
+- `front/report.php`: vista inicial de un informe.
+- `README.md`, `CHANGELOG.md`.
+
+## Modelo de datos inicial (v0.3.0)
+
+- `glpi_plugin_informeglopi_sequences`: correlativo anual.
+- `glpi_plugin_informeglopi_reports`: informe, estado, campos manuales, snapshot JSON y metadatos del PDF.
+- `glpi_plugin_informeglopi_signatures`: firmas técnico/supervisor.
+- `glpi_plugin_informeglopi_evidences`: fotografías y archivos de evidencia.
+- `glpi_plugin_informeglopi_history`: auditoría de acciones y cambios.
+
+Las relaciones se gestionan desde el plugin y no se crean claves foráneas hacia tablas GLPI, para mantener compatibilidad con el ciclo de vida de sus activos.
+
+## Estado de desarrollo
+
+**Versión 0.3.0 — creación inicial de borradores.**
+
+Implementado en repositorio:
+- Registro de pestaña de informes para Computer, Phone, Printer, Monitor y NetworkEquipment.
+- Pestaña de permisos en perfiles GLPI con derechos de consulta/edición y aprobación.
+- Esquema inicial de informes, correlativos, firmas, evidencias y auditoría.
+- Consulta de historial por activo.
+- Creación de borradores desde activos compatibles.
+- Numeración anual `ITSISAAAA-NNN` reservada dentro de una transacción.
+- El contador de cada año inicia en cero en una base nueva; antes de producción debe inicializarse con el último número oficial ya utilizado para evitar duplicar informes históricos.
+- Snapshot JSON de los campos escalares disponibles del activo al momento de crear el borrador.
+- Registro de auditoría para la creación del informe.
+- Vista de lectura del borrador con los datos capturados.
+- Edición del borrador por su creador o por perfiles con derecho de actualización.
+- Clasificación de daño/desgaste y registro del valor en libros con usuario y fecha.
+- Conservación de tablas al desinstalar.
+
+Pendiente:
+- Snapshot ampliado de componentes y relaciones de hardware por tipo de activo.
+- Integración del tipo de activo industrial personalizado.
+- Gestión de evidencias fotográficas y sus checksums.
+- Firmas, aprobación, bloqueo y generación del PDF institucional.
+- Generación del PDF respetando exactamente la plantilla documental oficial.
+- Pruebas de instalación y funcionamiento en una instancia GLPI 11.
+
+## Requisito documental pendiente
+
+Para reproducir el formato sin desviaciones, el desarrollo del PDF debe basarse en la plantilla institucional oficial en blanco (.docx), además de los dos ejemplos ya descritos. No se debe inventar ni rediseñar la plantilla.
+
+
+## Versión 0.4.0 — Snapshot ampliado
+
+El snapshot de los computadores ahora incluye las relaciones de hardware consultadas a través de las clases de relación nativas de GLPI. Cada componente guarda los datos de la relación y los campos escalares del dispositivo asociado. Los discos y sistemas operativos se capturan por separado. Esta información queda serializada en el informe al momento de crear el borrador; no se vuelve a consultar para representar informes históricos.
+
+**Alcance pendiente:** validar la captura en una instancia GLPI 11.0.7 real con equipos que tengan componentes inventariados. La presencia de componentes depende de que GLPI Agent/inventario haya registrado esas relaciones. Los activos `industrial` y otros tipos personalizados todavía no están habilitados.
+
+
+## Versión 0.5.1 — Ajustes de registro dinámico
+
+Se corrige el registro de pestañas para usar el registro dinámico de tipos y se ajusta el acceso de retorno a la ficha del activo genérico.
+
+## Versión 0.5.0 — Compatibilidad con todos los activos
+
+La pestaña de informes deja de depender de una lista cerrada de cinco tipos. El registro de tipos resuelve los activos nativos de GLPI 11 y consulta `AssetDefinitionManager` para descubrir las clases concretas generadas por cada definición activa de Asset Definitions. La creación del informe valida contra ese registro común. Para los activos genéricos se conserva también la definición asociada y los campos personalizados que GLPI expone en el registro del activo.
+
+La cobertura de componentes especializados continúa siendo específica de los activos que disponen de esas relaciones (por ahora, computadores). Para el resto se conserva el conjunto de campos y valores personalizados que GLPI proporciona. Debe validarse con definiciones reales y perfiles/entidades de la instancia de pruebas antes de producción.
