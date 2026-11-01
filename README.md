@@ -46,13 +46,13 @@ Las relaciones se gestionan desde el plugin y no se crean claves foráneas hacia
 
 ## Estado de desarrollo
 
-**Versión 0.5.19 — presentación institucional del formulario, pestañas amarillas y consistencia visual entre creación y edición.**
+**Versión 0.5.20 — orden del documento Word y estructura idéntica en creación y edición; título institucional reservado para el PDF.**
 
 El formulario incorpora número correlativo, fecha automática de creación no editable, destinatarios múltiples de GLPI, técnico elaborador, revisor y asunto editable. Los usuarios se validan contra usuarios activos de GLPI. Código de activo usa el número de inventario; tipo, marca, modelo, serie, responsable, ubicación y fecha de compra se consultan desde el activo. El valor en libros permanece manual.
 
 La carga de fotografías JPG/PNG/WEBP, su almacenamiento privado y su visualización en el detalle del informe ya están implementados. Las firmas, el flujo de aprobación y el PDF institucional siguen pendientes.
 
-El formulario en la pestaña del activo y la pantalla de edición adoptan una presentación más cercana al Word institucional: encabezado del documento, número visible, secciones diferenciadas, etiquetas alineadas y campos con estilo uniforme. La pestaña seleccionada y las acciones de edición usan acento amarillo. El diseño se adapta a pantallas móviles. La carga de fotografías está disponible; las firmas, aprobación y PDF final continúan pendientes.
+El formulario de creación y edición comparten la misma estructura, basada en el Word institucional: número, fecha, destinatarios, elaborador, revisor y asunto; información del activo; información técnica; fotografías. El título institucional completo se reserva para el PDF final. La pestaña seleccionada y las acciones de edición usan acento amarillo. El diseño se adapta a pantallas móviles. La carga de fotografías está disponible; las firmas, aprobación y PDF final continúan pendientes.
 
 
 
