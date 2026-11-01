@@ -1,0 +1,66 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Informe Técnico - Songa.
+ * Internal plugin key and installation directory: informeglopi.
+ */
+
+define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.1');
+
+require_once __DIR__ . '/src/Report.php';
+require_once __DIR__ . '/src/AssetTypeRegistry.php';
+require_once __DIR__ . '/src/Profile.php';
+require_once __DIR__ . '/src/ReportTab.php';
+require_once __DIR__ . '/src/AssetSnapshotBuilder.php';
+require_once __DIR__ . '/src/ReportService.php';
+
+function plugin_init_informeglopi(): void
+{
+    global $PLUGIN_HOOKS;
+
+    $PLUGIN_HOOKS['csrf_compliant']['informeglopi'] = true;
+
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
+        'addtabon' => ['Profile'],
+    ]);
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\ReportTab::class, [
+        'addtabon' => \GlpiPlugin\Informeglopi\AssetTypeRegistry::getItemtypes(),
+    ]);
+}
+
+function plugin_version_informeglopi(): array
+{
+    return [
+        'name'         => 'Informe Técnico',
+        'version'      => PLUGIN_INFORMEGLOPI_VERSION,
+        'author'       => 'Songa - Infraestructura IT',
+        'license'      => 'Proprietary',
+        'homepage'     => 'https://github.com/fmosquera01/InformeGlopi',
+        'requirements' => [
+            'glpi' => [
+                'min' => '11.0.0',
+                'max' => '11.99.99',
+            ],
+            'php' => [
+                'min' => '8.2.0',
+            ],
+        ],
+    ];
+}
+
+function plugin_informeglopi_check_prerequisites(): bool
+{
+    if (!defined('GLPI_VERSION')) {
+        return false;
+    }
+
+    return version_compare(GLPI_VERSION, '11.0.0', '>=')
+        && version_compare(GLPI_VERSION, '12.0.0', '<');
+}
+
+function plugin_informeglopi_check_config($verbose = false): bool
+{
+    return true;
+}
