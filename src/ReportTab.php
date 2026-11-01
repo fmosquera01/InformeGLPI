@@ -40,27 +40,9 @@ final class ReportTab extends CommonGLPI
             $view = 'new';
         }
 
-        echo "<div class='card mb-3'><div class='card-header'><strong>" . self::e(__('Informes técnicos', 'informeglpi')) . '</strong></div><div class="card-body">';
-        echo "<style>
-            .ig-report-tabs .ig-report-panel{display:none}
-            .ig-report-tabs #ig-tab-new:checked ~ .ig-report-panels #ig-panel-new,
-            .ig-report-tabs #ig-tab-drafts:checked ~ .ig-report-panels #ig-panel-drafts,
-            .ig-report-tabs #ig-tab-approved:checked ~ .ig-report-panels #ig-panel-approved{display:block}
-            .ig-report-tabs ul.nav{display:flex;gap:.35rem;flex-wrap:wrap;border-bottom:1px solid var(--bs-border-color);padding-bottom:.45rem;margin-bottom:.85rem}
-            .ig-report-tabs ul label{cursor:pointer;margin:0;border:1px solid transparent;border-radius:.45rem;padding:.5rem .9rem;font-weight:600;color:var(--bs-secondary-color);transition:background .15s ease,color .15s ease}
-            .ig-report-tabs #ig-tab-new:checked ~ ul label[for=ig-tab-new],
-            .ig-report-tabs #ig-tab-drafts:checked ~ ul label[for=ig-tab-drafts],
-            .ig-report-tabs #ig-tab-approved:checked ~ ul label[for=ig-tab-approved]{color:var(--bs-primary-text-emphasis);background:var(--bs-primary-bg-subtle);border-color:var(--bs-primary-border-subtle);box-shadow:inset 0 -2px 0 var(--bs-primary)}
-            .ig-report-tabs ul label:hover{background:var(--bs-tertiary-bg);color:var(--bs-emphasis-color)}
-            .ig-report-form .ig-document-number{display:flex;justify-content:flex-end;align-items:center;gap:.6rem;padding:.35rem .75rem;margin:0 0 .65rem;border:1px solid var(--bs-border-color);border-radius:.45rem;background:var(--bs-tertiary-bg);font-weight:700}
-            .ig-report-form .ig-document-number strong{font-size:1.05rem;color:var(--bs-emphasis-color)}
-            .ig-report-form .ig-section-title{margin:.7rem 0 .35rem;padding:.25rem;text-align:center;font-weight:700;border-bottom:1px solid var(--bs-border-color)}
-            .ig-report-form .ig-row{grid-template-columns:minmax(190px,30%) minmax(0,1fr)}
-            .ig-report-form .ig-label{padding:.3rem .5rem}
-            .ig-report-form .ig-value{padding:.2rem .4rem}
-            .ig-report-form .form-control{min-height:30px;padding:.22rem .45rem}
-            .ig-report-form textarea.form-control{min-height:54px}
-        </style>";
+        self::renderStyles();
+        echo "<div class='card mb-3 ig-report-shell'><div class='card-header'><strong>" . self::e(__('Informes técnicos', 'informeglpi')) . '</strong></div><div class="card-body">';
+
         echo "<div class='ig-report-tabs'>";
         foreach (['new', 'drafts', 'approved'] as $tabKey) {
             echo "<input type='radio' name='ig_report_view' id='ig-tab-" . self::e($tabKey) . "' " . ($view === $tabKey ? 'checked' : '') . " style='position:absolute;opacity:0;pointer-events:none'>";
@@ -111,18 +93,9 @@ final class ReportTab extends CommonGLPI
         $fields = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
         $components = is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [];
 
-        echo "<style>
-            .ig-report-form .ig-section-title{font-weight:700;text-align:center;margin:1rem 0 .45rem;padding:.35rem;border-bottom:1px solid var(--bs-border-color)}
-            .ig-report-form .ig-row{display:grid;grid-template-columns:minmax(190px,30%) minmax(0,1fr);border-bottom:1px solid var(--bs-border-color);align-items:start}
-            .ig-report-form .ig-label{font-weight:600;padding:.38rem .55rem;background:var(--bs-tertiary-bg)}
-            .ig-report-form .ig-value{padding:.25rem .45rem;min-width:0}
-            .ig-report-form .form-control{min-height:32px;padding:.28rem .5rem}
-            .ig-report-form textarea.form-control{min-height:58px}
-            .ig-report-form .ig-asset-table{border:1px solid var(--bs-border-color);border-bottom:0}
-            @media(max-width:650px){.ig-report-form .ig-row{grid-template-columns:1fr}.ig-report-form .ig-label{padding-bottom:0}.ig-report-form .ig-value{padding-top:.15rem}}
-        </style>";
+
         echo "<div class='ig-report-form'>";
-        self::renderDocumentNumber($values['report_number'] ?? '');
+        self::renderDocumentHeader(ReportService::previewNextReportNumber());
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN DEL ACTIVO', 'informeglpi')) . '</div>';
         echo "<div class='ig-asset-table'>";
         $typeField = strtolower((new \ReflectionClass($item))->getShortName()) . 'types_id';
@@ -210,9 +183,52 @@ final class ReportTab extends CommonGLPI
         echo '</div>';
     }
 
-    private static function renderDocumentNumber($number): void
+    private static function renderDocumentHeader($number): void
     {
-        echo "<div class='ig-document-number'><span>" . self::e(__('NÚMERO DE DOCUMENTO', 'informeglpi')) . "</span><strong>" . self::e($number !== '' ? $number : __('Pendiente', 'informeglpi')) . "</strong></div>";
+        echo "<header class='ig-document-header'>";
+        echo "<div class='ig-document-number'><span>" . self::e(__('NÚMERO', 'informeglpi')) . "</span><strong>" . self::e($number !== '' ? $number : __('Pendiente', 'informeglpi')) . "</strong></div>";
+        echo "<h2>" . self::e(__('INFORME TECNICO DE ITEMS DE PROPIEDAD, PLANTA Y EQUIPOS', 'informeglpi')) . "</h2>";
+        echo '</header>';
+    }
+
+    private static function renderStyles(): void
+    {
+        echo "<style>
+        .ig-report-shell{--ig-yellow:#f4c542;--ig-yellow-dark:#d6a900;color:var(--bs-body-color)}
+        .ig-report-shell .card-header{font-weight:700;background:#f5f6f8}
+        .ig-report-tabs .ig-report-panel{display:none}
+        .ig-report-tabs #ig-tab-new:checked ~ .ig-report-panels #ig-panel-new,
+        .ig-report-tabs #ig-tab-drafts:checked ~ .ig-report-panels #ig-panel-drafts,
+        .ig-report-tabs #ig-tab-approved:checked ~ .ig-report-panels #ig-panel-approved{display:block}
+        .ig-report-tabs ul.nav{display:flex;gap:.45rem;flex-wrap:wrap;border-bottom:1px solid #d8dce2;padding:.15rem .15rem .55rem;margin:0 0 1rem}
+        .ig-report-tabs ul label{cursor:pointer;margin:0;border:1px solid #d9dde3;border-radius:.55rem;padding:.55rem 1rem;font-weight:650;color:#596273;background:#fff;transition:all .15s ease}
+        .ig-report-tabs #ig-tab-new:checked ~ ul label[for=ig-tab-new],
+        .ig-report-tabs #ig-tab-drafts:checked ~ ul label[for=ig-tab-drafts],
+        .ig-report-tabs #ig-tab-approved:checked ~ ul label[for=ig-tab-approved]{color:#29230e;background:var(--ig-yellow);border-color:var(--ig-yellow-dark);box-shadow:0 2px 5px rgba(0,0,0,.10)}
+        .ig-report-tabs ul label:hover{border-color:var(--ig-yellow-dark);background:#fff8df;color:#29230e}
+        .ig-report-form{max-width:1120px;margin:0 auto;padding:1.1rem 1.25rem;background:#fff;border:1px solid #d9dde3;border-radius:7px;box-shadow:0 2px 8px rgba(20,30,45,.045);font-family:Arial,Helvetica,sans-serif;color:#20242a}
+        .ig-report-form .ig-document-header{position:relative;padding:1.15rem .75rem 1rem;margin-bottom:1rem;border-bottom:2px solid #343a40}
+        .ig-report-form .ig-document-header h2{max-width:76%;margin:.7rem auto 0;text-align:center;font-size:1.12rem;line-height:1.35;font-weight:700;letter-spacing:.025em;color:#20242a}
+        .ig-report-form .ig-document-number{display:flex;justify-content:flex-end;align-items:center;gap:.6rem;font-size:.78rem;font-weight:700;color:#4b5563}
+        .ig-report-form .ig-document-number strong{font-size:.98rem;color:#20242a;border:1px solid #cfd4dc;background:#f7f8fa;border-radius:4px;padding:.28rem .55rem}
+        .ig-report-form .ig-section-title{margin:1.05rem 0 .45rem;padding:.45rem .55rem;text-align:center;font-size:.88rem;letter-spacing:.035em;font-weight:700;color:#252a31;background:#f0f1f3;border:1px solid #d8dce2;border-left:4px solid #d5aa19;border-radius:3px}
+        .ig-report-form .ig-row{display:grid;grid-template-columns:minmax(220px,31%) minmax(0,1fr);border-bottom:1px solid #e0e3e8;align-items:stretch}
+        .ig-report-form .ig-label{font-size:.8rem;line-height:1.4;font-weight:700;padding:.55rem .65rem;background:#f6f7f9;color:#333b46}
+        .ig-report-form .ig-value{padding:.38rem .55rem;min-width:0;font-size:.86rem;line-height:1.5;white-space:normal}
+        .ig-report-form .ig-asset-table{border:1px solid #d9dde3;border-bottom:0;border-radius:4px;overflow:hidden}
+        .ig-report-form .form-control,.ig-report-form .form-select{min-height:35px;padding:.38rem .55rem;border-color:#cbd1d9;border-radius:4px;font-size:.86rem}
+        .ig-report-form textarea.form-control{min-height:76px;line-height:1.45;resize:vertical}
+        .ig-report-form .form-control:focus,.ig-report-form .form-select:focus{border-color:#d3a914;box-shadow:0 0 0 .16rem rgba(244,197,66,.2)}
+        .ig-report-form .input-group-text{background:#f5f6f8;border-color:#cbd1d9}
+        .ig-report-form .btn-primary{background:#e7b92d;border-color:#d5a719;color:#29230e;font-weight:700}
+        .ig-report-form .btn-primary:hover{background:#d9aa1e;border-color:#c69a14;color:#201a08}
+        .ig-report-form .ig-evidence-area{background:#fafbfc}
+        .ig-edit-paper{max-width:1180px;margin:0 auto;background:#fdfdfd}
+        .ig-report-shell .table{font-size:.86rem}
+        .ig-report-shell .table thead th{background:#f2f3f5;color:#3b414b;font-weight:700;white-space:nowrap}
+        .ig-report-shell .btn-warning{background:var(--ig-yellow);border-color:var(--ig-yellow-dark);color:#29230e}
+        @media(max-width:700px){.ig-report-form{padding:.7rem}.ig-report-form .ig-document-header h2{max-width:100%;font-size:1rem}.ig-report-form .ig-row{grid-template-columns:1fr}.ig-report-form .ig-label{padding-bottom:.1rem}.ig-report-form .ig-value{padding-top:.2rem}}
+        </style>";
     }
 
     public static function renderEditPage(int $reportId): void
@@ -236,11 +252,13 @@ final class ReportTab extends CommonGLPI
         $isEditable = ($report->fields['status'] ?? '') === 'draft'
             && ($userId === (int) ($report->fields['users_id'] ?? 0) || \Session::haveRight(Report::$rightname, UPDATE));
 
-        echo "<div class='container-fluid mt-3'><div class='d-flex justify-content-between align-items-center mb-3'>";
+        self::renderStyles();
+        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'>";
         echo "<h2 class='h4 mb-0'>" . self::e(__('Editar informe técnico', 'informeglpi')) . "</h2>";
         echo "<a class='btn btn-outline-secondary btn-sm' href='" . self::e($item->getFormURLWithID($itemsId)) . "'>" . self::e(__('Volver al activo', 'informeglpi')) . "</a></div>";
-        echo "<div class='border rounded p-3'>";
-        self::renderDocumentNumber($report->fields['report_number'] ?? '');
+        echo "<div class='ig-edit-paper border rounded p-3'>";
+        echo "<div class='ig-report-form'>";
+        self::renderDocumentHeader($report->fields['report_number'] ?? '');
         echo "<div class='mb-2 text-muted'>" . self::e($item->getTypeName() . ' · ' . ($item->fields['name'] ?? '')) . "</div>";
         if ($isEditable) {
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
@@ -366,7 +384,7 @@ final class ReportTab extends CommonGLPI
             echo '<td>' . self::e($row['date_creation']) . '</td>';
             echo '<td>' . self::e(self::statusLabel((string) $row['status'])) . '</td>';
             echo '<td>' . self::e($row['creator_name'] ?? '—') . '</td>';
-            echo "<td><a class='btn btn-sm btn-outline-primary' href='" . self::e($openUrl) . "'>" . self::e(__('Editar / ver', 'informeglpi')) . '</a></td></tr>';
+            echo "<td><a class='btn btn-sm btn-warning' href='" . self::e($openUrl) . "'>" . self::e(__('Editar / ver', 'informeglpi')) . '</a></td></tr>';
         }
         echo '</tbody></table></div>';
     }
