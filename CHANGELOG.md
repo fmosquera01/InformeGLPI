@@ -1,3 +1,9 @@
+## 0.5.15
+
+- Replace server-navigation report tabs with in-place tab panels so all three views work inside the GLPI asset tab.
+- Add multi-image upload for JPG, PNG and WEBP, with mobile camera capture, local previews, MIME/size validation and private storage under GLPI_VAR_DIR.
+- Add authenticated photo viewing and evidence audit entries; photos are associated with the report and displayed in its detail view.
+
 ## 0.5.14
 
 - Bind the report preparer to the authenticated GLPI user; it can no longer be selected as another person's identity.
