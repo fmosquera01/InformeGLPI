@@ -41,61 +41,55 @@ final class ReportTab extends CommonGLPI
         }
 
         echo "<div class='card mb-3'><div class='card-header'><strong>" . self::e(__('Informes técnicos', 'informeglpi')) . '</strong></div><div class="card-body">';
-        echo "<ul class='nav nav-tabs mb-3' id='ig-report-tabs' role='tablist'>";
-        self::navLink('new', __('Nuevo', 'informeglpi'), $view);
-        self::navLink('drafts', __('Pendientes de revisión', 'informeglpi'), $view);
-        self::navLink('approved', __('Finalizados', 'informeglpi'), $view);
+        echo "<style>
+            .ig-report-tabs .ig-report-panel{display:none}
+            .ig-report-tabs #ig-tab-new:checked ~ .ig-report-panels #ig-panel-new,
+            .ig-report-tabs #ig-tab-drafts:checked ~ .ig-report-panels #ig-panel-drafts,
+            .ig-report-tabs #ig-tab-approved:checked ~ .ig-report-panels #ig-panel-approved{display:block}
+            .ig-report-tabs #ig-tab-new:checked ~ ul label[for=ig-tab-new],
+            .ig-report-tabs #ig-tab-drafts:checked ~ ul label[for=ig-tab-drafts],
+            .ig-report-tabs #ig-tab-approved:checked ~ ul label[for=ig-tab-approved]{color:var(--bs-nav-tabs-link-active-color);background:var(--bs-nav-tabs-link-active-bg);border-color:var(--bs-nav-tabs-link-active-border-color)}
+            .ig-report-tabs ul label{cursor:pointer;margin-bottom:-1px}
+        </style>";
+        echo "<div class='ig-report-tabs'>";
+        foreach (['new', 'drafts', 'approved'] as $tabKey) {
+            echo "<input type='radio' name='ig_report_view' id='ig-tab-" . self::e($tabKey) . "' " . ($view === $tabKey ? 'checked' : '') . " style='position:absolute;opacity:0;pointer-events:none'>";
+        }
+        echo "<ul class='nav nav-tabs mb-3' role='tablist'>";
+        self::navLink('new', __('Nuevo', 'informeglpi'));
+        self::navLink('drafts', __('Pendientes de revisión', 'informeglpi'));
+        self::navLink('approved', __('Finalizados', 'informeglpi'));
         echo '</ul>';
 
         $reportId = (int) ($_GET['report_id'] ?? 0);
-        echo "<div id='ig-panel-new' class='ig-report-panel' " . ($view !== 'new' ? 'hidden' : '') . ">";
+        echo "<div class='ig-report-panels'>";
+        echo "<div id='ig-panel-new' class='ig-report-panel'>";
         if (\Session::haveRight(Report::$rightname, CREATE)) {
             self::renderNewForm($itemtype, $itemsId);
         } else {
             echo "<div class='alert alert-warning mb-0'>" . self::e(__('No tiene permisos para crear informes técnicos.', 'informeglpi')) . '</div>';
         }
         echo '</div>';
-        echo "<div id='ig-panel-drafts' class='ig-report-panel' " . ($view !== 'drafts' ? 'hidden' : '') . ">";
+        echo "<div id='ig-panel-drafts' class='ig-report-panel'>";
         self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature']);
         if ($view === 'drafts' && $reportId > 0) {
             self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
         }
         echo '</div>';
-        echo "<div id='ig-panel-approved' class='ig-report-panel' " . ($view !== 'approved' ? 'hidden' : '') . ">";
+        echo "<div id='ig-panel-approved' class='ig-report-panel'>";
         self::renderReportList($itemtype, $itemsId, $tabUrl, ['finalized']);
         if ($view === 'approved' && $reportId > 0) {
             self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
         }
-        echo '</div>';
-        echo "<script>
-        (function () {
-            const root = document.getElementById('ig-report-tabs');
-            if (!root || root.dataset.bound === '1') return;
-            root.dataset.bound = '1';
-            root.addEventListener('click', function (event) {
-                const link = event.target.closest('[data-report-view]');
-                if (!link) return;
-                event.preventDefault();
-                const view = link.dataset.reportView;
-                root.querySelectorAll('[data-report-view]').forEach(function (item) {
-                    item.classList.toggle('active', item === link);
-                    item.setAttribute('aria-selected', item === link ? 'true' : 'false');
-                });
-                document.querySelectorAll('.ig-report-panel').forEach(function (panel) {
-                    panel.hidden = panel.id !== 'ig-panel-' + view;
-                });
-            });
-        })();
-        </script>";
+        echo '</div></div></div>";
 
         echo '</div></div>';
         return true;
     }
 
-    private static function navLink(string $key, string $label, string $active): void
+    private static function navLink(string $key, string $label): void
     {
-        $class = $active === $key ? 'nav-link active' : 'nav-link';
-        echo "<li class='nav-item' role='presentation'><a class='" . $class . "' href='#ig-panel-" . self::e($key) . "' data-report-view='" . self::e($key) . "' role='tab' aria-selected='" . ($active === $key ? 'true' : 'false') . "'>" . self::e($label) . '</a></li>';
+        echo "<li class='nav-item' role='presentation'><label class='nav-link' for='ig-tab-" . self::e($key) . "' role='tab'>" . self::e($label) . '</label></li>';
     }
 
     private static function renderNewForm(string $itemtype, int $itemsId): void
