@@ -314,4 +314,107 @@ final class ReportService
         }
     }
 
+
+    /**
+     * Store evidence photographs for a report. Files are kept below GLPI_VAR_DIR,
+     * outside the public web root, and are served only through evidence.php.
+     */
+    public static function addEvidence(int $reportId, array $files): int
+    {
+        global $DB;
+
+        $report = new Report();
+        if (!$report->getFromDB($reportId)) {
+            throw new RuntimeException(__('No se encontró el informe para adjuntar fotografías.', 'informeglpi'));
+        }
+        if (($report->fields['status'] ?? '') !== 'draft') {
+            throw new RuntimeException(__('Solo se pueden adjuntar fotografías mientras el informe está en borrador.', 'informeglpi'));
+        }
+        $userId = (int) Session::getLoginUserID();
+        if ($userId !== (int) ($report->fields['users_id'] ?? 0)
+            && !Session::haveRight(Report::$rightname, UPDATE)) {
+            throw new RuntimeException(__('No tiene permisos para adjuntar fotografías a este informe.', 'informeglpi'));
+        }
+
+        if (!isset($files['name']) || !is_array($files['name'])) {
+            return 0;
+        }
+        $count = count(array_filter($files['error'] ?? [], static fn($error) => (int) $error !== UPLOAD_ERR_NO_FILE));
+        if ($count > 8) {
+            throw new RuntimeException(__('Puede adjuntar un máximo de 8 fotografías por envío.', 'informeglpi'));
+        }
+
+        $baseDir = rtrim(GLPI_VAR_DIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '_plugins' . DIRECTORY_SEPARATOR . 'informeglpi' . DIRECTORY_SEPARATOR . 'evidences';
+        if (!is_dir($baseDir) && !mkdir($baseDir, 0750, true) && !is_dir($baseDir)) {
+            throw new RuntimeException(__('No se pudo crear el directorio privado de fotografías.', 'informeglpi'));
+        }
+
+        $allowed = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+        ];
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $saved = 0;
+
+        foreach ($files['name'] as $index => $originalName) {
+            $error = (int) ($files['error'][$index] ?? UPLOAD_ERR_NO_FILE);
+            if ($error === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+            if ($error !== UPLOAD_ERR_OK) {
+                throw new RuntimeException(__('Una fotografía no se pudo cargar correctamente (código ' . $error . ').', 'informeglpi'));
+            }
+
+            $tmpName = (string) ($files['tmp_name'][$index] ?? '');
+            $size = (int) ($files['size'][$index] ?? 0);
+            if ($size < 1 || $size > 8 * 1024 * 1024 || !is_uploaded_file($tmpName)) {
+                throw new RuntimeException(__('Cada fotografía debe pesar como máximo 8 MB.', 'informeglpi'));
+            }
+
+            $mime = (string) $finfo->file($tmpName);
+            if (!isset($allowed[$mime]) || @getimagesize($tmpName) === false) {
+                throw new RuntimeException(__('Formato de fotografía no permitido. Use JPG, PNG o WEBP.', 'informeglpi'));
+            }
+
+            $fileName = $reportId . '_' . bin2hex(random_bytes(16)) . '.' . $allowed[$mime];
+            $destination = $baseDir . DIRECTORY_SEPARATOR . $fileName;
+            if (!move_uploaded_file($tmpName, $destination)) {
+                throw new RuntimeException(__('No se pudo guardar una de las fotografías.', 'informeglpi'));
+            }
+            chmod($destination, 0640);
+            $relativePath = '_plugins/informeglpi/evidences/' . $fileName;
+
+            try {
+                $DB->insert('glpi_plugin_informeglopi_evidences', [
+                    'reports_id' => $reportId,
+                    'category' => 'general',
+                    'original_name' => mb_substr(basename((string) $originalName), 0, 255),
+                    'mime_type' => $mime,
+                    'file_path' => $relativePath,
+                    'sha256' => hash_file('sha256', $destination),
+                    'caption' => null,
+                    'users_id' => $userId,
+                ]);
+            } catch (Throwable $e) {
+                @unlink($destination);
+                throw $e;
+            }
+            $saved++;
+        }
+
+        if ($saved > 0) {
+            $DB->insert('glpi_plugin_informeglopi_history', [
+                'reports_id' => $reportId,
+                'action' => 'evidence_added',
+                'old_status' => 'draft',
+                'new_status' => 'draft',
+                'changes_json' => json_encode(['photos_added' => $saved], JSON_THROW_ON_ERROR),
+                'comment' => __('Se adjuntaron fotografías al informe.', 'informeglpi'),
+                'users_id' => $userId,
+            ]);
+        }
+        return $saved;
+    }
+
 }
