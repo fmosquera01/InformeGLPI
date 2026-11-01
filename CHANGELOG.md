@@ -1,3 +1,10 @@
+## 0.5.11
+
+- Replace the create-then-redirect flow with a visible New form inside the asset tab; a report is created only when the technician saves.
+- Add three internal views in the asset tab: New, Drafts, and Approved.
+- Open draft editing inline from the Drafts list without navigating to a separate report page.
+- Keep existing report records and snapshots; no schema changes or destructive migration.
+
 ## 0.5.10
 
 - Fix GLPI asset tab deep links by using the complete tab identifier (`ReportTab::$1`) when redirecting after creation and save.
