@@ -1,3 +1,8 @@
+## 0.5.7
+
+- Replace deprecated direct SQL calls in draft creation with GLPI's database query builder.
+- Keep annual sequence increments atomic and compatible with GLPI 11.
+
 ## 0.5.6
 
 - Load profile rights using a native GLPI Profile instance, avoiding queries against a nonexistent plugin-specific profiles table.
