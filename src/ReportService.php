@@ -47,8 +47,41 @@ final class ReportService
 
         $DB->beginTransaction();
         try {
-            $DB->query("INSERT IGNORE INTO glpi_plugin_informeglopi_sequences (year, last_number) VALUES ({$year}, 0)");
-            $DB->query("UPDATE glpi_plugin_informeglopi_sequences SET last_number = last_number + 1 WHERE year = {$year}");
+            $sequenceTable = 'glpi_plugin_informeglopi_sequences';
+            $sequenceExists = $DB->request([
+                'SELECT' => ['id'],
+                'FROM'   => $sequenceTable,
+                'WHERE'  => ['year' => $year],
+                'LIMIT'  => 1,
+            ])->count() > 0;
+
+            if (!$sequenceExists) {
+                try {
+                    $DB->insert($sequenceTable, [
+                        'year'        => $year,
+                        'last_number' => 0,
+                    ]);
+                } catch (Throwable $insertError) {
+                    // A concurrent request may have created this year's sequence first.
+                    $sequenceExists = $DB->request([
+                        'SELECT' => ['id'],
+                        'FROM'   => $sequenceTable,
+                        'WHERE'  => ['year' => $year],
+                        'LIMIT'  => 1,
+                    ])->count() > 0;
+
+                    if (!$sequenceExists) {
+                        throw $insertError;
+                    }
+                }
+            }
+
+            // Use GLPI's query builder expression for an atomic increment.
+            $DB->update(
+                $sequenceTable,
+                ['last_number' => new \QueryExpression('last_number + 1')],
+                ['year' => $year]
+            );
 
             $sequence = 0;
             foreach ($DB->request([
