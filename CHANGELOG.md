@@ -1,3 +1,10 @@
+## 0.5.8
+
+- Move report creation, data entry and report history into the asset's Informe Técnico tab.
+- Replace the intermediate creation page with a POST action that returns to the same asset and opens the newly created report.
+- Use independent GLPI CSRF tokens for each inline form to avoid token collisions between forms and other GLPI requests.
+- Present the internal draft state as “En preparación” in the interface.
+
 ## 0.5.7
 
 - Replace deprecated direct SQL calls in draft creation with GLPI's database query builder.
