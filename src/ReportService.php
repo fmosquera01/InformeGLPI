@@ -106,6 +106,7 @@ final class ReportService
                 'is_recursive' => $isRecursive,
                 'status' => 'draft',
                 'asset_snapshot' => $snapshotJson,
+                'report_date' => date('Y-m-d'),
                 'users_id' => $userId,
             ]);
 
@@ -145,6 +146,19 @@ final class ReportService
         }
     }
 
+    private static function assertActiveUser(int $userId): void
+    {
+        global $DB;
+        if ($userId < 1 || $DB->request([
+            'SELECT' => ['id'],
+            'FROM' => 'glpi_users',
+            'WHERE' => ['id' => $userId, 'is_active' => 1],
+            'LIMIT' => 1,
+        ])->count() === 0) {
+            throw new RuntimeException(__('Seleccione usuarios activos y válidos de GLPI para Para y De.', 'informeglpi'));
+        }
+    }
+
     public static function updateDraft(int $reportId, array $input): void
     {
         global $DB;
@@ -174,6 +188,26 @@ final class ReportService
             throw new RuntimeException(__('El informe ya no está en borrador y no puede modificarse desde este formulario.', 'informeglpi'));
         }
 
+        $recipients = array_values(array_unique(array_filter(array_map('intval', (array) ($input['recipients_ids'] ?? [])), static fn($id) => $id > 0)));
+        if ($recipients === []) {
+            throw new RuntimeException(__('Debe seleccionar al menos un destinatario en el campo Para.', 'informeglpi'));
+        }
+        foreach ($recipients as $recipientId) {
+            self::assertActiveUser($recipientId);
+        }
+
+        $preparedBy = (int) ($input['prepared_by_users_id'] ?? 0);
+        $reviewer = (int) ($input['reviewer_users_id'] ?? 0);
+        self::assertActiveUser($preparedBy);
+        self::assertActiveUser($reviewer);
+        if ($preparedBy === $reviewer) {
+            throw new RuntimeException(__('El técnico y el responsable que revisa deben ser usuarios distintos.', 'informeglpi'));
+        }
+        $subject = trim((string) ($input['subject'] ?? ''));
+        if ($subject === '') {
+            throw new RuntimeException(__('El asunto es obligatorio.', 'informeglpi'));
+        }
+
         $damageType = (string) ($input['damage_type'] ?? '');
         if (!in_array($damageType, ['', 'property_damage', 'wear'], true)) {
             throw new RuntimeException(__('El tipo de daño seleccionado no es válido.', 'informeglpi'));
@@ -192,6 +226,16 @@ final class ReportService
         $updates = [
             'damage_type' => $damageType !== '' ? $damageType : null,
             'book_value' => $bookValue,
+            'recipients_json' => json_encode($recipients, JSON_THROW_ON_ERROR),
+            'prepared_by_users_id' => $preparedBy,
+            'reviewer_users_id' => $reviewer,
+            'subject' => $subject,
+        ];
+        $changes['document_header'] = [
+            'recipients_ids' => $recipients,
+            'prepared_by_users_id' => $preparedBy,
+            'reviewer_users_id' => $reviewer,
+            'subject' => $subject,
         ];
         if ($bookValueChanged) {
             $updates['book_value_users_id'] = $bookValue !== null ? $userId : null;
