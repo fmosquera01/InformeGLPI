@@ -23,7 +23,7 @@ if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
 
 try {
     $reportId = ReportService::createDraft($itemtype, $itemsId);
-    $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class);
+    $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class . '$1');
     Session::addMessageAfterRedirect(__('Informe creado. Complete la información técnica en esta misma ficha.', 'informeglpi'), true, INFO);
     Html::redirect($tabUrl . '&report_id=' . $reportId);
     exit;
