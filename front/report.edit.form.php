@@ -30,5 +30,5 @@ try {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
 }
 $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class . '$1');
-Html::redirect($tabUrl . '&report_id=' . $reportId);
+Html::redirect($tabUrl . '&report_view=drafts&report_id=' . $reportId);
 exit;
