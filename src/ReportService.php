@@ -15,24 +15,24 @@ final class ReportService
         global $DB;
 
         if (!Session::haveRight(Report::$rightname, CREATE)) {
-            throw new RuntimeException(__('No tiene permisos para crear informes técnicos.', 'informeglopi'));
+            throw new RuntimeException(__('No tiene permisos para crear informes técnicos.', 'informeglpi'));
         }
         if (!AssetTypeRegistry::isSupported($itemtype) || !class_exists($itemtype)) {
-            throw new RuntimeException(__('Tipo de activo no permitido.', 'informeglopi'));
+            throw new RuntimeException(__('Tipo de activo no permitido.', 'informeglpi'));
         }
 
         /** @var CommonDBTM $item */
         $item = new $itemtype();
         if (!$item->getFromDB($itemsId)) {
-            throw new RuntimeException(__('No se encontró el activo seleccionado.', 'informeglopi'));
+            throw new RuntimeException(__('No se encontró el activo seleccionado.', 'informeglpi'));
         }
         if (!$item->can($itemsId, READ)) {
-            throw new RuntimeException(__('No tiene permisos para consultar este activo.', 'informeglopi'));
+            throw new RuntimeException(__('No tiene permisos para consultar este activo.', 'informeglpi'));
         }
 
         $userId = (int) Session::getLoginUserID();
         if ($userId < 1) {
-            throw new RuntimeException(__('No se pudo identificar al usuario de GLPI.', 'informeglopi'));
+            throw new RuntimeException(__('No se pudo identificar al usuario de GLPI.', 'informeglpi'));
         }
 
         $year = (int) date('Y');
@@ -61,7 +61,7 @@ final class ReportService
                 break;
             }
             if ($sequence < 1) {
-                throw new RuntimeException(__('No se pudo reservar el número correlativo del informe.', 'informeglopi'));
+                throw new RuntimeException(__('No se pudo reservar el número correlativo del informe.', 'informeglpi'));
             }
 
             $reportNumber = 'ITSIS' . $year . '-' . str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
@@ -87,7 +87,7 @@ final class ReportService
                 break;
             }
             if ($reportId < 1) {
-                throw new RuntimeException(__('No se pudo guardar el informe técnico.', 'informeglopi'));
+                throw new RuntimeException(__('No se pudo guardar el informe técnico.', 'informeglpi'));
             }
 
             $DB->insert('glpi_plugin_informeglopi_history', [
@@ -100,7 +100,7 @@ final class ReportService
                     'itemtype' => $itemtype,
                     'items_id' => $itemsId,
                 ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-                'comment' => __('Creación del borrador.', 'informeglopi'),
+                'comment' => __('Creación del borrador.', 'informeglpi'),
                 'users_id' => $userId,
             ]);
 
@@ -117,38 +117,38 @@ final class ReportService
         global $DB;
 
         if (!Session::haveRight(Report::$rightname, READ)) {
-            throw new RuntimeException(__('No tiene permisos para editar informes técnicos.', 'informeglopi'));
+            throw new RuntimeException(__('No tiene permisos para editar informes técnicos.', 'informeglpi'));
         }
 
         $report = new Report();
         if (!$report->getFromDB($reportId)) {
-            throw new RuntimeException(__('No se encontró el informe técnico.', 'informeglopi'));
+            throw new RuntimeException(__('No se encontró el informe técnico.', 'informeglpi'));
         }
         if (!Session::haveAccessToEntity(
             (int) ($report->fields['entities_id'] ?? -1),
             (bool) ($report->fields['is_recursive'] ?? false)
         )) {
-            throw new RuntimeException(__('No tiene acceso a la entidad de este informe.', 'informeglopi'));
+            throw new RuntimeException(__('No tiene acceso a la entidad de este informe.', 'informeglpi'));
         }
 
         $userId = (int) Session::getLoginUserID();
         $isCreator = $userId === (int) ($report->fields['users_id'] ?? 0);
         $canManage = Session::haveRight(Report::$rightname, UPDATE);
         if (!$isCreator && !$canManage) {
-            throw new RuntimeException(__('Solo el creador o un usuario con permiso de edición puede modificar este borrador.', 'informeglopi'));
+            throw new RuntimeException(__('Solo el creador o un usuario con permiso de edición puede modificar este borrador.', 'informeglpi'));
         }
         if (($report->fields['status'] ?? '') !== 'draft') {
-            throw new RuntimeException(__('El informe ya no está en borrador y no puede modificarse desde este formulario.', 'informeglopi'));
+            throw new RuntimeException(__('El informe ya no está en borrador y no puede modificarse desde este formulario.', 'informeglpi'));
         }
 
         $damageType = (string) ($input['damage_type'] ?? '');
         if (!in_array($damageType, ['', 'property_damage', 'wear'], true)) {
-            throw new RuntimeException(__('El tipo de daño seleccionado no es válido.', 'informeglopi'));
+            throw new RuntimeException(__('El tipo de daño seleccionado no es válido.', 'informeglpi'));
         }
 
         $bookValueRaw = trim((string) ($input['book_value'] ?? ''));
         if ($bookValueRaw !== '' && (!is_numeric($bookValueRaw) || (float) $bookValueRaw < 0)) {
-            throw new RuntimeException(__('El valor en libros debe ser un número mayor o igual a cero.', 'informeglopi'));
+            throw new RuntimeException(__('El valor en libros debe ser un número mayor o igual a cero.', 'informeglpi'));
         }
         $bookValue = $bookValueRaw === '' ? null : number_format((float) $bookValueRaw, 2, '.', '');
 
@@ -203,7 +203,7 @@ final class ReportService
                     'old_status' => 'draft',
                     'new_status' => 'draft',
                     'changes_json' => json_encode($changes, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-                    'comment' => __('Actualización de campos del borrador.', 'informeglopi'),
+                    'comment' => __('Actualización de campos del borrador.', 'informeglpi'),
                     'users_id' => $userId,
                 ]);
             }
