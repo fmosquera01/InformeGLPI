@@ -25,11 +25,11 @@ try {
     $reportId = ReportService::createDraft($itemtype, $itemsId);
     $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class);
     Session::addMessageAfterRedirect(__('Informe creado. Complete la información técnica en esta misma ficha.', 'informeglpi'), true, INFO);
-    Html::redirect($CFG_GLPI['root_doc'] . $tabUrl . '&report_id=' . $reportId);
+    Html::redirect($tabUrl . '&report_id=' . $reportId);
     exit;
 } catch (Throwable $e) {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
     $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class);
-    Html::redirect($CFG_GLPI['root_doc'] . $tabUrl);
+    Html::redirect($tabUrl);
     exit;
 }
