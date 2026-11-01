@@ -43,8 +43,8 @@ final class ReportTab extends CommonGLPI
         echo "<div class='card mb-3'><div class='card-header'><strong>" . self::e(__('Informes técnicos', 'informeglpi')) . '</strong></div><div class="card-body">';
         echo "<ul class='nav nav-tabs mb-3'>";
         self::navLink($tabUrl, 'new', __('Nuevo', 'informeglpi'), $view);
-        self::navLink($tabUrl, 'drafts', __('Borradores', 'informeglpi'), $view);
-        self::navLink($tabUrl, 'approved', __('Aprobados', 'informeglpi'), $view);
+        self::navLink($tabUrl, 'drafts', __('Pendientes de revisión', 'informeglpi'), $view);
+        self::navLink($tabUrl, 'approved', __('Finalizados', 'informeglpi'), $view);
         echo '</ul>';
 
         if ($view === 'new') {
@@ -222,18 +222,21 @@ final class ReportTab extends CommonGLPI
             'width' => '100%',
         ]);
         echo "<small class='text-muted'>" . self::e(__('Seleccione uno o varios destinatarios; mínimo uno obligatorio.', 'informeglpi')) . "</small></div></div>";
-        foreach (['prepared_by_users_id' => __('DE: TÉCNICO QUE ELABORA:', 'informeglpi'), 'reviewer_users_id' => __('DE: RESPONSABLE QUE REVISA:', 'informeglpi')] as $field => $label) {
-            $selected = (int) ($values[$field] ?? 0);
-            echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>";
-            echo \Dropdown::showFromArray($field, $users, [
-                'value' => $selected,
-                'display' => false,
-                'class' => 'form-select',
-                'width' => '100%',
-                'display_emptychoice' => true,
-            ]);
-            echo '</div></div>';
-        }
+        $preparedById = (int) ($values['prepared_by_users_id'] ?? \\Session::getLoginUserID());
+        $preparedByName = $preparedById > 0 ? getUserName($preparedById) : '';
+        echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('DE: TÉCNICO QUE ELABORA:', 'informeglpi')) . "</div><div class='ig-value'>" . self::e($preparedByName) . "</div></div>";
+        $field = 'reviewer_users_id';
+        $label = __('DE: RESPONSABLE QUE REVISA:', 'informeglpi');
+        $selected = (int) ($values[$field] ?? 0);
+        echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>";
+        echo \\Dropdown::showFromArray($field, $users, [
+            'value' => $selected,
+            'display' => false,
+            'class' => 'form-select',
+            'width' => '100%',
+            'display_emptychoice' => true,
+        ]);
+        echo '</div></div>';
         $subject = (string) ($values['subject'] ?? 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.');
         echo "<div class='ig-row'><label class='ig-label' for='ig_subject'>" . self::e(__('ASUNTO:', 'informeglpi')) . "</label><div class='ig-value'><input class='form-control' type='text' id='ig_subject' name='subject' required value='" . self::e($subject) . "'></div></div>";
         echo '</div>';
