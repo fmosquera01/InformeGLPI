@@ -425,14 +425,18 @@ final class ReportTab extends CommonGLPI
         }
         $itemtype = (string) ($report->fields['itemtype'] ?? '');
         $itemsId = (int) ($report->fields['items_id'] ?? 0);
-        if (!class_exists($itemtype) || !AssetTypeRegistry::isSupported($itemtype)
-            || !\Session::haveRight(Report::$rightname, READ)
-            || !\Session::haveAccessToEntity((int) ($report->fields['entities_id'] ?? -1), (bool) ($report->fields['is_recursive'] ?? false))) {
-            \Html::displayRightError();
+        $isManualPhone = $itemtype === 'ManualCellphone' && $itemsId === 0;
+        if ((!$isManualPhone && (!class_exists($itemtype) || !AssetTypeRegistry::isSupported($itemtype)))
+            || !\\Session::haveRight(Report::$rightname, READ)
+            || !\\Session::haveAccessToEntity((int) ($report->fields['entities_id'] ?? -1), (bool) ($report->fields['is_recursive'] ?? false))) {
+            \\Html::displayRightError();
         }
-        $item = new $itemtype();
-        if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
-            \Html::displayRightError();
+        $item = null;
+        if (!$isManualPhone) {
+            $item = new $itemtype();
+            if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
+                \\Html::displayRightError();
+            }
         }
         $userId = (int) \Session::getLoginUserID();
         $isEditable = ($report->fields['status'] ?? '') === 'draft'
