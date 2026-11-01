@@ -1,3 +1,8 @@
+## 0.5.24
+
+- Capture processor, RAM and storage hardware relations for GLPI Phone assets.
+- Display these technical details for Phone types “Hand Held” and “Tablet”; continue omitting network-card entries.
+
 ## 0.5.23
 
 - Present only relevant computer hardware details: processor, RAM, and storage; omit generic network-adapter entries.
