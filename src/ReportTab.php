@@ -81,7 +81,7 @@ final class ReportTab extends CommonGLPI
         if ($view === 'approved' && $reportId > 0) {
             self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
         }
-        echo '</div></div></div>";
+        echo '</div></div>';
 
         echo '</div></div>';
         return true;
