@@ -80,20 +80,20 @@ final class ReportTab extends CommonGLPI
 
     public static function renderManualPhonePage(): void
     {
-        if (!\\Session::haveRight(Report::$rightname, CREATE)) {
-            \\Html::displayRightError();
+        if (!\Session::haveRight(Report::$rightname, CREATE)) {
+            \Html::displayRightError();
         }
         self::renderStyles();
         echo "<div class='container-fluid mt-3 ig-report-shell'><div class='card'><div class='card-header'><strong>" . self::e(__('Nuevo informe de celular no registrado en GLPI', 'informeglpi')) . "</strong></div><div class='card-body'>";
         echo "<div class='alert alert-warning'>" . self::e(__('Esta opción es exclusiva para celulares que todavía no están registrados en GLPI. Si el celular ya existe en el inventario, el informe debe crearse desde su ficha.', 'informeglpi')) . "</div>";
         $assetHtml = self::renderManualPhoneInformation([], true);
         self::renderFieldsForm('/plugins/informeglpi/front/manual-phone.form.php', [
-            '_glpi_csrf_token' => \\Session::getNewCSRFToken(true),
+            '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
             'manual_cellphone' => '1',
         ], [
             'report_date' => date('Y-m-d'),
             'report_number' => ReportService::previewNextReportNumber(),
-            'prepared_by_users_id' => (int) \\Session::getLoginUserID(),
+            'prepared_by_users_id' => (int) \Session::getLoginUserID(),
             'subject' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.',
             'damage_type' => 'wear',
         ], $assetHtml);
@@ -427,15 +427,15 @@ final class ReportTab extends CommonGLPI
         $itemsId = (int) ($report->fields['items_id'] ?? 0);
         $isManualPhone = $itemtype === 'ManualCellphone' && $itemsId === 0;
         if ((!$isManualPhone && (!class_exists($itemtype) || !AssetTypeRegistry::isSupported($itemtype)))
-            || !\\Session::haveRight(Report::$rightname, READ)
-            || !\\Session::haveAccessToEntity((int) ($report->fields['entities_id'] ?? -1), (bool) ($report->fields['is_recursive'] ?? false))) {
-            \\Html::displayRightError();
+            || !\Session::haveRight(Report::$rightname, READ)
+            || !\Session::haveAccessToEntity((int) ($report->fields['entities_id'] ?? -1), (bool) ($report->fields['is_recursive'] ?? false))) {
+            \Html::displayRightError();
         }
         $item = null;
         if (!$isManualPhone) {
             $item = new $itemtype();
             if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
-                \\Html::displayRightError();
+                \Html::displayRightError();
             }
         }
         $userId = (int) \Session::getLoginUserID();
