@@ -105,7 +105,6 @@ final class ReportTab extends CommonGLPI
             'prepared_by_users_id' => (int) \Session::getLoginUserID(),
             'subject' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.',
         ], $assetHtml);
-        echo '</div>';
     }
 
     private static function renderAssetInformation(string $itemtype, array $fields, array $components): string
@@ -114,10 +113,11 @@ final class ReportTab extends CommonGLPI
 
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN DEL ACTIVO', 'informeglpi')) . '</div>';
         echo "<div class='ig-asset-table'>";
-        $typeField = strtolower((new \ReflectionClass($item))->getShortName()) . 'types_id';
-        $modelField = strtolower((new \ReflectionClass($item))->getShortName()) . 'models_id';
-        $typeClass = (new \ReflectionClass($item))->getShortName() . 'Type';
-        $modelClass = (new \ReflectionClass($item))->getShortName() . 'Model';
+        $shortName = (new \ReflectionClass($itemtype))->getShortName();
+        $typeField = strtolower($shortName) . 'types_id';
+        $modelField = strtolower($shortName) . 'models_id';
+        $typeClass = $shortName . 'Type';
+        $modelClass = $shortName . 'Model';
         $typeValue = isset($fields[$typeField]) && class_exists($typeClass)
             ? \Dropdown::getDropdownName($typeClass::getTable(), (int) $fields[$typeField])
             : '';
@@ -261,9 +261,6 @@ final class ReportTab extends CommonGLPI
         echo "<h2 class='h4 mb-0'>" . self::e(__('Editar informe técnico', 'informeglpi')) . "</h2>";
         echo "<a class='btn btn-outline-secondary btn-sm' href='" . self::e($item->getFormURLWithID($itemsId)) . "'>" . self::e(__('Volver al activo', 'informeglpi')) . "</a></div>";
         echo "<div class='ig-edit-paper border rounded p-3'>";
-        echo "<div class='ig-report-form'>";
-        self::renderDocumentHeader($report->fields['report_number'] ?? '');
-        echo "<div class='mb-2 text-muted'>" . self::e($item->getTypeName() . ' · ' . ($item->fields['name'] ?? '')) . "</div>";
         $snapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
         $snapshot = is_array($snapshot) ? $snapshot : [];
         $assetHtml = self::renderAssetInformation(
@@ -279,12 +276,13 @@ final class ReportTab extends CommonGLPI
         } else {
             echo "<div class='alert alert-warning mb-0'>" . self::e(__('Este informe no está disponible para edición con su usuario o su estado actual.', 'informeglpi')) . "</div>";
         }
-        echo '</div></div>';
+        echo '</div>';
     }
 
     private static function renderFieldsForm(string $action, array $hidden, array $values, string $assetHtml = ''): void
     {
         echo "<form class='ig-report-form' method='post' enctype='multipart/form-data' action='" . self::e($action) . "'>";
+        self::renderDocumentHeader($values['report_number'] ?? '');
         global $DB;
         $users = [];
         foreach ($DB->request(['SELECT' => ['id', 'name', 'realname', 'firstname'], 'FROM' => 'glpi_users', 'WHERE' => ['is_active' => 1], 'ORDER' => ['realname ASC', 'firstname ASC']]) as $user) {
