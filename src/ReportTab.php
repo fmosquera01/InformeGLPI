@@ -41,41 +41,61 @@ final class ReportTab extends CommonGLPI
         }
 
         echo "<div class='card mb-3'><div class='card-header'><strong>" . self::e(__('Informes técnicos', 'informeglpi')) . '</strong></div><div class="card-body">';
-        echo "<ul class='nav nav-tabs mb-3'>";
-        self::navLink($tabUrl, 'new', __('Nuevo', 'informeglpi'), $view);
-        self::navLink($tabUrl, 'drafts', __('Pendientes de revisión', 'informeglpi'), $view);
-        self::navLink($tabUrl, 'approved', __('Finalizados', 'informeglpi'), $view);
+        echo "<ul class='nav nav-tabs mb-3' id='ig-report-tabs' role='tablist'>";
+        self::navLink('new', __('Nuevo', 'informeglpi'), $view);
+        self::navLink('drafts', __('Pendientes de revisión', 'informeglpi'), $view);
+        self::navLink('approved', __('Finalizados', 'informeglpi'), $view);
         echo '</ul>';
 
-        if ($view === 'new') {
-            if (\Session::haveRight(Report::$rightname, CREATE)) {
-                self::renderNewForm($itemtype, $itemsId);
-            } else {
-                echo "<div class='alert alert-warning mb-0'>" . self::e(__('No tiene permisos para crear informes técnicos.', 'informeglpi')) . '</div>';
-            }
-        } elseif ($view === 'drafts') {
-            self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature']);
-            $reportId = (int) ($_GET['report_id'] ?? 0);
-            if ($reportId > 0) {
-                self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
-            }
+        $reportId = (int) ($_GET['report_id'] ?? 0);
+        echo "<div id='ig-panel-new' class='ig-report-panel' " . ($view !== 'new' ? 'hidden' : '') . ">";
+        if (\Session::haveRight(Report::$rightname, CREATE)) {
+            self::renderNewForm($itemtype, $itemsId);
         } else {
-            self::renderReportList($itemtype, $itemsId, $tabUrl, ['finalized']);
-            $reportId = (int) ($_GET['report_id'] ?? 0);
-            if ($reportId > 0) {
-                self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
-            }
+            echo "<div class='alert alert-warning mb-0'>" . self::e(__('No tiene permisos para crear informes técnicos.', 'informeglpi')) . '</div>';
         }
+        echo '</div>';
+        echo "<div id='ig-panel-drafts' class='ig-report-panel' " . ($view !== 'drafts' ? 'hidden' : '') . ">";
+        self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature']);
+        if ($view === 'drafts' && $reportId > 0) {
+            self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
+        }
+        echo '</div>';
+        echo "<div id='ig-panel-approved' class='ig-report-panel' " . ($view !== 'approved' ? 'hidden' : '') . ">";
+        self::renderReportList($itemtype, $itemsId, $tabUrl, ['finalized']);
+        if ($view === 'approved' && $reportId > 0) {
+            self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
+        }
+        echo '</div>';
+        echo "<script>
+        (function () {
+            const root = document.getElementById('ig-report-tabs');
+            if (!root || root.dataset.bound === '1') return;
+            root.dataset.bound = '1';
+            root.addEventListener('click', function (event) {
+                const link = event.target.closest('[data-report-view]');
+                if (!link) return;
+                event.preventDefault();
+                const view = link.dataset.reportView;
+                root.querySelectorAll('[data-report-view]').forEach(function (item) {
+                    item.classList.toggle('active', item === link);
+                    item.setAttribute('aria-selected', item === link ? 'true' : 'false');
+                });
+                document.querySelectorAll('.ig-report-panel').forEach(function (panel) {
+                    panel.hidden = panel.id !== 'ig-panel-' + view;
+                });
+            });
+        })();
+        </script>";
 
         echo '</div></div>';
         return true;
     }
 
-    private static function navLink(string $tabUrl, string $key, string $label, string $active): void
+    private static function navLink(string $key, string $label, string $active): void
     {
-        $url = $tabUrl . '&report_view=' . rawurlencode($key);
         $class = $active === $key ? 'nav-link active' : 'nav-link';
-        echo "<li class='nav-item'><a class='" . $class . "' href='" . self::e($url) . "'>" . self::e($label) . '</a></li>';
+        echo "<li class='nav-item' role='presentation'><a class='" . $class . "' href='#ig-panel-" . self::e($key) . "' data-report-view='" . self::e($key) . "' role='tab' aria-selected='" . ($active === $key ? 'true' : 'false') . "'>" . self::e($label) . '</a></li>';
     }
 
     private static function renderNewForm(string $itemtype, int $itemsId): void
@@ -193,7 +213,7 @@ final class ReportTab extends CommonGLPI
 
     private static function renderFieldsForm(string $action, array $hidden, array $values): void
     {
-        echo "<form class='ig-report-form' method='post' action='" . self::e($action) . "'>";
+        echo "<form class='ig-report-form' method='post' enctype='multipart/form-data' action='" . self::e($action) . "'>";
         global $DB;
         $users = [];
         foreach ($DB->request(['SELECT' => ['id', 'name', 'realname', 'firstname'], 'FROM' => 'glpi_users', 'WHERE' => ['is_active' => 1], 'ORDER' => ['realname ASC', 'firstname ASC']]) as $user) {
@@ -268,6 +288,15 @@ final class ReportTab extends CommonGLPI
             echo "<label class='form-check form-check-inline mb-0'><input class='form-check-input' type='radio' name='damage_type' value='" . self::e($value) . "' " . ($damage === $value ? 'checked' : '') . '><span class="form-check-label">' . self::e($label) . '</span></label>';
         }
         echo '</div></div></div>';
+        echo '<div class="ig-section-title">' . self::e(__('FOTOS DEL EQUIPO', 'informeglpi')) . '</div>';
+        echo "<div class='ig-asset-table p-2'>";
+        echo "<label class='form-label' for='ig_evidence_files'>" . self::e(__('Adjuntar fotografías (JPG, PNG o WEBP; máximo 8 archivos de 8 MB cada uno).', 'informeglpi')) . "</label>";
+        echo "<input class='form-control' type='file' id='ig_evidence_files' name='evidence_files[]' accept='image/jpeg,image/png,image/webp' capture='environment' multiple>";
+        echo "<div class='form-text'>" . self::e(__('Puede seleccionar varias fotos o tomar una fotografía desde un dispositivo móvil.', 'informeglpi')) . "</div>";
+        echo "<div id='ig-evidence-preview' class='d-flex flex-wrap gap-2 mt-2'></div></div>";
+        echo "<script>
+        (function(){const input=document.getElementById('ig_evidence_files');const preview=document.getElementById('ig-evidence-preview');if(!input||!preview)return;input.addEventListener('change',function(){preview.replaceChildren();Array.from(input.files||[]).forEach(function(file){if(!file.type.startsWith('image/'))return;const figure=document.createElement('div');figure.className='border rounded p-1';figure.style.width='120px';const img=document.createElement('img');img.src=URL.createObjectURL(file);img.alt=file.name;img.style.width='100%';img.style.height='85px';img.style.objectFit='cover';const name=document.createElement('small');name.textContent=file.name;name.style.display='block';name.style.overflowWrap='anywhere';figure.append(img,name);preview.append(figure);});});})();
+        </script>";
         echo "<div class='d-flex justify-content-end mt-2'><button type='submit' class='btn btn-primary btn-sm'>" . self::e(__('Guardar borrador', 'informeglpi')) . '</button></div>';
         echo '</form>';
     }
