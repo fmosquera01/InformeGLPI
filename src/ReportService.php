@@ -10,7 +10,7 @@ use Throwable;
 
 final class ReportService
 {
-    public static function createDraft(string $itemtype, int $itemsId): int
+    public static function createDraft(string $itemtype, int $itemsId, array $input = []): int
     {
         global $DB;
 
@@ -33,6 +33,25 @@ final class ReportService
         $userId = (int) Session::getLoginUserID();
         if ($userId < 1) {
             throw new RuntimeException(__('No se pudo identificar al usuario de GLPI.', 'informeglpi'));
+        }
+
+        $recipients = array_values(array_unique(array_filter(array_map('intval', (array) ($input['recipients_ids'] ?? [])), static fn($id) => $id > 0)));
+        if ($recipients === []) {
+            throw new RuntimeException(__('Debe seleccionar al menos un destinatario en el campo Para.', 'informeglpi'));
+        }
+        foreach ($recipients as $recipientId) {
+            self::assertActiveUser($recipientId);
+        }
+        $preparedBy = (int) ($input['prepared_by_users_id'] ?? 0);
+        $reviewer = (int) ($input['reviewer_users_id'] ?? 0);
+        self::assertActiveUser($preparedBy);
+        self::assertActiveUser($reviewer);
+        if ($preparedBy === $reviewer) {
+            throw new RuntimeException(__('El técnico y el responsable que revisa deben ser usuarios distintos.', 'informeglpi'));
+        }
+        $subject = trim((string) ($input['subject'] ?? ''));
+        if ($subject === '') {
+            throw new RuntimeException(__('El asunto es obligatorio.', 'informeglpi'));
         }
 
         $year = (int) date('Y');
@@ -107,6 +126,10 @@ final class ReportService
                 'status' => 'draft',
                 'asset_snapshot' => $snapshotJson,
                 'report_date' => date('Y-m-d'),
+                'recipients_json' => json_encode($recipients, JSON_THROW_ON_ERROR),
+                'prepared_by_users_id' => $preparedBy,
+                'reviewer_users_id' => $reviewer,
+                'subject' => $subject,
                 'users_id' => $userId,
             ]);
 
