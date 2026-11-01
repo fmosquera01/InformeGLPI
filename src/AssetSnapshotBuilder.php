@@ -58,8 +58,15 @@ final class AssetSnapshotBuilder
             }
         }
 
-        if ($itemtype === 'Computer') {
+        if (in_array($itemtype, ['Computer', 'Phone'], true)) {
+            // GLPI stores hardware-device relations against the generic
+            // itemtype/items_id pair. Capture CPU, RAM and storage for
+            // Hand Held and Tablet Phone types as well as Computers.
             foreach (self::DEVICE_RELATIONS as $key => $relationClass) {
+                if (!in_array($key, ['processors', 'memories', 'hard_drives'], true)
+                    && $itemtype === 'Phone') {
+                    continue;
+                }
                 $snapshot['components'][$key] = self::deviceRelations(
                     $relationClass,
                     $itemtype,
@@ -67,8 +74,10 @@ final class AssetSnapshotBuilder
                 );
             }
 
-            $snapshot['components']['disks'] = self::disks($itemtype, $itemsId);
-            $snapshot['components']['operating_systems'] = self::operatingSystems($itemtype, $itemsId);
+            if ($itemtype === 'Computer') {
+                $snapshot['components']['disks'] = self::disks($itemtype, $itemsId);
+                $snapshot['components']['operating_systems'] = self::operatingSystems($itemtype, $itemsId);
+            }
         }
 
         return $snapshot;
