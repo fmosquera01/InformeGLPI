@@ -43,7 +43,7 @@ final class ReportTab extends CommonGLPI
         echo '<strong>' . self::e(__('Informes técnicos del activo', 'informeglpi')) . '</strong>';
         if (\Session::haveRight(Report::$rightname, CREATE)) {
             echo "<form method='post' action='" . self::e($CFG_GLPI['root_doc'] . '/plugins/informeglpi/front/report.form.php') . "' class='m-0'>";
-            echo Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken()]);
+            echo Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
             echo Html::hidden('itemtype', ['value' => $itemtype]);
             echo Html::hidden('items_id', ['value' => $itemsId]);
             echo "<button type='submit' class='btn btn-primary btn-sm' onclick=\"this.disabled=true;this.form.submit();\">" . self::e(__('Crear informe', 'informeglpi')) . '</button>';
@@ -126,7 +126,7 @@ final class ReportTab extends CommonGLPI
         if ($isEditable) {
             $action = $CFG_GLPI['root_doc'] . '/plugins/informeglpi/front/report.edit.form.php';
             echo "<form method='post' action='" . self::e($action) . "'>";
-            echo Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken()]);
+            echo Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
             echo Html::hidden('id', ['value' => $reportId]);
             $fields = [
                 'book_value' => __('Valor en libros (USD)', 'informeglpi'),
