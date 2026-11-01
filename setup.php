@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Informe Técnico - Songa.
- * Internal plugin key and installation directory: informeglopi.
+ * Internal plugin key and installation directory: informeglpi.
  */
 
 define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.1');
@@ -15,11 +15,11 @@ require_once __DIR__ . '/src/ReportTab.php';
 require_once __DIR__ . '/src/AssetSnapshotBuilder.php';
 require_once __DIR__ . '/src/ReportService.php';
 
-function plugin_init_informeglopi(): void
+function plugin_init_informeglpi(): void
 {
     global $PLUGIN_HOOKS;
 
-    $PLUGIN_HOOKS['csrf_compliant']['informeglopi'] = true;
+    $PLUGIN_HOOKS['csrf_compliant']['informeglpi'] = true;
 
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
@@ -30,7 +30,7 @@ function plugin_init_informeglopi(): void
     ]);
 }
 
-function plugin_version_informeglopi(): array
+function plugin_version_informeglpi(): array
 {
     return [
         'name'         => 'Informe Técnico',
@@ -50,7 +50,7 @@ function plugin_version_informeglopi(): array
     ];
 }
 
-function plugin_informeglopi_check_prerequisites(): bool
+function plugin_informeglpi_check_prerequisites(): bool
 {
     if (!defined('GLPI_VERSION')) {
         return false;
@@ -60,7 +60,7 @@ function plugin_informeglopi_check_prerequisites(): bool
         && version_compare(GLPI_VERSION, '12.0.0', '<');
 }
 
-function plugin_informeglopi_check_config($verbose = false): bool
+function plugin_informeglpi_check_config($verbose = false): bool
 {
     return true;
 }
