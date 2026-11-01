@@ -46,13 +46,13 @@ Las relaciones se gestionan desde el plugin y no se crean claves foráneas hacia
 
 ## Estado de desarrollo
 
-**Versión 0.5.16 — identidad del elaborador asociada al usuario autenticado (en desarrollo).**
+**Versión 0.5.17 — correcciones para activos Computador, edición de borradores y previsualización del correlativo.**
 
 El formulario incorpora número correlativo, fecha automática de creación no editable, destinatarios múltiples de GLPI, técnico elaborador, revisor y asunto editable. Los usuarios se validan contra usuarios activos de GLPI. Código de activo usa el número de inventario; tipo, marca, modelo, serie, responsable, ubicación y fecha de compra se consultan desde el activo. El valor en libros permanece manual.
 
-Las fotografías con cámara móvil, firmas, flujo de aprobación y PDF institucional todavía están pendientes de implementación.
+La carga de fotografías JPG/PNG/WEBP, su almacenamiento privado y su visualización en el detalle del informe ya están implementados. Las firmas, el flujo de aprobación y el PDF institucional siguen pendientes.
 
-El formulario en la pestaña del activo presenta etiquetas a la izquierda y valores a la derecha, conserva los títulos del documento institucional y adapta su distribución a pantallas móviles. Esta versión todavía no completa fotografías, cámara, firmas ni PDF final.
+El formulario en la pestaña del activo presenta etiquetas a la izquierda y valores a la derecha, conserva los títulos del documento institucional y adapta su distribución a pantallas móviles. La carga de fotografías está disponible; las firmas, aprobación y PDF final continúan pendientes.
 
 
 
