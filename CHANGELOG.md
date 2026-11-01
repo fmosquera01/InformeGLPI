@@ -1,3 +1,7 @@
+## 0.5.21
+
+- Correct the standalone edit page container closure after sharing the same renderer with the creation form.
+
 ## 0.5.20
 
 - Remove the institutional report title from the interactive creation and edit forms; reserve it for the generated PDF.
