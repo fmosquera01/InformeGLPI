@@ -54,13 +54,13 @@ final class ReportTab extends CommonGLPI
                 echo "<div class='alert alert-warning mb-0'>" . self::e(__('No tiene permisos para crear informes técnicos.', 'informeglpi')) . '</div>';
             }
         } elseif ($view === 'drafts') {
-            self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft']);
+            self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature']);
             $reportId = (int) ($_GET['report_id'] ?? 0);
             if ($reportId > 0) {
                 self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
             }
         } else {
-            self::renderReportList($itemtype, $itemsId, $tabUrl, ['pending_technical_signature', 'pending_supervisor_signature', 'finalized']);
+            self::renderReportList($itemtype, $itemsId, $tabUrl, ['finalized']);
             $reportId = (int) ($_GET['report_id'] ?? 0);
             if ($reportId > 0) {
                 self::renderSelectedReport($reportId, $itemtype, $itemsId, $tabUrl);
@@ -155,7 +155,7 @@ final class ReportTab extends CommonGLPI
         $reports = self::loadReports($itemtype, $itemsId, $statuses);
         if ($reports === []) {
             $message = in_array('draft', $statuses, true)
-                ? __('No hay borradores para este activo.', 'informeglpi')
+                ? __('No hay borradores ni informes pendientes de firma para este activo.', 'informeglpi')
                 : __('No hay informes aprobados o pendientes de firma para este activo.', 'informeglpi');
             echo "<div class='alert alert-info mb-0'>" . self::e($message) . '</div>';
             return;
