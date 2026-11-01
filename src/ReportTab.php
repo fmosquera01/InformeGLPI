@@ -155,6 +155,12 @@ final class ReportTab extends CommonGLPI
 
     private static function renderFieldsForm(string $action, array $hidden, array $values): void
     {
+        global $DB;
+        $users = [];
+        foreach ($DB->request(['SELECT' => ['id', 'name', 'realname', 'firstname'], 'FROM' => 'glpi_users', 'WHERE' => ['is_active' => 1], 'ORDER' => ['realname ASC', 'firstname ASC']]) as $user) {
+            $label = trim((string) ($user['firstname'] ?? '') . ' ' . (string) ($user['realname'] ?? ''));
+            $users[(int) $user['id']] = $label !== '' ? $label : (string) $user['name'];
+        }
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO', 'informeglpi')) . '</div>';
         echo "<form class='ig-report-form' method='post' action='" . self::e($action) . "'>";
         foreach ($hidden as $name => $value) {
