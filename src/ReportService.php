@@ -333,6 +333,32 @@ final class ReportService
             'reviewer_users_id' => $reviewer,
             'subject' => $subject,
         ];
+
+        if (($report->fields['itemtype'] ?? '') === 'ManualCellphone' && (int) ($report->fields['items_id'] ?? -1) === 0) {
+            $manual = is_array($input['manual_asset'] ?? null) ? $input['manual_asset'] : [];
+            foreach (['asset_code', 'manufacturer', 'model', 'serial', 'responsible', 'area'] as $required) {
+                if (trim((string) ($manual[$required] ?? '')) === '') {
+                    throw new RuntimeException(__('Complete código de activo, marca, modelo, IMEI, usuario responsable y área.', 'informeglpi'));
+                }
+            }
+            $imei = trim((string) $manual['serial']);
+            if (!preg_match('/^[0-9]{14,16}$/', $imei)) {
+                throw new RuntimeException(__('La serie debe corresponder al IMEI numérico del celular (14 a 16 dígitos).', 'informeglpi'));
+            }
+            if ($DB->tableExists('glpi_phones') && $DB->request([
+                'SELECT' => ['id'], 'FROM' => 'glpi_phones',
+                'WHERE' => ['serial' => $imei], 'LIMIT' => 1,
+            ])->count() > 0) {
+                throw new RuntimeException(__('Este IMEI ya está registrado en GLPI. Debe utilizar el informe del activo inventariado.', 'informeglpi'));
+            }
+            $oldSnapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
+            $newSnapshot = self::buildManualCellphoneSnapshot($manual);
+            $updates['asset_snapshot'] = json_encode($newSnapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+            $changes['manual_asset'] = [
+                'before' => is_array($oldSnapshot['fields'] ?? null) ? $oldSnapshot['fields'] : [],
+                'after' => $newSnapshot['fields'],
+            ];
+        }
         if ($bookValueChanged) {
             $updates['book_value_users_id'] = $bookValue !== null ? $userId : null;
             $updates['book_value_date'] = $bookValue !== null ? date('Y-m-d H:i:s') : null;
