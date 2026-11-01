@@ -1,3 +1,7 @@
+## 0.5.4
+
+- Submit the plugin profile-rights matrix to GLPI's native Profile form endpoint instead of resolving the plugin subclass form URL.
+
 ## 0.5.3
 
 - Make native profile-right registration idempotent to prevent duplicate-key errors during installation and upgrades.
