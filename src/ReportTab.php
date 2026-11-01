@@ -23,8 +23,6 @@ final class ReportTab extends CommonGLPI
 
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
-        global $CFG_GLPI;
-
         if (!AssetTypeRegistry::isSupported($item::class)) {
             return true;
         }
@@ -42,8 +40,8 @@ final class ReportTab extends CommonGLPI
         echo "<div class='card mb-3'><div class='card-header d-flex justify-content-between align-items-center'>";
         echo '<strong>' . self::e(__('Informes técnicos del activo', 'informeglpi')) . '</strong>';
         if (\Session::haveRight(Report::$rightname, CREATE)) {
-            echo "<form method='post' action='" . self::e($CFG_GLPI['root_doc'] . '/plugins/informeglpi/front/report.form.php') . "' class='m-0'>";
-            echo Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
+            echo "<form method='post' action='" . self::e('/' . Plugin::getWebDir('informeglpi', false) . '/front/report.form.php') . "' class='m-0'>";
+            echo \Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
             echo Html::hidden('itemtype', ['value' => $itemtype]);
             echo Html::hidden('items_id', ['value' => $itemsId]);
             echo "<button type='submit' class='btn btn-primary btn-sm' onclick=\"this.disabled=true;this.form.submit();\">" . self::e(__('Crear informe', 'informeglpi')) . '</button>';
@@ -72,7 +70,7 @@ final class ReportTab extends CommonGLPI
                 echo '<td>' . self::e($row['date_creation']) . '</td>';
                 echo '<td>' . self::e(self::statusLabel((string) $row['status'])) . '</td>';
                 echo '<td>' . self::e($row['creator_name'] ?? '—') . '</td>';
-                echo "<td><a class='btn btn-sm btn-outline-primary' href='" . self::e($CFG_GLPI['root_doc'] . $openUrl) . "'>" . self::e(__('Abrir', 'informeglpi')) . '</a></td></tr>';
+                echo "<td><a class='btn btn-sm btn-outline-primary' href='" . self::e($openUrl) . "'>" . self::e(__('Abrir', 'informeglpi')) . '</a></td></tr>';
             }
             echo '</tbody></table></div>';
         }
@@ -82,7 +80,6 @@ final class ReportTab extends CommonGLPI
 
     private static function renderSelectedReport(int $reportId, string $itemtype, int $itemsId, string $tabUrl): void
     {
-        global $CFG_GLPI;
         $report = new Report();
         if (!$report->getFromDB($reportId)
             || ($report->fields['itemtype'] ?? '') !== $itemtype
@@ -124,7 +121,7 @@ final class ReportTab extends CommonGLPI
 
         echo '<h5 class="mt-4">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO', 'informeglpi')) . '</h5>';
         if ($isEditable) {
-            $action = $CFG_GLPI['root_doc'] . '/plugins/informeglpi/front/report.edit.form.php';
+            $action = '/' . Plugin::getWebDir('informeglpi', false) . '/front/report.edit.form.php';
             echo "<form method='post' action='" . self::e($action) . "'>";
             echo Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
             echo Html::hidden('id', ['value' => $reportId]);
@@ -152,7 +149,7 @@ final class ReportTab extends CommonGLPI
             }
             echo '</fieldset>';
             echo "<button type='submit' class='btn btn-primary'>" . self::e(__('Guardar informe', 'informeglpi')) . '</button> ';
-            echo "<a class='btn btn-secondary' href='" . self::e($CFG_GLPI['root_doc'] . $tabUrl) . "'>" . self::e(__('Cerrar formulario', 'informeglpi')) . '</a>';
+            echo "<a class='btn btn-secondary' href='" . self::e($tabUrl) . "'>" . self::e(__('Cerrar formulario', 'informeglpi')) . '</a>';
             echo '</form>';
         } else {
             echo "<div class='alert alert-secondary'>" . self::e(__('Este informe ya no está en edición. La descarga PDF estará disponible cuando haya sido firmado y finalizado.', 'informeglpi')) . '</div>';
