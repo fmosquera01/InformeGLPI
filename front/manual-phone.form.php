@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use GlpiPlugin\\Informeglopi\\ReportService;
+use GlpiPlugin\Informeglopi\ReportService;
 
 include('../../../inc/includes.php');
 Session::checkLoginUser();
