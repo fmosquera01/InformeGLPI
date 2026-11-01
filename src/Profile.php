@@ -14,12 +14,12 @@ use Session;
 final class Profile extends \Profile
 {
     // CommonGLPI declares $rightname without a type; keep the same declaration.
-    public static $rightname = 'plugin_informeglopi';
+    public static $rightname = 'plugin_informeglpi';
 
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
         if ($item instanceof \Profile && (int) $item->getField('id') > 0) {
-            return self::createTabEntry(__('Informe Técnico', 'informeglopi'));
+            return self::createTabEntry(__('Informe Técnico', 'informeglpi'));
         }
 
         return '';
@@ -51,19 +51,19 @@ final class Profile extends \Profile
         $rights = [
             [
                 'itemtype' => Report::class,
-                'label'    => __('Informes técnicos', 'informeglopi'),
+                'label'    => __('Informes técnicos', 'informeglpi'),
                 'field'    => self::$rightname,
             ],
             [
                 'itemtype' => Report::class,
-                'label'    => __('Aprobar y finalizar informes', 'informeglopi'),
-                'field'    => 'plugin_informeglopi_validate',
+                'label'    => __('Aprobar y finalizar informes', 'informeglpi'),
+                'field'    => 'plugin_informeglpi_validate',
             ],
         ];
 
         $this->displayRightsChoiceMatrix($rights, [
             'canedit' => $canEdit,
-            'title'   => __('Derechos de Informe Técnico', 'informeglopi'),
+            'title'   => __('Derechos de Informe Técnico', 'informeglpi'),
         ]);
 
         if ($canEdit) {
