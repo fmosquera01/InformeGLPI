@@ -1,3 +1,11 @@
+## 0.5.13
+
+- Add institutional document header fields: annual report number display, fixed creation date, GLPI recipients, preparer, reviewer, and editable subject.
+- Validate active GLPI users and require at least one recipient plus two distinct signatories before reserving the report sequence.
+- Resolve inventory number, asset type, manufacturer, model, assigned user, location, and purchase date from the asset record for the form.
+- Improve component display for processor, memory, and disk information.
+- Add non-destructive schema migration for document header metadata.
+
 ## 0.5.12
 
 - Reorganize the inline form to follow the institutional Word layout: fixed labels on the left, values/inputs on the right, and centered section titles.
