@@ -78,6 +78,60 @@ final class ReportTab extends CommonGLPI
         echo "<li class='nav-item' role='presentation'><label class='nav-link' for='ig-tab-" . self::e($key) . "' role='tab'>" . self::e($label) . '</label></li>';
     }
 
+    public static function renderManualPhonePage(): void
+    {
+        if (!\\Session::haveRight(Report::$rightname, CREATE)) {
+            \\Html::displayRightError();
+        }
+        self::renderStyles();
+        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='card'><div class='card-header'><strong>" . self::e(__('Nuevo informe de celular no registrado en GLPI', 'informeglpi')) . "</strong></div><div class='card-body'>";
+        echo "<div class='alert alert-warning'>" . self::e(__('Esta opción es exclusiva para celulares que todavía no están registrados en GLPI. Si el celular ya existe en el inventario, el informe debe crearse desde su ficha.', 'informeglpi')) . "</div>";
+        $assetHtml = self::renderManualPhoneInformation([], true);
+        self::renderFieldsForm('/plugins/informeglpi/front/manual-phone.form.php', [
+            '_glpi_csrf_token' => \\Session::getNewCSRFToken(true),
+            'manual_cellphone' => '1',
+        ], [
+            'report_date' => date('Y-m-d'),
+            'report_number' => ReportService::previewNextReportNumber(),
+            'prepared_by_users_id' => (int) \\Session::getLoginUserID(),
+            'subject' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.',
+            'damage_type' => 'wear',
+        ], $assetHtml);
+        echo '</div></div></div>';
+    }
+
+    private static function renderManualPhoneInformation(array $fields, bool $editable): string
+    {
+        ob_start();
+        echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN DEL ACTIVO', 'informeglpi')) . '</div>';
+        echo "<div class='ig-asset-table'>";
+        echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('TIPO:', 'informeglpi')) . "</div><div class='ig-value'><strong>CELULAR</strong></div></div>";
+        $rows = [
+            'asset_code' => __('CÓDIGO DE ACTIVO:', 'informeglpi'),
+            'description' => __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi'),
+            'purchase_date' => __('FECHA DE COMPRA:', 'informeglpi'),
+            'manufacturer' => __('MARCA:', 'informeglpi'),
+            'model' => __('MODELO:', 'informeglpi'),
+            'serial' => __('SERIE (IMEI):', 'informeglpi'),
+            'responsible' => __('USUARIO RESPONSABLE:', 'informeglpi'),
+            'area' => __('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', 'informeglpi'),
+        ];
+        foreach ($rows as $key => $label) {
+            $value = (string) ($fields[$key] ?? '');
+            echo "<div class='ig-row'><label class='ig-label' for='manual_asset_" . self::e($key) . "'>" . self::e($label) . "</label><div class='ig-value'>";
+            if ($editable) {
+                $type = $key === 'purchase_date' ? 'date' : 'text';
+                $required = in_array($key, ['asset_code', 'manufacturer', 'model', 'serial', 'responsible', 'area'], true) ? ' required' : '';
+                echo "<input class='form-control' type='" . $type . "' id='manual_asset_" . self::e($key) . "' name='manual_asset[" . self::e($key) . "]' value='" . self::e($value) . "'" . $required . ">";
+            } else {
+                echo nl2br(self::e($value !== '' ? $value : '—'));
+            }
+            echo '</div></div>';
+        }
+        echo '</div>';
+        return (string) ob_get_clean();
+    }
+
     private static function renderNewForm(string $itemtype, int $itemsId): void
     {
         if (!class_exists($itemtype)) {
