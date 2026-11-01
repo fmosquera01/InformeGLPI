@@ -1,3 +1,9 @@
+## 0.5.10
+
+- Fix GLPI asset tab deep links by using the complete tab identifier (`ReportTab::$1`) when redirecting after creation and save.
+- Use GLPI 11 plugin URLs (`/plugins/informeglpi/...`) instead of the deprecated `Plugin::getWebDir()` helper.
+- Keep standalone CSRF tokens on POST forms; GLPI 11.0 listener validates `_glpi_csrf_token` for non-AJAX POST requests.
+
 ## 0.5.9
 
 - Fix namespaced GLPI `Html` calls in the asset tab.
