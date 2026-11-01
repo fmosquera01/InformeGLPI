@@ -1,3 +1,9 @@
+## 0.5.18
+
+- Open existing draft reports in a dedicated edit view so GLPI tab AJAX cannot drop the selected report ID and show a blank New form.
+- Keep the user on the same edited report after saving.
+- Improve tab styling, reduce form spacing, remove the explanatory alert, and move the document number to the top.
+
 ## 0.5.17
 
 - Fix Computer asset snapshot when resolving the global GLPI `Item_Disk` class.
