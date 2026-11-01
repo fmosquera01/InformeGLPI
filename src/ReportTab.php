@@ -445,7 +445,11 @@ final class ReportTab extends CommonGLPI
         self::renderStyles();
         echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'>";
         echo "<h2 class='h4 mb-0'>" . self::e(__('Editar informe técnico', 'informeglpi')) . "</h2>";
-        echo "<a class='btn btn-outline-secondary btn-sm' href='" . self::e($item->getFormURLWithID($itemsId)) . "'>" . self::e(__('Volver al activo', 'informeglpi')) . "</a></div>";
+        if ($isManualPhone) {
+            echo "<a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/manual-phone.php'>" . self::e(__('Volver a celulares no registrados', 'informeglpi')) . "</a></div>";
+        } else {
+            echo "<a class='btn btn-outline-secondary btn-sm' href='" . self::e($item->getFormURLWithID($itemsId)) . "'>" . self::e(__('Volver al activo', 'informeglpi')) . "</a></div>";
+        }
         echo "<div class='ig-edit-paper border rounded p-3'>";
         $snapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
         $snapshot = is_array($snapshot) ? $snapshot : [];
