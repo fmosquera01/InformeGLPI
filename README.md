@@ -46,7 +46,7 @@ Las relaciones se gestionan desde el plugin y no se crean claves foráneas hacia
 
 ## Estado de desarrollo
 
-**Versión 0.5.17 — correcciones para activos Computador, edición de borradores y previsualización del correlativo.**
+**Versión 0.5.18 — correcciones para activos Computador, edición de borradores y previsualización del correlativo.**
 
 El formulario incorpora número correlativo, fecha automática de creación no editable, destinatarios múltiples de GLPI, técnico elaborador, revisor y asunto editable. Los usuarios se validan contra usuarios activos de GLPI. Código de activo usa el número de inventario; tipo, marca, modelo, serie, responsable, ubicación y fecha de compra se consultan desde el activo. El valor en libros permanece manual.
 
