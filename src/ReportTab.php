@@ -227,6 +227,16 @@ final class ReportTab extends CommonGLPI
         .ig-report-form .btn-primary{background:#e7b92d;border-color:#d5a719;color:#29230e;font-weight:700}
         .ig-report-form .btn-primary:hover{background:#d9aa1e;border-color:#c69a14;color:#201a08}
         .ig-report-form .ig-evidence-area{background:#fafbfc}
+        .ig-report-form .ig-evidence-upload{margin-top:.65rem;background:#fafbfc;border:1px dashed #c8ced7;border-radius:5px}
+        .ig-report-form .ig-evidence-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:.7rem;margin:.65rem 0 1rem}
+        .ig-report-form .ig-evidence-card{min-width:0;border:1px solid #d9dde3;border-radius:6px;background:#fff;padding:.4rem;box-shadow:0 1px 3px rgba(20,30,45,.05)}
+        .ig-report-form .ig-evidence-card img{display:block;width:100%;height:118px;object-fit:cover;border-radius:4px;background:#f2f3f5}
+        .ig-report-form .ig-evidence-card small{display:block;margin-top:.35rem;color:#596273;overflow-wrap:anywhere;line-height:1.3}
+        .ig-report-form .ig-evidence-empty{padding:.75rem;border:1px dashed #d9dde3;border-radius:5px;color:#687385;background:#fafbfc;font-size:.84rem}
+        .ig-report-form .ig-document-header{padding:.75rem .7rem;margin-bottom:.7rem;background:linear-gradient(90deg,#fff 0%,#fafbfc 100%)}
+        .ig-report-form .ig-section-title{margin:1rem 0 .4rem;padding:.48rem .65rem;text-align:left;border-left-width:5px}
+        .ig-report-form .ig-row{grid-template-columns:minmax(205px,29%) minmax(0,1fr)}
+        .ig-report-form .ig-label{display:flex;align-items:center}
         .ig-edit-paper{max-width:1180px;margin:0 auto;background:#fdfdfd}
         .ig-report-shell .table{font-size:.86rem}
         .ig-report-shell .table thead th{background:#f2f3f5;color:#3b414b;font-weight:700;white-space:nowrap}
@@ -277,6 +287,48 @@ final class ReportTab extends CommonGLPI
             echo "<div class='alert alert-warning mb-0'>" . self::e(__('Este informe no está disponible para edición con su usuario o su estado actual.', 'informeglpi')) . "</div>";
         }
         echo '</div></div>';
+    }
+
+    /**
+     * Display evidence already persisted for this report while editing.
+     * The original files remain private and are streamed through evidence.php.
+     */
+    private static function renderEvidenceGallery(int $reportId): void
+    {
+        global $DB;
+
+        $rows = [];
+        foreach ($DB->request([
+            'SELECT' => ['id', 'original_name', 'date_creation', 'caption'],
+            'FROM' => 'glpi_plugin_informeglopi_evidences',
+            'WHERE' => ['reports_id' => $reportId],
+            'ORDER' => ['date_creation ASC', 'id ASC'],
+        ]) as $row) {
+            $rows[] = $row;
+        }
+
+        if ($rows === []) {
+            echo "<div class='ig-evidence-empty'>" . self::e(__('Todavía no hay fotografías guardadas en este informe.', 'informeglpi')) . '</div>';
+            return;
+        }
+
+        echo "<div class='ig-evidence-gallery' aria-label='" . self::e(__('Fotografías guardadas', 'informeglpi')) . "'>";
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id < 1) {
+                continue;
+            }
+            $url = '/plugins/informeglpi/front/evidence.php?id=' . $id;
+            $name = (string) ($row['caption'] ?: $row['original_name'] ?: __('Fotografía', 'informeglpi'));
+            echo "<figure class='ig-evidence-card mb-0'>";
+            echo "<a href='" . self::e($url) . "' target='_blank' rel='noopener noreferrer'>";
+            echo "<img src='" . self::e($url) . "' alt='" . self::e($name) . "' loading='lazy'>";
+            echo '</a>';
+            echo '<figcaption><small>' . self::e($name) . '</small></figcaption>';
+            echo '</figure>';
+        }
+        echo '</div>';
+        echo "<div class='form-text mb-2'>" . self::e(__('Las fotografías guardadas se conservan. Las nuevas imágenes que seleccione se añadirán al informe.', 'informeglpi')) . '</div>';
     }
 
     private static function renderFieldsForm(string $action, array $hidden, array $values, string $assetHtml = ''): void
@@ -357,8 +409,12 @@ final class ReportTab extends CommonGLPI
         }
         echo '</div></div></div>';
         echo '<div class="ig-section-title">' . self::e(__('FOTOS DEL EQUIPO', 'informeglpi')) . '</div>';
-        echo "<div class='ig-asset-table p-2'>";
-        echo "<label class='form-label' for='ig_evidence_files'>" . self::e(__('Adjuntar fotografías (JPG, PNG o WEBP; máximo 8 archivos de 8 MB cada uno).', 'informeglpi')) . "</label>";
+        $reportId = (int) ($values['id'] ?? 0);
+        if ($reportId > 0) {
+            self::renderEvidenceGallery($reportId);
+        }
+        echo "<div class='ig-asset-table p-2 ig-evidence-upload'>";
+        echo "<label class='form-label' for='ig_evidence_files'>" . self::e(__('Agregar fotografías (JPG, PNG o WEBP; máximo 8 por envío, 8 MB cada una).', 'informeglpi')) . "</label>";
         echo "<input class='form-control' type='file' id='ig_evidence_files' name='evidence_files[]' accept='image/jpeg,image/png,image/webp' capture='environment' multiple>";
         echo "<div class='form-text'>" . self::e(__('Puede seleccionar varias fotos o tomar una fotografía desde un dispositivo móvil.', 'informeglpi')) . "</div>";
         echo "<div id='ig-evidence-preview' class='d-flex flex-wrap gap-2 mt-2'></div></div>";
