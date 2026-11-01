@@ -1,3 +1,8 @@
+## 0.5.23
+
+- Present only relevant computer hardware details: processor, RAM, and storage; omit generic network-adapter entries.
+- Format component descriptions using their technical designation and suppress placeholder asset codes such as “No Asset Information”.
+
 ## 0.5.22
 
 - Show previously uploaded equipment photos in the report edit form; adding new photos no longer hides existing evidence.
