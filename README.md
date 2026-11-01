@@ -46,7 +46,7 @@ Las relaciones se gestionan desde el plugin y no se crean claves foráneas hacia
 
 ## Estado de desarrollo
 
-**Versión 0.5.20 — orden del documento Word y estructura idéntica en creación y edición; título institucional reservado para el PDF.**
+**Versión 0.5.21 — ajuste de presentación compartida en edición y creación conforme al Word.**
 
 El formulario incorpora número correlativo, fecha automática de creación no editable, destinatarios múltiples de GLPI, técnico elaborador, revisor y asunto editable. Los usuarios se validan contra usuarios activos de GLPI. Código de activo usa el número de inventario; tipo, marca, modelo, serie, responsable, ubicación y fecha de compra se consultan desde el activo. El valor en libros permanece manual.
 
