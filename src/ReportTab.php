@@ -90,12 +90,28 @@ final class ReportTab extends CommonGLPI
         }
 
         $snapshot = AssetSnapshotBuilder::build($item);
-        $fields = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
-        $components = is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [];
+        $assetHtml = self::renderAssetInformation(
+            $itemtype,
+            is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [],
+            is_array($snapshot['components'] ?? null) ? $snapshot['components'] : []
+        );
+        self::renderFieldsForm('/plugins/informeglpi/front/report.form.php', [
+            '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
+            'itemtype' => $itemtype,
+            'items_id' => $itemsId,
+        ], [
+            'report_date' => date('Y-m-d'),
+            'report_number' => ReportService::previewNextReportNumber(),
+            'prepared_by_users_id' => (int) \Session::getLoginUserID(),
+            'subject' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.',
+        ], $assetHtml);
+        echo '</div>';
+    }
 
+    private static function renderAssetInformation(string $itemtype, array $fields, array $components): string
+    {
+        ob_start();
 
-        echo "<div class='ig-report-form'>";
-        self::renderDocumentHeader(ReportService::previewNextReportNumber());
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN DEL ACTIVO', 'informeglpi')) . '</div>';
         echo "<div class='ig-asset-table'>";
         $typeField = strtolower((new \ReflectionClass($item))->getShortName()) . 'types_id';
@@ -170,24 +186,13 @@ final class ReportTab extends CommonGLPI
             }
         }
         echo '</div>';
-        self::renderFieldsForm('/plugins/informeglpi/front/report.form.php', [
-            '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
-            'itemtype' => $itemtype,
-            'items_id' => $itemsId,
-        ], [
-            'report_date' => date('Y-m-d'),
-            'report_number' => ReportService::previewNextReportNumber(),
-            'prepared_by_users_id' => (int) \Session::getLoginUserID(),
-            'subject' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.',
-        ]);
-        echo '</div>';
+        return (string) ob_get_clean();
     }
 
     private static function renderDocumentHeader($number): void
     {
         echo "<header class='ig-document-header'>";
         echo "<div class='ig-document-number'><span>" . self::e(__('NÚMERO', 'informeglpi')) . "</span><strong>" . self::e($number !== '' ? $number : __('Pendiente', 'informeglpi')) . "</strong></div>";
-        echo "<h2>" . self::e(__('INFORME TECNICO DE ITEMS DE PROPIEDAD, PLANTA Y EQUIPOS', 'informeglpi')) . "</h2>";
         echo '</header>';
     }
 
@@ -208,8 +213,7 @@ final class ReportTab extends CommonGLPI
         .ig-report-tabs ul label:hover{border-color:var(--ig-yellow-dark);background:#fff8df;color:#29230e}
         .ig-report-form{max-width:1120px;margin:0 auto;padding:1.1rem 1.25rem;background:#fff;border:1px solid #d9dde3;border-radius:7px;box-shadow:0 2px 8px rgba(20,30,45,.045);font-family:Arial,Helvetica,sans-serif;color:#20242a}
         .ig-report-form .ig-document-header{position:relative;padding:1.15rem .75rem 1rem;margin-bottom:1rem;border-bottom:2px solid #343a40}
-        .ig-report-form .ig-document-header h2{max-width:76%;margin:.7rem auto 0;text-align:center;font-size:1.12rem;line-height:1.35;font-weight:700;letter-spacing:.025em;color:#20242a}
-        .ig-report-form .ig-document-number{display:flex;justify-content:flex-end;align-items:center;gap:.6rem;font-size:.78rem;font-weight:700;color:#4b5563}
+                .ig-report-form .ig-document-number{display:flex;justify-content:flex-end;align-items:center;gap:.6rem;font-size:.78rem;font-weight:700;color:#4b5563}
         .ig-report-form .ig-document-number strong{font-size:.98rem;color:#20242a;border:1px solid #cfd4dc;background:#f7f8fa;border-radius:4px;padding:.28rem .55rem}
         .ig-report-form .ig-section-title{margin:1.05rem 0 .45rem;padding:.45rem .55rem;text-align:center;font-size:.88rem;letter-spacing:.035em;font-weight:700;color:#252a31;background:#f0f1f3;border:1px solid #d8dce2;border-left:4px solid #d5aa19;border-radius:3px}
         .ig-report-form .ig-row{display:grid;grid-template-columns:minmax(220px,31%) minmax(0,1fr);border-bottom:1px solid #e0e3e8;align-items:stretch}
@@ -227,7 +231,7 @@ final class ReportTab extends CommonGLPI
         .ig-report-shell .table{font-size:.86rem}
         .ig-report-shell .table thead th{background:#f2f3f5;color:#3b414b;font-weight:700;white-space:nowrap}
         .ig-report-shell .btn-warning{background:var(--ig-yellow);border-color:var(--ig-yellow-dark);color:#29230e}
-        @media(max-width:700px){.ig-report-form{padding:.7rem}.ig-report-form .ig-document-header h2{max-width:100%;font-size:1rem}.ig-report-form .ig-row{grid-template-columns:1fr}.ig-report-form .ig-label{padding-bottom:.1rem}.ig-report-form .ig-value{padding-top:.2rem}}
+        @media(max-width:700px){.ig-report-form{padding:.7rem}.ig-report-form .ig-row{grid-template-columns:1fr}.ig-report-form .ig-label{padding-bottom:.1rem}.ig-report-form .ig-value{padding-top:.2rem}}
         </style>";
     }
 
@@ -260,18 +264,25 @@ final class ReportTab extends CommonGLPI
         echo "<div class='ig-report-form'>";
         self::renderDocumentHeader($report->fields['report_number'] ?? '');
         echo "<div class='mb-2 text-muted'>" . self::e($item->getTypeName() . ' · ' . ($item->fields['name'] ?? '')) . "</div>";
+        $snapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
+        $snapshot = is_array($snapshot) ? $snapshot : [];
+        $assetHtml = self::renderAssetInformation(
+            $itemtype,
+            is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [],
+            is_array($snapshot['components'] ?? null) ? $snapshot['components'] : []
+        );
         if ($isEditable) {
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
                 'id' => $reportId,
-            ], $report->fields);
+            ], $report->fields, $assetHtml);
         } else {
             echo "<div class='alert alert-warning mb-0'>" . self::e(__('Este informe no está disponible para edición con su usuario o su estado actual.', 'informeglpi')) . "</div>";
         }
         echo '</div></div>';
     }
 
-    private static function renderFieldsForm(string $action, array $hidden, array $values): void
+    private static function renderFieldsForm(string $action, array $hidden, array $values, string $assetHtml = ''): void
     {
         echo "<form class='ig-report-form' method='post' enctype='multipart/form-data' action='" . self::e($action) . "'>";
         global $DB;
@@ -289,7 +300,6 @@ final class ReportTab extends CommonGLPI
         $parts = explode('-', $reportDate);
         $months = ['', 'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
         $dateLabel = count($parts) === 3 ? sprintf('%s – %s - %s', $parts[2], $months[(int) $parts[1]] ?? '', $parts[0]) : $reportDate;
-        echo '<div class="ig-section-title">' . self::e(__('ENCABEZADO DEL DOCUMENTO', 'informeglpi')) . '</div>';
         echo "<div class='ig-asset-table'>";
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('FECHA:', 'informeglpi')) . "</div><div class='ig-value'><input class='form-control' value='" . self::e($dateLabel) . "' readonly></div></div>";
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('PARA:', 'informeglpi')) . "</div><div class='ig-value'>";
@@ -319,6 +329,7 @@ final class ReportTab extends CommonGLPI
         $subject = (string) ($values['subject'] ?? 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.');
         echo "<div class='ig-row'><label class='ig-label' for='ig_subject'>" . self::e(__('ASUNTO:', 'informeglpi')) . "</label><div class='ig-value'><input class='form-control' type='text' id='ig_subject' name='subject' required value='" . self::e($subject) . "'></div></div>";
         echo '</div>';
+        echo $assetHtml;
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO', 'informeglpi')) . '</div>';
         foreach ($hidden as $name => $value) {
             echo "<input type='hidden' name='" . self::e($name) . "' value='" . self::e($value) . "'>";
