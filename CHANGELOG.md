@@ -1,3 +1,9 @@
+## 0.5.9
+
+- Fix namespaced GLPI `Html` calls in the asset tab.
+- Remove references to the unavailable `$CFG_GLPI['root_doc']` global and build plugin endpoints using the plugin web directory.
+- Keep report creation, editing and return navigation on the asset tab.
+
 ## 0.5.8
 
 - Move report creation, data entry and report history into the asset's Informe Técnico tab.
