@@ -153,6 +153,13 @@ final class ReportTab extends CommonGLPI
         }
         if ($itemtype === 'Computer') {
             self::renderComputerComponents($components);
+        } elseif ($itemtype === 'Phone') {
+            // Phone types "Hand Held" and "Tablet" share the relevant
+            // inventory details: processor, RAM and internal storage.
+            $phoneType = mb_strtolower(trim((string) $typeValue));
+            if (in_array($phoneType, ['hand held', 'handheld', 'tablet'], true)) {
+                self::renderPhoneComponents($components);
+            }
         }
         echo '</div>';
         return (string) ob_get_clean();
@@ -220,6 +227,74 @@ final class ReportTab extends CommonGLPI
                 }
             }
 
+            if ($lines !== []) {
+                echo "<div class='ig-row'><div class='ig-label'>" . self::e($definition['label']) . "</div><div class='ig-value'>";
+                foreach ($lines as $line) {
+                    echo "<div class='ig-component-line'>" . self::e($line) . '</div>';
+                }
+                echo '</div></div>';
+            }
+        }
+    }
+
+    /**
+     * Hand Held and Tablet are GLPI Phone types in this installation.
+     * Show their useful computing hardware and omit network-card noise.
+     */
+    private static function renderPhoneComponents(array $components): void
+    {
+        self::renderHardwareComponentRows($components);
+    }
+
+    private static function renderHardwareComponentRows(array $components): void
+    {
+        $definitions = [
+            'processors' => [
+                'label' => __('PROCESADOR:', 'informeglpi'),
+                'fields' => ['designation', 'name', 'frequency', 'nbcores', 'nbthreads'],
+            ],
+            'memories' => [
+                'label' => __('RAM:', 'informeglpi'),
+                'fields' => ['designation', 'name', 'size', 'frequency'],
+            ],
+            'hard_drives' => [
+                'label' => __('ALMACENAMIENTO:', 'informeglpi'),
+                'fields' => ['designation', 'name', 'capacity', 'interface', 'rpm'],
+            ],
+        ];
+
+        foreach ($definitions as $key => $definition) {
+            $lines = [];
+            foreach (($components[$key] ?? []) as $entry) {
+                $device = is_array($entry['device'] ?? null) ? $entry['device'] : [];
+                $relation = is_array($entry['relation'] ?? null) ? $entry['relation'] : [];
+                $parts = [];
+                foreach (['designation', 'name'] as $preferred) {
+                    $value = trim((string) ($device[$preferred] ?? ''));
+                    if ($value !== '' && $value !== '0') {
+                        $parts[] = $value;
+                        break;
+                    }
+                }
+                if ($parts === []) {
+                    foreach (array_slice($definition['fields'], 2) as $field) {
+                        $value = trim((string) ($device[$field] ?? $relation[$field] ?? ''));
+                        if ($value !== '' && $value !== '0') {
+                            $parts[] = $value;
+                        }
+                    }
+                }
+                if (!empty($device['manufacturers_id'])) {
+                    $manufacturer = \\Dropdown::getDropdownName(\\Manufacturer::getTable(), (int) $device['manufacturers_id']);
+                    if ($manufacturer !== '' && !in_array($manufacturer, $parts, true)) {
+                        $parts[] = $manufacturer;
+                    }
+                }
+                $line = trim(implode(' ', array_unique($parts)));
+                if ($line !== '' && !in_array($line, $lines, true)) {
+                    $lines[] = $line;
+                }
+            }
             if ($lines !== []) {
                 echo "<div class='ig-row'><div class='ig-label'>" . self::e($definition['label']) . "</div><div class='ig-value'>";
                 foreach ($lines as $line) {
