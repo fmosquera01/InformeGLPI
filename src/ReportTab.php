@@ -467,7 +467,7 @@ final class ReportTab extends CommonGLPI
             ];
             $purchaseDate = (string) ($assetFields['FECHA DE COMPRA'] ?? '');
             if ($purchaseDate !== '') {
-                $parsedDate = \\DateTime::createFromFormat('d/m/Y', $purchaseDate);
+                $parsedDate = \DateTime::createFromFormat('d/m/Y', $purchaseDate);
                 $manualValues['purchase_date'] = $parsedDate ? $parsedDate->format('Y-m-d') : '';
             }
             $assetHtml = self::renderManualPhoneInformation($manualValues, true);
