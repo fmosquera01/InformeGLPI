@@ -1,3 +1,9 @@
+## 0.5.2
+
+- Fix rendering of the Informe Técnico tab in GLPI profiles.
+- Allow users with native profile-administration rights to configure plugin rights.
+- Register plugin rights during installation and upgrade so Super-Admin can manage profile permissions.
+
 # Changelog
 
 ## 0.5.1 - Correcciones de integración
