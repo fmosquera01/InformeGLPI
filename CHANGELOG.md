@@ -1,3 +1,10 @@
+## 0.5.26
+
+- Configure **DESCRIPCIÓN DEL ACTIVO** as a required multiline text field in the manual cellphone form.
+- Add the example placeholder “TELEFONO CELULAR A24” and a 255-character limit.
+- Validate the description on both creation and draft editing.
+- Preserve line breaks when displaying asset snapshot fields in the report.
+
 ## 0.5.25
 
 - Add **Plugins → Informe Técnico** entry to create reports for cellular phones not registered in GLPI.
