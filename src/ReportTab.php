@@ -148,16 +148,29 @@ final class ReportTab extends CommonGLPI
             foreach ([
                 'processors' => __('PROCESADOR:', 'informeglpi'),
                 'memories' => __('RAM:', 'informeglpi'),
-                'hard_drives' => __('DISCOS:', 'informeglpi'),
+                'hard_drives' => __('DISCO DURO:', 'informeglpi'),
                 'network_cards' => __('TARJETAS DE RED:', 'informeglpi'),
             ] as $key => $label) {
                 $entries = $components[$key] ?? [];
                 $lines = [];
                 foreach ($entries as $entry) {
                     $device = $entry['device'] ?? [];
-                    $description = array_filter(array_map('strval', $device), static fn($v) => trim($v) !== '' && $v !== '0');
+                    $description = [];
+                    foreach ($device as $deviceField => $deviceValue) {
+                        if (!is_scalar($deviceValue) || trim((string) $deviceValue) === '' || (string) $deviceValue === '0') {
+                            continue;
+                        }
+                        if (in_array($deviceField, ['id', 'entities_id', 'is_recursive', 'is_deleted', 'is_template', 'date_creation', 'date_mod'], true)
+                            || str_ends_with((string) $deviceField, '_id')) {
+                            continue;
+                        }
+                        $description[] = (string) $deviceValue;
+                    }
+                    if (!empty($device['manufacturers_id'])) {
+                        $description[] = \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $device['manufacturers_id']);
+                    }
                     if ($description !== []) {
-                        $lines[] = implode(' · ', $description);
+                        $lines[] = implode(' · ', array_unique($description));
                     }
                 }
                 if ($lines !== []) {
@@ -200,18 +213,26 @@ final class ReportTab extends CommonGLPI
         echo "<div class='ig-asset-table'>";
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('NÚMERO:', 'informeglpi')) . "</div><div class='ig-value'>" . self::e($values['report_number'] ?? __('Se asigna al guardar', 'informeglpi')) . "</div></div>";
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('FECHA:', 'informeglpi')) . "</div><div class='ig-value'><input class='form-control' value='" . self::e($dateLabel) . "' readonly></div></div>";
-        echo "<div class='ig-row'><label class='ig-label' for='ig_recipients'>" . self::e(__('PARA:', 'informeglpi')) . "</label><div class='ig-value'><select class='form-select' id='ig_recipients' name='recipients_ids[]' multiple required size='3'>";
-        foreach ($users as $id => $name) {
-            echo "<option value='" . $id . "' " . (in_array($id, $recipients, true) ? 'selected' : '') . ">" . self::e($name) . "</option>";
-        }
-        echo "</select><small class='text-muted'>" . self::e(__('Seleccione al menos un usuario. Use Ctrl o Cmd para seleccionar varios.', 'informeglpi')) . "</small></div></div>";
+        echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('PARA:', 'informeglpi')) . "</div><div class='ig-value'>";
+        echo \Dropdown::showFromArray('recipients_ids[]', $users, [
+            'multiple' => true,
+            'value' => $recipients,
+            'display' => false,
+            'class' => 'form-select',
+            'width' => '100%',
+        ]);
+        echo "<small class='text-muted'>" . self::e(__('Seleccione uno o varios destinatarios; mínimo uno obligatorio.', 'informeglpi')) . "</small></div></div>";
         foreach (['prepared_by_users_id' => __('DE: TÉCNICO QUE ELABORA:', 'informeglpi'), 'reviewer_users_id' => __('DE: RESPONSABLE QUE REVISA:', 'informeglpi')] as $field => $label) {
             $selected = (int) ($values[$field] ?? 0);
-            echo "<div class='ig-row'><label class='ig-label' for='ig_" . self::e($field) . "'>" . self::e($label) . "</label><div class='ig-value'><select class='form-select' id='ig_" . self::e($field) . "' name='" . self::e($field) . "' required><option value=''>" . self::e(__('Seleccione un usuario', 'informeglpi')) . "</option>";
-            foreach ($users as $id => $name) {
-                echo "<option value='" . $id . "' " . ($selected === $id ? 'selected' : '') . ">" . self::e($name) . "</option>";
-            }
-            echo "</select></div></div>";
+            echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>";
+            echo \Dropdown::showFromArray($field, $users, [
+                'value' => $selected,
+                'display' => false,
+                'class' => 'form-select',
+                'width' => '100%',
+                'display_emptychoice' => true,
+            ]);
+            echo '</div></div>';
         }
         $subject = (string) ($values['subject'] ?? 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.');
         echo "<div class='ig-row'><label class='ig-label' for='ig_subject'>" . self::e(__('ASUNTO:', 'informeglpi')) . "</label><div class='ig-value'><input class='form-control' type='text' id='ig_subject' name='subject' required value='" . self::e($subject) . "'></div></div>";
