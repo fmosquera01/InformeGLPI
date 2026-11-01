@@ -1,3 +1,9 @@
+## 0.5.14
+
+- Bind the report preparer to the authenticated GLPI user; it can no longer be selected as another person's identity.
+- Preserve the original preparer when an authorized user edits a draft.
+- Rename the asset-tab lists to “Pendientes de revisión” and “Finalizados”.
+
 ## 0.5.13
 
 - Add institutional document header fields: annual report number display, fixed creation date, GLPI recipients, preparer, reviewer, and editable subject.
