@@ -40,10 +40,10 @@ final class ReportTab extends CommonGLPI
         echo "<div class='card mb-3'><div class='card-header d-flex justify-content-between align-items-center'>";
         echo '<strong>' . self::e(__('Informes técnicos del activo', 'informeglpi')) . '</strong>';
         if (\Session::haveRight(Report::$rightname, CREATE)) {
-            echo "<form method='post' action='" . self::e('/' . Plugin::getWebDir('informeglpi', false) . '/front/report.form.php') . "' class='m-0'>";
+            echo "<form method='post' action='" . self::e('/' . \Plugin::getWebDir('informeglpi', false) . '/front/report.form.php') . "' class='m-0'>";
             echo \Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
-            echo Html::hidden('itemtype', ['value' => $itemtype]);
-            echo Html::hidden('items_id', ['value' => $itemsId]);
+            echo \Html::hidden('itemtype', ['value' => $itemtype]);
+            echo \Html::hidden('items_id', ['value' => $itemsId]);
             echo "<button type='submit' class='btn btn-primary btn-sm' onclick=\"this.disabled=true;this.form.submit();\">" . self::e(__('Crear informe', 'informeglpi')) . '</button>';
             echo '</form>';
         }
@@ -121,10 +121,10 @@ final class ReportTab extends CommonGLPI
 
         echo '<h5 class="mt-4">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO', 'informeglpi')) . '</h5>';
         if ($isEditable) {
-            $action = '/' . Plugin::getWebDir('informeglpi', false) . '/front/report.edit.form.php';
+            $action = '/' . \Plugin::getWebDir('informeglpi', false) . '/front/report.edit.form.php';
             echo "<form method='post' action='" . self::e($action) . "'>";
-            echo Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
-            echo Html::hidden('id', ['value' => $reportId]);
+            echo \Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
+            echo \Html::hidden('id', ['value' => $reportId]);
             $fields = [
                 'book_value' => __('Valor en libros (USD)', 'informeglpi'),
                 'background' => __('ANTECEDENTES', 'informeglpi'),
