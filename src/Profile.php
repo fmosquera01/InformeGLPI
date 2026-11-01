@@ -27,7 +27,7 @@ final class Profile extends \Profile
 
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
-        if ($item instanceof \\Profile) {
+        if ($item instanceof \Profile) {
             $profile = new self();
             $profile->showFormInformeTecnico((int) $item->getID());
         }
@@ -37,7 +37,7 @@ final class Profile extends \Profile
 
     private function showFormInformeTecnico(int $profiles_id): void
     {
-        $targetProfile = new \\Profile();
+        $targetProfile = new \Profile();
         if (!$targetProfile->can($profiles_id, UPDATE)) {
             return;
         }
