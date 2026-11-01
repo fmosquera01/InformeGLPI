@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Uninstall intentionally preserves report tables and files. These are
  * controlled institutional records and must not be destroyed by accident.
  */
-function plugin_informeglopi_install(): bool
+function plugin_informeglpi_install(): bool
 {
     global $DB;
 
@@ -112,20 +112,20 @@ function plugin_informeglopi_install(): bool
 
     // Register native GLPI profile rights. New rights default to no access.
     ProfileRight::addProfileRights([
-        'plugin_informeglopi',
-        'plugin_informeglopi_validate',
+        'plugin_informeglpi',
+        'plugin_informeglpi_validate',
     ]);
 
     return true;
 }
 
-function plugin_informeglopi_upgrade($previousVersion): bool
+function plugin_informeglpi_upgrade($previousVersion): bool
 {
     // Schema migrations are deliberately idempotent.
-    return plugin_informeglopi_install();
+    return plugin_informeglpi_install();
 }
 
-function plugin_informeglopi_uninstall(): bool
+function plugin_informeglpi_uninstall(): bool
 {
     // Do not drop report tables or stored documents during plugin uninstall.
     // A separate, explicitly authorized archival/purge procedure will be
