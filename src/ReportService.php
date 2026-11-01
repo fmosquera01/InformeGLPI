@@ -197,7 +197,7 @@ final class ReportService
         $value = static fn(string $key): string => trim((string) ($manual[$key] ?? ''));
         $purchaseDate = $value('purchase_date');
         if ($purchaseDate !== '') {
-            $parsed = \\DateTime::createFromFormat('Y-m-d', $purchaseDate);
+            $parsed = \DateTime::createFromFormat('Y-m-d', $purchaseDate);
             if (!$parsed || $parsed->format('Y-m-d') !== $purchaseDate) {
                 throw new RuntimeException(__('La fecha de compra no es válida.', 'informeglpi'));
             }
