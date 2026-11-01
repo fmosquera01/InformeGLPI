@@ -25,9 +25,13 @@ if ($reportId < 1 || !$report->getFromDB($reportId)) {
 }
 $itemtype = (string) ($report->fields['itemtype'] ?? '');
 $itemsId = (int) ($report->fields['items_id'] ?? 0);
-$item = class_exists($itemtype) ? new $itemtype() : null;
-if (!$item || !$item->getFromDB($itemsId)) {
-    Html::displayNotFoundError();
+$isManualPhone = $itemtype === 'ManualCellphone' && $itemsId === 0;
+$item = null;
+if (!$isManualPhone) {
+    $item = class_exists($itemtype) ? new $itemtype() : null;
+    if (!$item || !$item->getFromDB($itemsId)) {
+        Html::displayNotFoundError();
+    }
 }
 try {
     ReportService::updateDraft($reportId, $_POST);
@@ -36,6 +40,10 @@ try {
 } catch (Throwable $e) {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
 }
-$tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class . '$1');
-Html::redirect('/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId);
+if ($isManualPhone) {
+    Html::redirect('/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId);
+} else {
+    $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class . '$1');
+    Html::redirect('/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId);
+}
 exit;
