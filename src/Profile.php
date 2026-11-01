@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GlpiPlugin\\Informeglopi;
+namespace GlpiPlugin\Informeglopi;
 
 use CommonGLPI;
 use Html;
@@ -11,14 +11,14 @@ use Session;
  * Native GLPI profile rights for Informe Técnico.
  * No parallel ACL or plugin-specific user-role system is used.
  */
-final class Profile extends \\Profile
+final class Profile extends \Profile
 {
     // CommonGLPI declares $rightname without a type; keep the same declaration.
     public static $rightname = 'plugin_informeglopi';
 
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
-        if ($item instanceof \\Profile && (int) $item->getField('id') > 0) {
+        if ($item instanceof \Profile && (int) $item->getField('id') > 0) {
             return self::createTabEntry(__('Informe Técnico', 'informeglopi'));
         }
 
