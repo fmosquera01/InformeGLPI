@@ -24,6 +24,7 @@ if (!$item || !$item->getFromDB($itemsId)) {
 }
 try {
     ReportService::updateDraft($reportId, $_POST);
+    ReportService::addEvidence($reportId, $_FILES['evidence_files'] ?? []);
     Session::addMessageAfterRedirect(__('Informe guardado correctamente.', 'informeglpi'), true, INFO);
 } catch (Throwable $e) {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
