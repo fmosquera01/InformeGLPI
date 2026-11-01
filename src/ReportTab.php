@@ -185,7 +185,7 @@ final class ReportTab extends CommonGLPI
             'items_id' => $itemsId,
         ], [
             'report_date' => date('Y-m-d'),
-            'prepared_by_users_id' => (int) \\Session::getLoginUserID(),
+            'prepared_by_users_id' => (int) \Session::getLoginUserID(),
             'subject' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.',
         ]);
         echo '</div>';
