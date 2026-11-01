@@ -1,3 +1,11 @@
+## 0.5.25
+
+- Add **Plugins → Informe Técnico** entry to create reports for cellular phones not registered in GLPI.
+- Fix the asset type to **CELULAR**; collect asset code, description, purchase date, brand, model, IMEI/serial, responsible user and area manually.
+- Keep the same annual report numbering, recipients, preparer/reviewer, technical fields, photographs and draft editing.
+- Store manual cellphone data as an immutable-style report snapshot without creating or modifying a GLPI asset.
+- Reject manual creation when the IMEI is already present in GLPI Phones, directing the technician to the registered asset record.
+
 ## 0.5.24
 
 - Capture processor, RAM and storage hardware relations for GLPI Phone assets.
