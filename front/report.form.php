@@ -22,7 +22,7 @@ if (!$item->getFromDB($itemsId) || !$item->can($itemsId, READ)) {
 }
 
 try {
-    $reportId = ReportService::createDraft($itemtype, $itemsId);
+    $reportId = ReportService::createDraft($itemtype, $itemsId, $_POST);
     ReportService::updateDraft($reportId, $_POST);
     Session::addMessageAfterRedirect(__('Borrador guardado correctamente.', 'informeglpi'), true, INFO);
     $tabUrl = $item->getFormURLWithID($itemsId) . '&forcetab=' . rawurlencode(ReportTab::class . '$1');
