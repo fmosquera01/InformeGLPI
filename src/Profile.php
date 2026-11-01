@@ -42,6 +42,12 @@ final class Profile extends \Profile
             return;
         }
 
+        // Load the selected profile and its ProfileRight values into this instance.
+        // displayRightsChoiceMatrix() reads the current values from $this->fields.
+        if (!$this->getFromDB($profiles_id)) {
+            return;
+        }
+
         // Permission to administer profiles is the authority to edit this rights tab.
         // Do not gate this screen on the plugin right being configured already.
         $canEdit = Session::haveRight('profile', UPDATE);
