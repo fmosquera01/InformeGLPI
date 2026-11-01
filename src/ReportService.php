@@ -25,9 +25,9 @@ final class ReportService
         $item = null;
         if ($isManualPhone) {
             $manual = is_array($input['manual_asset'] ?? null) ? $input['manual_asset'] : [];
-            foreach (['asset_code', 'manufacturer', 'model', 'serial', 'responsible', 'area'] as $required) {
+            foreach (['asset_code', 'description', 'manufacturer', 'model', 'serial', 'responsible', 'area'] as $required) {
                 if (trim((string) ($manual[$required] ?? '')) === '') {
-                    throw new RuntimeException(__('Complete código de activo, marca, modelo, IMEI, usuario responsable y área.', 'informeglpi'));
+                    throw new RuntimeException(__('Complete código de activo, descripción, marca, modelo, IMEI, usuario responsable y área.', 'informeglpi'));
                 }
             }
             $imei = trim((string) $manual['serial']);
@@ -213,6 +213,12 @@ final class ReportService
     private static function buildManualCellphoneSnapshot(array $manual): array
     {
         $value = static fn(string $key): string => trim((string) ($manual[$key] ?? ''));
+        if ($value('description') === '') {
+            throw new RuntimeException(__('La descripción del activo es obligatoria.', 'informeglpi'));
+        }
+        if (mb_strlen($value('description')) > 255) {
+            throw new RuntimeException(__('La descripción del activo no puede superar los 255 caracteres.', 'informeglpi'));
+        }
         $purchaseDate = $value('purchase_date');
         if ($purchaseDate !== '') {
             $parsed = \DateTime::createFromFormat('Y-m-d', $purchaseDate);
@@ -354,9 +360,9 @@ final class ReportService
 
         if (($report->fields['itemtype'] ?? '') === 'ManualCellphone' && (int) ($report->fields['items_id'] ?? -1) === 0) {
             $manual = is_array($input['manual_asset'] ?? null) ? $input['manual_asset'] : [];
-            foreach (['asset_code', 'manufacturer', 'model', 'serial', 'responsible', 'area'] as $required) {
+            foreach (['asset_code', 'description', 'manufacturer', 'model', 'serial', 'responsible', 'area'] as $required) {
                 if (trim((string) ($manual[$required] ?? '')) === '') {
-                    throw new RuntimeException(__('Complete código de activo, marca, modelo, IMEI, usuario responsable y área.', 'informeglpi'));
+                    throw new RuntimeException(__('Complete código de activo, descripción, marca, modelo, IMEI, usuario responsable y área.', 'informeglpi'));
                 }
             }
             $imei = trim((string) $manual['serial']);
