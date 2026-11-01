@@ -1,3 +1,10 @@
+## 0.5.20
+
+- Remove the institutional report title from the interactive creation and edit forms; reserve it for the generated PDF.
+- Reorder both forms to match the Word template: document number/date/recipients/preparer/reviewer/subject, asset information, technical information, and equipment photos.
+- Use the same asset snapshot layout and shared form renderer for creation and editing, so both screens have identical structure and styling.
+- Rename the technical section to “INFORMACIÓN TÉCNICA DEL ACTIVO” and show the stored asset snapshot while editing.
+
 ## 0.5.19
 
 - Redesign the report form to more closely follow the institutional Word document, with a formal document heading, cleaner metadata rows, section bands, and refined spacing/typography.
