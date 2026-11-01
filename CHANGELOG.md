@@ -1,3 +1,9 @@
+## 0.5.12
+
+- Reorganize the inline form to follow the institutional Word layout: fixed labels on the left, values/inputs on the right, and centered section titles.
+- Reduce form density with compact controls and responsive single-column layout on narrow screens.
+- Remove non-template manual fields (activities and additional observations) from the form; retain the Word sections and damage classification.
+
 ## 0.5.11
 
 - Replace the create-then-redirect flow with a visible New form inside the asset tab; a report is created only when the technician saves.
