@@ -34,12 +34,7 @@ final class ReportService
             if (!preg_match('/^[0-9]{14,16}$/', $imei)) {
                 throw new RuntimeException(__('La serie debe corresponder al IMEI numérico del celular (14 a 16 dígitos).', 'informeglpi'));
             }
-            if ($DB->tableExists('glpi_phones') && $DB->request([
-                'SELECT' => ['id'], 'FROM' => 'glpi_phones',
-                'WHERE' => ['serial' => $imei], 'LIMIT' => 1,
-            ])->count() > 0) {
-                throw new RuntimeException(__('Este IMEI ya está registrado en GLPI. Debe crear el informe desde la ficha del celular.', 'informeglpi'));
-            }
+            self::assertManualCellphoneNotRegistered($imei, trim((string) $manual['asset_code']));
             $entityId = (int) Session::getActiveEntity();
             $isRecursive = 0;
             $snapshot = self::buildManualCellphoneSnapshot($manual);
@@ -189,6 +184,29 @@ final class ReportService
         } catch (Throwable $e) {
             $DB->rollBack();
             throw $e;
+        }
+    }
+
+    private static function assertManualCellphoneNotRegistered(string $imei, string $assetCode): void
+    {
+        global $DB;
+        if (!$DB->tableExists('glpi_phones')) {
+            return;
+        }
+        $byImei = $DB->request([
+            'SELECT' => ['id'],
+            'FROM' => 'glpi_phones',
+            'WHERE' => ['serial' => $imei],
+            'LIMIT' => 1,
+        ])->count() > 0;
+        $byAssetCode = $DB->request([
+            'SELECT' => ['id'],
+            'FROM' => 'glpi_phones',
+            'WHERE' => ['otherserial' => $assetCode],
+            'LIMIT' => 1,
+        ])->count() > 0;
+        if ($byImei || $byAssetCode) {
+            throw new RuntimeException(__('El IMEI o código de activo ya está registrado en GLPI. Debe crear el informe desde la ficha del celular.', 'informeglpi'));
         }
     }
 
@@ -345,12 +363,7 @@ final class ReportService
             if (!preg_match('/^[0-9]{14,16}$/', $imei)) {
                 throw new RuntimeException(__('La serie debe corresponder al IMEI numérico del celular (14 a 16 dígitos).', 'informeglpi'));
             }
-            if ($DB->tableExists('glpi_phones') && $DB->request([
-                'SELECT' => ['id'], 'FROM' => 'glpi_phones',
-                'WHERE' => ['serial' => $imei], 'LIMIT' => 1,
-            ])->count() > 0) {
-                throw new RuntimeException(__('Este IMEI ya está registrado en GLPI. Debe utilizar el informe del activo inventariado.', 'informeglpi'));
-            }
+            self::assertManualCellphoneNotRegistered($imei, trim((string) $manual['asset_code']));
             $oldSnapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
             $newSnapshot = self::buildManualCellphoneSnapshot($manual);
             $updates['asset_snapshot'] = json_encode($newSnapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
