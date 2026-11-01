@@ -42,9 +42,9 @@ final class Profile extends \Profile
             return;
         }
 
-        // Load the selected profile and its ProfileRight values into this instance.
-        // displayRightsChoiceMatrix() reads the current values from $this->fields.
-        if (!$this->getFromDB($profiles_id)) {
+        // Load the native GLPI profile. Calling getFromDB() on this plugin
+        // subclass would resolve its table as glpi_plugin_informeglopi_profiles.
+        if (!$targetProfile->getFromDB($profiles_id)) {
             return;
         }
 
@@ -70,7 +70,7 @@ final class Profile extends \Profile
             ],
         ];
 
-        $this->displayRightsChoiceMatrix($rights, [
+        $targetProfile->displayRightsChoiceMatrix($rights, [
             'canedit' => $canEdit,
             'title'   => __('Derechos de Informe Técnico', 'informeglpi'),
         ]);
