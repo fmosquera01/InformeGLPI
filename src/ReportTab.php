@@ -362,6 +362,30 @@ final class ReportTab extends CommonGLPI
         }
         echo '</tbody></table></div>';
 
+        global $DB;
+        $evidenceRows = [];
+        foreach ($DB->request([
+            'SELECT' => ['id', 'original_name', 'caption'],
+            'FROM' => 'glpi_plugin_informeglopi_evidences',
+            'WHERE' => ['reports_id' => $reportId],
+            'ORDER' => ['id ASC'],
+        ]) as $evidenceRow) {
+            $evidenceRows[] = $evidenceRow;
+        }
+        echo '<h5>' . self::e(__('Fotografías del equipo', 'informeglpi')) . '</h5>';
+        if ($evidenceRows === []) {
+            echo "<div class='text-muted mb-3'>" . self::e(__('Aún no se han adjuntado fotografías.', 'informeglpi')) . '</div>';
+        } else {
+            echo "<div class='d-flex flex-wrap gap-3 mb-3'>";
+            foreach ($evidenceRows as $evidenceRow) {
+                $evidenceUrl = '/plugins/informeglpi/front/evidence.php?id=' . (int) $evidenceRow['id'];
+                echo "<a href='" . self::e($evidenceUrl) . "' target='_blank' rel='noopener' class='border rounded p-1' style='width:160px'>";
+                echo "<img src='" . self::e($evidenceUrl) . "' alt='" . self::e($evidenceRow['original_name']) . "' style='width:100%;height:115px;object-fit:cover'>";
+                echo "<small class='d-block text-break mt-1'>" . self::e($evidenceRow['original_name']) . '</small></a>';
+            }
+            echo '</div>';
+        }
+
         if ($isEditable) {
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
