@@ -48,7 +48,7 @@ final class Profile extends \Profile
         echo "<div class='spaced'>";
 
         if ($canEdit) {
-            echo "<form method='post' action='" . htmlspecialchars(self::getFormURL(), ENT_QUOTES, 'UTF-8') . "'>";
+            echo "<form method='post' action='" . htmlspecialchars(\Profile::getFormURL(), ENT_QUOTES, 'UTF-8') . "'>";
         }
 
         $rights = [
