@@ -214,9 +214,9 @@ final class ReportTab extends CommonGLPI
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('NÚMERO:', 'informeglpi')) . "</div><div class='ig-value'>" . self::e($values['report_number'] ?? __('Se asigna al guardar', 'informeglpi')) . "</div></div>";
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('FECHA:', 'informeglpi')) . "</div><div class='ig-value'><input class='form-control' value='" . self::e($dateLabel) . "' readonly></div></div>";
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('PARA:', 'informeglpi')) . "</div><div class='ig-value'>";
-        echo \Dropdown::showFromArray('recipients_ids[]', $users, [
+        echo \Dropdown::showFromArray('recipients_ids', $users, [
             'multiple' => true,
-            'value' => $recipients,
+            'values' => $recipients,
             'display' => false,
             'class' => 'form-select',
             'width' => '100%',
