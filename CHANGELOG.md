@@ -1,3 +1,8 @@
+## 0.5.57
+- Sustituye la composición HTML del PDF por renderizado TCPDF con coordenadas para reproducir el formato institucional en papel Letter.
+- Adapta destinatarios, activo, descripción, fecha de compra, valor en libros, componentes de Computer, información técnica, evidencias y firmas desde los datos reales del plugin.
+- Conserva validación de firmas/fotografías, almacenamiento privado, SHA-256 y finalización sólo después de guardar correctamente el PDF; rechaza contenido que no quepa en una página.
+
 ## 0.5.56
 - Ajusta el PDF al formato institucional de referencia: elimina bordes de cuadrícula, compacta filas, centra y resalta los títulos de sección y ordena el tipo de daño antes de las recomendaciones.
 
