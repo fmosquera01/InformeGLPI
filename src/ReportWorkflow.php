@@ -52,6 +52,15 @@ final class ReportWorkflow
             $nextStatus = 'approved_pending_pdf';
         }
 
+        if ($type === 'technical' && $DB->request([
+            'SELECT' => ['id'],
+            'FROM' => 'glpi_plugin_informeglopi_evidences',
+            'WHERE' => ['reports_id' => $reportId],
+            'LIMIT' => 1,
+        ])->count() === 0) {
+            throw new RuntimeException(__('Debe adjuntar al menos una fotografía del equipo antes de firmar y enviar el informe.', 'informeglpi'));
+        }
+
         $signature = self::verifyUserPin($userId, $pin);
         $source = rtrim(GLPI_VAR_DIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $signature['signature_path']);
         $source = self::privateFile($source);
