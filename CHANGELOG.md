@@ -1,3 +1,6 @@
+## 0.5.61
+- Corrige el cálculo del espacio inferior del PDF Letter: restablece la reserva segura para los bloques de firma y evita que el validador rechace informes por el espacio adicional consumido al posicionar las firmas.
+
 ## 0.5.60
 - Reduce la reserva inferior destinada a las firmas para ampliar aproximadamente 1 cm la altura disponible de las fotografías, manteniendo los bloques de firma dentro de la página Letter.
 
