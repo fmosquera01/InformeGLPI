@@ -1,3 +1,8 @@
+## 0.5.37
+
+- Fix duplicated namespace separators that caused a PHP syntax error while loading the asset snapshot builder.
+- Correct processor, memory, and hard-drive association filters to use the actual `$itemsId` parameter instead of an undefined variable.
+
 ## 0.5.36
 
 - Replace prohibited direct SQL execution with GLPI 11's database query builder for processor, memory, and hard-drive relations.
