@@ -107,67 +107,101 @@ final class AssetSnapshotBuilder
     {
         global $DB;
 
-        if (!class_exists($relationClass) || $itemsId < 1
-            || !is_a($relationClass, 'Item_Devices', true)) {
+        if ($itemtype !== 'Computer' || $itemsId < 1) {
             return [];
         }
 
-        $deviceType = $relationClass::getDeviceType();
-        $relationTable = $relationClass::getTable();
-        $deviceIdField = match ($relationClass) {
-            'Item_DeviceProcessor' => 'deviceprocessors_id',
-            'Item_DeviceMemory' => 'devicememories_id',
-            'Item_DeviceHardDrive' => 'deviceharddrives_id',
-            default => null,
-        };
-
-        if (!is_string($deviceType) || !class_exists($deviceType)
-            || !is_string($relationTable) || !is_string($deviceIdField)
-            || !$DB->tableExists($relationTable)
-            || !$DB->fieldExists($relationTable, $deviceIdField)) {
-            return [];
-        }
-
-        // Read the same association tables used by GLPI's Components tab.
-        // This mirrors the proven SQL joins: items_id + itemtype, then the
-        // component catalog record referenced by the relation's device ID.
-        $where = [
-            'itemtype' => $itemtype,
-            'items_id' => $itemsId,
+        // Explicit joins reproduce the verified GLPI inventory query.
+        // The ID is cast to integer before being inserted into the SQL.
+        $id = (int) $itemsId;
+        $queries = [
+            'Item_DeviceProcessor' => "
+                SELECT dp.*
+                FROM glpi_items_deviceprocessors idp
+                INNER JOIN glpi_deviceprocessors dp
+                    ON dp.id = idp.deviceprocessors_id
+                WHERE idp.items_id = {$id}
+                  AND idp.itemtype = 'Computer'
+            ",
+            'Item_DeviceMemory' => "
+                SELECT dm.*, idm.size AS _relation_size, dmt.name AS _memory_type_name
+                FROM glpi_items_devicememories idm
+                INNER JOIN glpi_devicememories dm
+                    ON dm.id = idm.devicememories_id
+                LEFT JOIN glpi_devicememorytypes dmt
+                    ON dmt.id = dm.devicememorytypes_id
+                WHERE idm.items_id = {$id}
+                  AND idm.itemtype = 'Computer'
+            ",
+            'Item_DeviceHardDrive' => "
+                SELECT dh.*, idh.capacity AS _relation_capacity, it.name AS _interface_name
+                FROM glpi_items_deviceharddrives idh
+                INNER JOIN glpi_deviceharddrives dh
+                    ON dh.id = idh.deviceharddrives_id
+                LEFT JOIN glpi_interfacetypes it
+                    ON it.id = dh.interfacetypes_id
+                WHERE idh.items_id = {$id}
+                  AND idh.itemtype = 'Computer'
+                  AND idh.is_deleted = 0
+                  AND idh.capacity > 0
+                  AND dh.designation IS NOT NULL
+                  AND (it.name IS NULL OR it.name NOT LIKE '%USB%')
+            ",
         ];
-        if ($DB->fieldExists($relationTable, 'is_deleted')) {
-            $where['is_deleted'] = 0;
+
+        if (!isset($queries[$relationClass])) {
+            return [];
+        }
+
+        $result = $DB->query($queries[$relationClass]);
+        if ($result === false) {
+            return [];
         }
 
         $records = [];
-        foreach ($DB->request([
-            'SELECT' => '*',
-            'FROM'   => $relationTable,
-            'WHERE'  => $where,
-            'ORDER'  => ['id ASC'],
-        ]) as $relationRow) {
-            $relationFields = self::scalarFields($relationRow);
-            $deviceId = (int) ($relationFields[$deviceIdField] ?? 0);
-            if ($deviceId < 1) {
-                continue;
+        while ($row = $DB->fetchAssoc($result)) {
+            $deviceFields = self::scalarFields($row);
+            $relationFields = [];
+            $labelParts = [];
+
+            if ($relationClass === 'Item_DeviceProcessor') {
+                $label = trim((string) ($row['designation'] ?? $row['name'] ?? ''));
+            } elseif ($relationClass === 'Item_DeviceMemory') {
+                $relationFields['size'] = $row['_relation_size'] ?? null;
+                $memoryType = trim((string) ($row['_memory_type_name'] ?? ''));
+                if ($memoryType !== '') {
+                    $labelParts[] = $memoryType;
+                }
+                if (!empty($row['frequency'])) {
+                    $labelParts[] = (string) $row['frequency'] . ' MHz';
+                }
+                if (!empty($row['manufacturers_id'])) {
+                    $manufacturer = (string) \\Dropdown::getDropdownName(\\Manufacturer::getTable(), (int) $row['manufacturers_id']);
+                    if ($manufacturer !== '') {
+                        $labelParts[] = $manufacturer;
+                    }
+                }
+                $size = (float) ($row['_relation_size'] ?? 0);
+                if ($size > 0) {
+                    $labelParts[] = (string) (int) round($size / 1024) . ' GB';
+                }
+                $label = implode(' ', $labelParts);
+                unset($deviceFields['_relation_size'], $deviceFields['_memory_type_name']);
+            } else {
+                $relationFields['capacity'] = $row['_relation_capacity'] ?? null;
+                $interface = trim((string) ($row['_interface_name'] ?? ''));
+                $designation = trim((string) ($row['designation'] ?? $row['name'] ?? ''));
+                $labelParts[] = $interface !== '' ? $interface : $designation;
+                $capacity = (float) ($row['_relation_capacity'] ?? 0);
+                if ($capacity > 0) {
+                    $labelParts[] = (string) (int) round($capacity / 1024) . ' GB';
+                }
+                $label = implode(' ', array_filter($labelParts));
+                unset($deviceFields['_relation_capacity'], $deviceFields['_interface_name']);
             }
 
-            $device = new $deviceType();
-            if (!$device->getFromDB($deviceId)) {
-                continue;
-            }
-
-            $deviceFields = self::scalarFields($device->fields ?? []);
-            $deviceFields['report_label'] = self::componentLabel(
-                $relationClass,
-                $deviceFields,
-                $relationFields
-            );
-
-            $records[] = [
-                'relation' => $relationFields,
-                'device'   => $deviceFields,
-            ];
+            $deviceFields['report_label'] = trim((string) $label);
+            $records[] = ['relation' => $relationFields, 'device' => $deviceFields];
         }
 
         return $records;
