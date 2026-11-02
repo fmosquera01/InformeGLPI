@@ -1,3 +1,8 @@
+## 0.5.46
+
+- Consolidate the manual cellphone report and supervisor review inbox under the single **Plugins > Informe Técnico** menu entry using GLPI 11 submenu options.
+- Remove duplicate report-inbox includes and class registrations; retain the existing manual cellphone page as the default menu destination.
+
 ## 0.5.45
 
 - Restrict report editing and evidence uploads to the assigned preparer while a report is in preparation or returned for correction; the assigned supervisor receives a read-only review view with only approve/sign or return actions. Enforce this on the server as well as the interface.
