@@ -77,6 +77,12 @@ final class ReportService
         }
 
         $year = (int) date('Y');
+        $bookValueRaw = trim((string) ($input['book_value'] ?? ''));
+        if ($bookValueRaw !== '' && (!is_numeric($bookValueRaw) || (float) $bookValueRaw < 0)) {
+            throw new RuntimeException(__('El valor en libros debe ser un número mayor o igual a cero.', 'informeglpi'));
+        }
+        $bookValue = $bookValueRaw === '' ? null : number_format((float) $bookValueRaw, 2, '.', '');
+
         $snapshotJson = json_encode(
             $snapshot,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
@@ -148,6 +154,9 @@ final class ReportService
                 'prepared_by_users_id' => $preparedBy,
                 'reviewer_users_id' => $reviewer,
                 'subject' => $subject,
+                'book_value' => $bookValue,
+                'book_value_users_id' => $bookValue !== null ? $userId : null,
+                'book_value_date' => $bookValue !== null ? date('Y-m-d H:i:s') : null,
                 'users_id' => $userId,
             ]);
 
