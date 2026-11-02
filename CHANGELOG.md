@@ -1,7 +1,7 @@
 ## 0.5.43
 
 - Add PIN-authorized technical and supervisor signature actions using each user's saved profile signature; preserve a private, hash-verified copy per report.
-- Enforce assigned preparer/reviewer identity, supervisor validation right, entity access, PIN lockout, and audit history for each transition.
+- Enforce assigned preparer/reviewer identity, supervisor validation right, entity access, PIN lockout, at least one evidence photo before technical signature, and audit history for each transition.
 - Allow the assigned technician to edit a report returned by the supervisor; saving corrections returns it to preparation for a new technical signature.
 - Add supervisor return-with-observations and an intermediate approved-pending-PDF state; reports are not marked final before PDF generation.
 - Expand the report status column to 40 characters so all workflow states are stored without truncation.
