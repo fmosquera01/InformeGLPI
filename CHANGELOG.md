@@ -1,3 +1,7 @@
+## 0.5.40
+
+- Correct PHP namespace separators in the component catalog lookups introduced with the JOIN-free retrieval.
+
 ## 0.5.39
 
 - Replace component JOIN queries with direct query-builder reads of association rows and individual component records, avoiding alias-dependent joins.
