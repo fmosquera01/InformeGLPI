@@ -4,6 +4,7 @@ declare(strict_types=1);
 use GlpiPlugin\Informeglopi\Report;
 use GlpiPlugin\Informeglopi\ReportService;
 use GlpiPlugin\Informeglopi\ReportTab;
+use GlpiPlugin\Informeglopi\ReportWorkflow;
 
 include('../../../inc/includes.php');
 Session::checkLoginUser();
@@ -36,7 +37,12 @@ if (!$isManualPhone) {
 try {
     ReportService::updateDraft($reportId, $_POST);
     ReportService::addEvidence($reportId, $_FILES['evidence_files'] ?? []);
-    Session::addMessageAfterRedirect(__('Informe guardado correctamente.', 'informeglpi'), true, INFO);
+    if (($_POST['submit_action'] ?? '') === 'sign_technical') {
+        ReportWorkflow::signTechnical($reportId, (string) ($_POST['technical_pin'] ?? ''));
+        Session::addMessageAfterRedirect(__('Informe firmado y enviado al supervisor.', 'informeglpi'), true, INFO);
+    } else {
+        Session::addMessageAfterRedirect(__('Informe guardado correctamente.', 'informeglpi'), true, INFO);
+    }
 } catch (Throwable $e) {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
 }
