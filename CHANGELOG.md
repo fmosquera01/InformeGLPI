@@ -1,3 +1,6 @@
+## 0.5.63
+- Corrige el cálculo del espacio reservado para las firmas en PDF A4: contempla también el espacio de «Atentamente» y el margen entre fotografías y firmas, evitando rechazos aunque los bloques sí puedan caber en la página.
+
 ## 0.5.62
 - Cambia el PDF institucional de tamaño Letter a A4 y calcula el ancho y límite inferior según las dimensiones reales de la página.
 - Reduce moderadamente la altura de las imágenes de firma y el espacio reservado para ellas, liberando más área para ampliar las fotografías sin sacar las firmas de la página.
