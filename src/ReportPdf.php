@@ -330,7 +330,7 @@ final class ReportPdf
         $borderBlue = [142, 170, 219];
         $x = 36.0;
         $width = 543.0;
-        $bottom = 742.0;
+        $bottom = 760.0;
         $regular = 'helvetica';
         $bold = 'helvetica';
         $pdf->SetDrawColor(...$borderBlue);
@@ -491,7 +491,7 @@ final class ReportPdf
         }
         $y += 8;
         $photoTitleH = 15.0;
-        $signatureReserve = 112.0;
+        $signatureReserve = 116.0;
         $availablePhotoHeight = $bottom - $y - $photoTitleH - $signatureReserve;
         if ($availablePhotoHeight < 48) {
             throw new RuntimeException(__('El contenido del informe no deja espacio suficiente para fotografías y firmas en una sola página Letter. Reduzca la extensión de los textos.', 'informeglpi'));
