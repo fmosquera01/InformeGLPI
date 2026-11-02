@@ -108,8 +108,8 @@ function plugin_informeglpi_install(): bool
             `id` int unsigned NOT NULL AUTO_INCREMENT,
             `reports_id` int unsigned NOT NULL,
             `action` varchar(40) NOT NULL,
-            `old_status` varchar(24) DEFAULT NULL,
-            `new_status` varchar(24) DEFAULT NULL,
+            `old_status` varchar(40) DEFAULT NULL,
+            `new_status` varchar(40) DEFAULT NULL,
             `changes_json` longtext DEFAULT NULL,
             `comment` text DEFAULT NULL,
             `users_id` int unsigned NOT NULL,
@@ -143,6 +143,17 @@ function plugin_informeglpi_install(): bool
     // Workflow states such as pending_supervisor_signature require more than 24 characters.
     if ($DB->tableExists($reportTable) && $DB->fieldExists($reportTable, 'status')) {
         $migration->changeField($reportTable, 'status', 'status', "varchar(40) NOT NULL DEFAULT 'draft'");
+    }
+
+    // History stores the same workflow state names as the report record.
+    $historyTable = 'glpi_plugin_informeglopi_history';
+    if ($DB->tableExists($historyTable)) {
+        if ($DB->fieldExists($historyTable, 'old_status')) {
+            $migration->changeField($historyTable, 'old_status', 'old_status', 'varchar(40) DEFAULT NULL');
+        }
+        if ($DB->fieldExists($historyTable, 'new_status')) {
+            $migration->changeField($historyTable, 'new_status', 'new_status', 'varchar(40) DEFAULT NULL');
+        }
     }
 
     $migration->executeMigration();
