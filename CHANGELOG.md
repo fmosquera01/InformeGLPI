@@ -1,3 +1,9 @@
+## 0.5.42
+
+- Display the authenticated user's previously saved personal signature in the GLPI user profile through a private, session-protected image endpoint.
+- Verify the stored image path remains inside the user's private signature directory and validate its SHA-256 hash before serving it; do not expose filesystem paths.
+- Keep signature registration, PIN handling, and existing report behavior unchanged.
+
 ## 0.5.41
 
 - Add a personal-signature tab to the authenticated user's own GLPI user record; other users' records do not expose or permit editing that signature.
