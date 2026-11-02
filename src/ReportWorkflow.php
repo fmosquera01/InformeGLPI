@@ -61,6 +61,24 @@ final class ReportWorkflow
             throw new RuntimeException(__('Debe adjuntar al menos una fotografía del equipo antes de firmar y enviar el informe.', 'informeglpi'));
         }
 
+        if ($type === 'technical') {
+            $missing = ReportService::getMissingFields($reportId);
+            if ($missing !== []) {
+                throw new RuntimeException(__('No se puede firmar. Complete los siguientes campos antes de continuar:', 'informeglpi') . "\\n• " . implode("\\n• ", $missing));
+            }
+            // Capture the current GLPI inventory values at the moment of signature.
+            if ((string) ($report->fields['itemtype'] ?? '') !== 'ManualCellphone') {
+                $itemtype = (string) $report->fields['itemtype'];
+                $item = new $itemtype();
+                if (!$item->getFromDB((int) $report->fields['items_id'])) {
+                    throw new RuntimeException(__('No se pudo volver a consultar el activo en GLPI.', 'informeglpi'));
+                }
+                $DB->update('glpi_plugin_informeglopi_reports', [
+                    'asset_snapshot' => json_encode(AssetSnapshotBuilder::build($item), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+                ], ['id' => $reportId, 'status' => 'draft']);
+            }
+        }
+
         $signature = self::verifyUserPin($userId, $pin);
         $source = rtrim(GLPI_VAR_DIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $signature['signature_path']);
         $source = self::privateFile($source);
