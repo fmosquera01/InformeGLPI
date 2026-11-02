@@ -176,7 +176,7 @@ final class AssetSnapshotBuilder
                     $labelParts[] = (string) $row['frequency'] . ' MHz';
                 }
                 if (!empty($row['manufacturers_id'])) {
-                    $manufacturer = (string) \\Dropdown::getDropdownName(\\Manufacturer::getTable(), (int) $row['manufacturers_id']);
+                    $manufacturer = (string) \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $row['manufacturers_id']);
                     if ($manufacturer !== '') {
                         $labelParts[] = $manufacturer;
                     }
