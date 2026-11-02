@@ -166,59 +166,145 @@ final class ReportPdf
     private static function buildHtml(array $report, array $asset, array $snapshot, array $evidences, array $signatures, array &$tempFiles): string
     {
         $esc = static fn($v): string => htmlspecialchars((string) ($v ?? '—'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $value = static fn(array $source, array $keys): string => trim((string) (array_reduce(
+            $keys,
+            static fn($found, $key) => $found !== null && $found !== '' ? $found : ($source[$key] ?? null),
+            null
+        ) ?? ''));
         $recipients = json_decode((string) ($report['recipients_json'] ?? '[]'), true);
         $recipientNames = [];
-        foreach (is_array($recipients) ? $recipients : [] as $id) $recipientNames[] = getUserName((int) $id);
+        foreach (is_array($recipients) ? $recipients : [] as $id) {
+            $recipientNames[] = getUserName((int) $id);
+        }
         $date = (string) ($report['report_date'] ?? '');
-        $assetRows = [];
-        $labels = [
-            'name' => 'ACTIVO', 'otherserial' => 'CÓDIGO DE ACTIVO', 'serial' => 'SERIE',
-            'manufacturers_id' => 'FABRICANTE', 'computermodels_id' => 'MODELO',
-            'locations_id' => 'UBICACIÓN', 'date_buy' => 'FECHA DE COMPRA',
-        ];
-        foreach ($labels as $key => $label) {
-            $value = $asset[$key] ?? '';
-            if ($key === 'manufacturers_id' && (int) $value > 0) $value = \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $value);
-            if ($key === 'locations_id' && (int) $value > 0) $value = \Dropdown::getDropdownName(\Location::getTable(), (int) $value);
-            if ($key === 'date_buy' && $value) $value = \Html::convDate((string) $value);
-            if (trim((string) $value) !== '' && $value !== null) $assetRows[] = '<td><b>' . $esc($label) . '</b><br>' . $esc($value) . '</td>';
-        }
-        $components = is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [];
-        foreach (['processors' => 'PROCESADOR', 'memories' => 'RAM', 'hard_drives' => 'DISCO'] as $key => $label) {
-            $values = [];
-            foreach (($components[$key] ?? []) as $component) {
-                $values[] = (string) ($component['device']['report_label'] ?? '');
+        if ($date !== '') {
+            $timestamp = strtotime($date);
+            if ($timestamp !== false) {
+                $months = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+                $date = date('d', $timestamp) . ' – ' . $months[(int) date('n', $timestamp) - 1] . ' - ' . date('Y', $timestamp);
             }
-            if ($values) $assetRows[] = '<td><b>' . $esc($label) . '</b><br>' . $esc(implode(' / ', $values)) . '</td>';
         }
-        $assetHtml = '<table cellpadding="3" cellspacing="1" border="0" bgcolor="#d9dee7"><tr>' . implode('', $assetRows) . '</tr></table>';
+
+        $itemType = (string) ($snapshot['itemtype'] ?? $report['itemtype'] ?? '');
+        $assetType = $itemType === 'ManualCellphone'
+            ? 'CELULAR'
+            : strtoupper(str_replace(['Glpi\\\\Asset\\\\', '_'], ['', ' '], $itemType));
+        $assetName = $value($asset, ['name']) ?: (string) ($snapshot['asset_name'] ?? '');
+        $description = $value($asset, ['comment', 'description']);
+        if ($description === '') {
+            $description = $assetName;
+        }
+        $purchaseDate = $value($asset, ['date_buy']);
+        if ($purchaseDate !== '') {
+            $timestamp = strtotime($purchaseDate);
+            if ($timestamp !== false) {
+                $purchaseDate = date('d/m/Y', $timestamp);
+            }
+        }
+        $bookValue = $report['book_value'] ?? null;
+        $bookValueText = $bookValue !== null && $bookValue !== ''
+            ? '$ ' . number_format((float) $bookValue, 2, '.', ',')
+            : '—';
+
+        $field = static function (string $label, string $content, int $labelWidth = 34) use ($esc): string {
+            return '<tr><td width="' . $labelWidth . '%" class="field-label"><b>' . $esc($label) . '</b></td><td>' . nl2br($esc($content !== '' ? $content : '—')) . '</td></tr>';
+        };
+        $assetRows = '';
+        $assetRows .= $field('CÓDIGO DE ACTIVO:', $value($asset, ['otherserial', 'asset_code']));
+        $assetRows .= $field('TIPO', $assetType);
+        $descriptionBlock = 'FECHA DE COMPRA: ' . ($purchaseDate !== '' ? $purchaseDate : '—')
+            . "\nVALOR EN LIBRO: " . $bookValueText
+            . "\n" . $description;
+        $components = is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [];
+        if ($itemType === 'Computer') {
+            foreach (['processors' => 'Procesador', 'memories' => 'RAM', 'hard_drives' => 'DISCO DURO'] as $key => $label) {
+                $componentLines = [];
+                foreach (($components[$key] ?? []) as $component) {
+                    $line = trim((string) ($component['device']['report_label'] ?? ''));
+                    if ($line !== '') {
+                        $componentLines[] = $label . ': ' . $line;
+                    }
+                }
+                if ($componentLines) {
+                    $descriptionBlock .= "\n" . implode("\n", $componentLines);
+                }
+            }
+        }
+        $assetRows .= $field('DESCRIPCIÓN DEL ACTIVO:', $descriptionBlock);
+        $manufacturer = $value($asset, ['manufacturers_id']);
+        if ($manufacturer !== '' && ctype_digit($manufacturer) && (int) $manufacturer > 0) {
+            $manufacturer = (string) \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $manufacturer);
+        }
+        $model = $value($asset, ['computermodels_id', 'phonemodels_id', 'monitormodels_id', 'model']);
+        if ($model !== '' && ctype_digit($model)) {
+            foreach (['ComputerModel', 'PhoneModel', 'MonitorModel'] as $class) {
+                if (class_exists($class)) {
+                    $table = $class::getTable();
+                    $modelName = (string) \Dropdown::getDropdownName($table, (int) $model);
+                    if ($modelName !== '') { $model = $modelName; break; }
+                }
+            }
+        }
+        $assetRows .= $field('MARCA:', $manufacturer);
+        $assetRows .= $field('MODELO:', $model);
+        $assetRows .= $field('SERIE:', $value($asset, ['serial', 'imei']));
+        $userId = (int) ($asset['users_id'] ?? 0);
+        $assetRows .= $field('USUARIO RESPONSABLE:', $userId > 0 ? getUserName($userId) : $value($asset, ['responsible']));
+        $location = $value($asset, ['locations_id', 'area']);
+        if ($location !== '' && ctype_digit($location) && (int) $location > 0) {
+            $location = (string) \Dropdown::getDropdownName(\Location::getTable(), (int) $location);
+        }
+        $assetRows .= $field('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', $location);
+
+        $technicalRows = '';
+        foreach (['background' => 'ANTECEDENTES:', 'diagnosis' => 'DIAGNÓSTICO', 'cause' => 'CAUSA:', 'recommendations' => 'RECOMENDACIONES.'] as $key => $label) {
+            $technicalRows .= $field($label, trim((string) ($report[$key] ?? '')), 25);
+        }
+        $damage = (string) ($report['damage_type'] ?? '');
+        $damageText = $damage === 'wear' ? 'Desgaste -X-     Mal uso ---' : ($damage === 'property_damage' ? 'Desgaste ---     Mal uso -X-' : 'Desgaste ---     Mal uso ---');
+        $technicalRows .= $field('TIPO DE DAÑO:', $damageText, 25);
+
         $photoHtml = '';
-        $max = count($evidences);
-        foreach ($evidences as $index => $ev) {
-            $path = self::compressedImage($ev['path'], $index, $tempFiles);
-            $photoHtml .= '<td width="' . (int) floor(100 / min(4, $max)) . '%" align="center"><img src="' . $esc($path) . '" height="24mm"><br><font size="6">' . $esc($ev['caption']) . '</font></td>';
-            if (($index + 1) % 4 === 0 && $index + 1 < $max) $photoHtml .= '</tr><tr>';
+        $perRow = min(4, count($evidences));
+        foreach ($evidences as $index => $evidence) {
+            $path = self::compressedImage($evidence['path'], $index, $tempFiles);
+            $photoHtml .= '<td width="' . (int) floor(100 / max(1, $perRow)) . '%" align="center" valign="middle"><img src="' . $esc($path) . '" height="23mm"><br><font size="6">' . $esc($evidence['caption']) . '</font></td>';
+            if (($index + 1) % $perRow === 0 && $index + 1 < count($evidences)) {
+                $photoHtml .= '</tr><tr>';
+            }
         }
         $photoHtml = '<table cellpadding="2" cellspacing="1" border="0"><tr>' . $photoHtml . '</tr></table>';
+
         $signatureHtml = '';
-        foreach (['technical' => 'FIRMA TÉCNICO', 'supervisor' => 'FIRMA SUPERVISOR'] as $type => $label) {
-            $signatureHtml .= '<td width="50%" align="center"><img src="' . $esc($signatures[$type]['path']) . '" height="15mm"><br><b>' . $esc($label) . '</b><br>' . $esc($signatures[$type]['user']) . '<br><font size="6">' . $esc($signatures[$type]['date']) . '</font></td>';
+        foreach (['technical' => 'Elaborador por:', 'supervisor' => 'Supervisado por:'] as $type => $label) {
+            $signature = $signatures[$type];
+            $signatureHtml .= '<td width="50%" align="center" valign="bottom"><b>' . $esc($label) . '</b><br><img src="' . $esc($signature['path']) . '" height="13mm"><br><b>' . $esc($signature['user']) . '</b><br><font size="6">' . $esc($type === 'technical' ? 'Técnico Infraestructura Sistemas' : 'Jefe de Infraestructura Sistemas') . '</font></td>';
         }
-        $sections = '';
-        foreach (['background' => 'ANTECEDENTES', 'diagnosis' => 'DIAGNÓSTICO', 'cause' => 'CAUSA', 'recommendations' => 'RECOMENDACIONES'] as $key => $label) {
-            $value = trim((string) ($report[$key] ?? ''));
-            $sections .= '<tr><td width="22%"><b>' . $esc($label) . '</b></td><td>' . ($value !== '' ? nl2br($esc($value)) : '—') . '</td></tr>';
-        }
-        $title = $esc($report['report_number'] ?? '');
-        return '<style>table{font-size:7pt} td{border:0.3pt solid #b8c2cf} .head{font-size:10pt;font-weight:bold}</style>'
-            . '<table cellpadding="3" cellspacing="0"><tr><td align="center"><font size="11"><b>INFORME TÉCNICO</b></font><br><b>' . $title . '</b></td></tr></table>'
-            . '<table cellpadding="3"><tr><td width="18%"><b>FECHA</b></td><td width="32%">' . $esc($date) . '</td><td width="18%"><b>PARA</b></td><td width="32%">' . $esc(implode(', ', $recipientNames)) . '</td></tr>'
-            . '<tr><td><b>TÉCNICO</b></td><td>' . $esc(getUserName((int) $report['prepared_by_users_id'])) . '</td><td><b>SUPERVISOR</b></td><td>' . $esc(getUserName((int) $report['reviewer_users_id'])) . '</td></tr>'
-            . '<tr><td><b>ASUNTO</b></td><td colspan="3">' . $esc($report['subject'] ?? '') . '</td></tr></table>'
-            . '<br><b>DESCRIPCIÓN DEL ACTIVO</b>' . $assetHtml
-            . '<br><b>INFORMACIÓN TÉCNICA</b><table cellpadding="3">' . $sections . '</table>'
-            . '<br><b>FOTOGRAFÍAS DEL EQUIPO</b>' . $photoHtml
-            . '<br><table cellpadding="4"><tr>' . $signatureHtml . '</tr></table>';
+
+        $preparedBy = getUserName((int) ($report['prepared_by_users_id'] ?? 0));
+        $reviewer = getUserName((int) ($report['reviewer_users_id'] ?? 0));
+        $number = $esc($report['report_number'] ?? '');
+        $subject = $esc($report['subject'] ?? 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.');
+        $header = '<table cellpadding="1" cellspacing="0" border="0"><tr><td width="72%" align="center"><font size="11"><b>INFORME TÉCNICO DE ÍTEMS DE<br>PROPIEDAD, PLANTA Y EQUIPOS</b></font></td><td width="28%" align="right"><b>' . $number . '</b></td></tr></table>';
+        $metadata = '<table cellpadding="2" cellspacing="0" border="0">'
+            . $field('Fecha:', $date, 15)
+            . $field('Para:', implode(' – ', $recipientNames), 15)
+            . $field('De:', $preparedBy . ' – ' . $reviewer, 15)
+            . $field('Asunto:', $subject, 15)
+            . '</table>';
+
+        return '<style>
+            table{font-size:7.2pt} td{border:0.25pt solid #aeb7c2;vertical-align:middle}
+            .field-label{font-weight:bold;background-color:#f3f5f7}
+        </style>'
+            . $header . $metadata
+            . '<br><table cellpadding="3" cellspacing="0"><tr><td align="center"><b>INFORMACIÓN DEL ACTIVO</b></td></tr></table>'
+            . '<table cellpadding="2" cellspacing="0">' . $assetRows . '</table>'
+            . '<br><table cellpadding="3" cellspacing="0"><tr><td align="center"><b>INFORMACIÓN TÉCNICA DEL ACTIVO</b></td></tr></table>'
+            . '<table cellpadding="2" cellspacing="0">' . $technicalRows . '</table>'
+            . '<br><table cellpadding="2" cellspacing="0" border="0"><tr><td align="center"><b>FOTOS DEL EQUIPO:</b></td></tr></table>'
+            . $photoHtml
+            . '<br><table cellpadding="3" cellspacing="0" border="0"><tr><td colspan="2" align="left">Atentamente,</td></tr><tr>' . $signatureHtml . '</tr></table>';
     }
 
     private static function compressedImage(string $source, int $index, array &$tempFiles): string
