@@ -111,82 +111,90 @@ final class AssetSnapshotBuilder
             return [];
         }
 
-        // Use GLPI 11's query builder; direct SQL execution is prohibited.
-        $queries = [
+        // Read the association rows first, then load each catalog device by ID.
+        // This avoids fragile JOIN alias handling across GLPI 11 installations.
+        $relationConfig = [
             'Item_DeviceProcessor' => [
-                'SELECT' => ['dp.*'],
-                'FROM' => 'glpi_items_deviceprocessors AS idp',
-                'INNER JOIN' => [
-                    'glpi_deviceprocessors AS dp' => [
-                        'ON' => ['idp' => 'deviceprocessors_id', 'dp' => 'id'],
-                    ],
-                ],
-                'WHERE' => [
-                    'idp.items_id' => $itemsId,
-                    'idp.itemtype' => 'Computer',
-                ],
+                'relation_table' => 'glpi_items_deviceprocessors',
+                'device_table' => 'glpi_deviceprocessors',
+                'foreign_key' => 'deviceprocessors_id',
             ],
             'Item_DeviceMemory' => [
-                'SELECT' => [
-                    'dm.*',
-                    'idm.size AS _relation_size',
-                    'dmt.name AS _memory_type_name',
-                ],
-                'FROM' => 'glpi_items_devicememories AS idm',
-                'INNER JOIN' => [
-                    'glpi_devicememories AS dm' => [
-                        'ON' => ['idm' => 'devicememories_id', 'dm' => 'id'],
-                    ],
-                ],
-                'LEFT JOIN' => [
-                    'glpi_devicememorytypes AS dmt' => [
-                        'ON' => ['dm' => 'devicememorytypes_id', 'dmt' => 'id'],
-                    ],
-                ],
-                'WHERE' => [
-                    'idm.items_id' => $itemsId,
-                    'idm.itemtype' => 'Computer',
-                ],
+                'relation_table' => 'glpi_items_devicememories',
+                'device_table' => 'glpi_devicememories',
+                'foreign_key' => 'devicememories_id',
             ],
             'Item_DeviceHardDrive' => [
-                'SELECT' => [
-                    'dh.*',
-                    'idh.capacity AS _relation_capacity',
-                    'it.name AS _interface_name',
-                ],
-                'FROM' => 'glpi_items_deviceharddrives AS idh',
-                'INNER JOIN' => [
-                    'glpi_deviceharddrives AS dh' => [
-                        'ON' => ['idh' => 'deviceharddrives_id', 'dh' => 'id'],
-                    ],
-                ],
-                'LEFT JOIN' => [
-                    'glpi_interfacetypes AS it' => [
-                        'ON' => ['dh' => 'interfacetypes_id', 'it' => 'id'],
-                    ],
-                ],
-                'WHERE' => [
-                    'idh.items_id' => $itemsId,
-                    'idh.itemtype' => 'Computer',
-                    'idh.is_deleted' => 0,
-                    'idh.capacity' => ['>', 0],
-                    'dh.designation' => ['<>', null],
-                    [
-                        'OR' => [
-                            ['it.name' => null],
-                            ['it.name' => ['NOT LIKE', '%USB%']],
-                        ],
-                    ],
-                ],
+                'relation_table' => 'glpi_items_deviceharddrives',
+                'device_table' => 'glpi_deviceharddrives',
+                'foreign_key' => 'deviceharddrives_id',
             ],
         ];
 
-        if (!isset($queries[$relationClass])) {
+        if (!isset($relationConfig[$relationClass])) {
             return [];
         }
 
+        $config = $relationConfig[$relationClass];
+        $rows = [];
+
+        foreach ($DB->request([
+            'SELECT' => '*',
+            'FROM' => $config['relation_table'],
+            'WHERE' => [
+                'items_id' => $itemsId,
+                'itemtype' => 'Computer',
+            ],
+        ]) as $relation) {
+            if ($relationClass === 'Item_DeviceHardDrive') {
+                if ((int) ($relation['is_deleted'] ?? 0) !== 0
+                    || (float) ($relation['capacity'] ?? 0) <= 0) {
+                    continue;
+                }
+            }
+
+            $deviceId = (int) ($relation[$config['foreign_key']] ?? 0);
+            if ($deviceId < 1) {
+                continue;
+            }
+
+            foreach ($DB->request([
+                'SELECT' => '*',
+                'FROM' => $config['device_table'],
+                'WHERE' => ['id' => $deviceId],
+                'LIMIT' => 1,
+            ]) as $device) {
+                $row = self::scalarFields($device);
+
+                if ($relationClass === 'Item_DeviceMemory') {
+                    $row['_relation_size'] = $relation['size'] ?? null;
+                    $memoryTypeId = (int) ($device['devicememorytypes_id'] ?? 0);
+                    $row['_memory_type_name'] = $memoryTypeId > 0
+                        ? (string) \\Dropdown::getDropdownName('glpi_devicememorytypes', $memoryTypeId)
+                        : '';
+                } elseif ($relationClass === 'Item_DeviceHardDrive') {
+                    $row['_relation_capacity'] = $relation['capacity'] ?? null;
+                    $interfaceId = (int) ($device['interfacetypes_id'] ?? 0);
+                    $row['_interface_name'] = $interfaceId > 0
+                        ? (string) \\Dropdown::getDropdownName('glpi_interfacetypes', $interfaceId)
+                        : '';
+
+                    $designation = trim((string) ($device['designation'] ?? $device['name'] ?? ''));
+                    if ($designation === '') {
+                        continue;
+                    }
+                    if (stripos((string) $row['_interface_name'], 'USB') !== false) {
+                        continue;
+                    }
+                }
+
+                $rows[] = $row;
+                break;
+            }
+        }
+
         $records = [];
-        foreach ($DB->request($queries[$relationClass]) as $row) {
+        foreach ($rows as $row) {
             $deviceFields = self::scalarFields($row);
             $relationFields = [];
             $labelParts = [];
