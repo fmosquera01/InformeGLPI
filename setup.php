@@ -30,6 +30,9 @@ function plugin_init_informeglpi(): void
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
         'addtabon' => ['Profile'],
     ]);
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\UserSignatureTab::class, [
+        'addtabon' => ['User'],
+    ]);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\ReportTab::class, [
         'addtabon' => \GlpiPlugin\Informeglopi\AssetTypeRegistry::getItemtypes(),
     ]);
