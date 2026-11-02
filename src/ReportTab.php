@@ -454,7 +454,7 @@ final class ReportTab extends CommonGLPI
         }
 
         self::renderStyles();
-        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='card'><div class='card-header d-flex justify-content-between align-items-center'><strong>" . self::e(__('Bandeja de revisión', 'informeglpi')) . "</strong><span class='badge bg-warning text-dark'>" . count($rows) . "</span></div><div class='card-body'>";
+        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='card'><div class='card-header d-flex justify-content-between align-items-center'><strong>" . self::e(__('Bandeja de entrada', 'informeglpi')) . "</strong><span class='badge bg-warning text-dark'>" . count($rows) . "</span></div><div class='card-body'>";
         echo "<p class='text-muted'>" . self::e(__('Informes enviados por los técnicos que esperan su revisión y firma.', 'informeglpi')) . '</p>';
         if ($rows === []) {
             echo "<div class='alert alert-success mb-0'>" . self::e(__('No tiene informes pendientes de revisión.', 'informeglpi')) . '</div>';
@@ -483,7 +483,6 @@ final class ReportTab extends CommonGLPI
             }
             echo '</tbody></table></div>';
         }
-        echo "<div class='mt-3'><a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/manual-phone.php'>" . self::e(__('Informe de celular no registrado', 'informeglpi')) . '</a></div>';
         echo '</div></div></div>';
     }
 
