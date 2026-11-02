@@ -454,7 +454,7 @@ final class ReportTab extends CommonGLPI
         }
 
         self::renderStyles();
-        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='card'><div class='card-header d-flex justify-content-between align-items-center'><strong>" . self::e(__('Bandeja de entrada', 'informeglpi')) . "</strong><span class='badge bg-warning text-dark'>" . count($rows) . "</span></div><div class='card-body'>";
+        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'><h2 class='h4 mb-0'>" . self::e(__('Bandeja de entrada', 'informeglpi')) . "</h2><a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/home.php'>← " . self::e(__('Regresar a Informe Técnico', 'informeglpi')) . "</a></div><div class='card'><div class='card-header d-flex justify-content-between align-items-center'><strong>" . self::e(__('Informes pendientes de firma', 'informeglpi')) . "</strong><span class='badge bg-warning text-dark'>" . count($rows) . "</span></div><div class='card-body'>"
         echo "<p class='text-muted'>" . self::e(__('Informes enviados por los técnicos que esperan su revisión y firma.', 'informeglpi')) . '</p>';
         if ($rows === []) {
             echo "<div class='alert alert-success mb-0'>" . self::e(__('No tiene informes pendientes de revisión.', 'informeglpi')) . '</div>';
@@ -480,6 +480,33 @@ final class ReportTab extends CommonGLPI
                 echo '<td>' . self::e(getUserName((int) $row['prepared_by_users_id'])) . '</td>';
                 echo '<td>' . self::e($row['date_creation']) . '</td>';
                 echo "<td><a class='btn btn-sm btn-warning' href='" . self::e($url) . "'>" . self::e(__('Revisar informe', 'informeglpi')) . '</a></td></tr>';
+            }
+            echo '</tbody></table></div>';
+        }
+        echo '</div></div></div>';
+    }
+
+    public static function renderFinalizedReportsPage(): void
+    {
+        global $DB;
+        if (!\\Session::haveRight(Report::$rightname, READ)) \\Html::displayRightError();
+        $rows = [];
+        foreach ($DB->request(['SELECT'=>['id','report_number','itemtype','items_id','asset_snapshot','date_mod','date_creation','prepared_by_users_id','entities_id','is_recursive'],'FROM'=>'glpi_plugin_informeglopi_reports','WHERE'=>['status'=>'finalized'],'ORDER'=>['date_mod DESC','id DESC']]) as $row) {
+            if (\\Session::haveAccessToEntity((int)$row['entities_id'], (bool)$row['is_recursive'])) $rows[]=$row;
+        }
+        self::renderStyles();
+        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'><h2 class='h4 mb-0'>" . self::e(__('Informes finalizados','informeglpi')) . "</h2><a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/home.php'>← " . self::e(__('Regresar a Informe Técnico','informeglpi')) . "</a></div><div class='card'><div class='card-header d-flex justify-content-between'><strong>" . self::e(__('Historial de informes finalizados','informeglpi')) . "</strong><span class='badge bg-success'>" . count($rows) . "</span></div><div class='card-body'>";
+        if (!$rows) echo "<div class='alert alert-info mb-0'>" . self::e(__('Todavía no hay informes finalizados.','informeglpi')) . '</div>';
+        else {
+            echo "<div class='table-responsive'><table class='table table-sm table-hover align-middle'><thead><tr>";
+            foreach ([__('Informe','informeglpi'),__('Activo','informeglpi'),__('Técnico','informeglpi'),__('Fecha','informeglpi'),__('Acción','informeglpi')] as $h) echo '<th>'.self::e($h).'</th>';
+            echo '</tr></thead><tbody>';
+            foreach ($rows as $r) {
+                $s=json_decode((string)$r['asset_snapshot'],true); $a=is_array($s)?($s['fields']??[]):[];
+                $name=trim(implode(' · ',array_filter([(string)($a['name']??$a['NAME']??$a['NOMBRE']??''),(string)($a['serial']??$a['SERIAL']??''),(string)($a['otherserial']??$a['OTHERSERIAL']??'')])));
+                if($name==='') $name=(string)$r['itemtype'].' #'.(int)$r['items_id'];
+                $url='/plugins/informeglpi/front/report.edit.form.php?id='.(int)$r['id'];
+                echo '<tr><td><strong>'.self::e($r['report_number']).'</strong></td><td>'.self::e($name).'</td><td>'.self::e(getUserName((int)$r['prepared_by_users_id'])).'</td><td>'.self::e($r['date_mod']?:$r['date_creation'])."</td><td><a class='btn btn-sm btn-outline-primary' href='".self::e($url)."'>".self::e(__('Consultar','informeglpi')).'</a></td></tr>';
             }
             echo '</tbody></table></div>';
         }
@@ -514,13 +541,18 @@ final class ReportTab extends CommonGLPI
 
         self::renderStyles();
         echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'>";
-        echo "<h2 class='h4 mb-0'>" . self::e(__('Editar informe técnico', 'informeglpi')) . "</h2>";
-        if ($isManualPhone) {
+        echo "<h2 class='h4 mb-0'>" . self::e(($isEditable ? __('Editar informe técnico', 'informeglpi') : __('Consultar informe técnico', 'informeglpi'))) . "</h2>";
+        if ($reportStatus === 'pending_supervisor_signature' && $userId === (int)($report->fields['reviewer_users_id'] ?? 0)) {
+            echo "<a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/report-inbox.php'>← " . self::e(__('Regresar a la bandeja','informeglpi')) . "</a></div>";
+        } elseif ($reportStatus === 'finalized') {
+            echo "<a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/report-finalized.php'>← " . self::e(__('Regresar a finalizados','informeglpi')) . "</a></div>";
+        } elseif ($isManualPhone) {
             echo "<a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/manual-phone.php'>" . self::e(__('Volver a celulares no registrados', 'informeglpi')) . "</a></div>";
         } else {
             echo "<a class='btn btn-outline-secondary btn-sm' href='" . self::e($item->getFormURLWithID($itemsId)) . "'>" . self::e(__('Volver al activo', 'informeglpi')) . "</a></div>";
         }
-        echo "<div class='ig-edit-paper border rounded p-3'>";
+        echo "<div class='ig-edit-paper ig-report-form border rounded p-3'>";
+        if (!$isEditable) self::renderDocumentHeader((string)($report->fields['report_number'] ?? ''));
         $snapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
         $snapshot = is_array($snapshot) ? $snapshot : [];
         $assetFields = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
@@ -556,6 +588,7 @@ final class ReportTab extends CommonGLPI
                 self::renderWorkflowActions($report);
             }
         } else {
+            echo self::renderReadOnlyDocumentMetadata($report);
             echo $assetHtml;
             self::renderReadOnlyDetails($report);
             self::renderWorkflowActions($report);
@@ -578,21 +611,33 @@ final class ReportTab extends CommonGLPI
         }
     }
 
+    private static function renderReadOnlyDocumentMetadata(Report $report): string
+    {
+        ob_start();
+        $date=(string)($report->fields['report_date']??'');
+        $recipients=json_decode((string)($report->fields['recipients_json']??'[]'),true);
+        $names=[]; foreach(is_array($recipients)?$recipients:[] as $id) $names[]=getUserName((int)$id);
+        echo "<div class='ig-asset-table mb-3'>";
+        foreach ([__('FECHA:','informeglpi')=>($date!==''?\\Html::convDate($date):'—'),__('PARA:','informeglpi')=>($names?implode(', ',$names):'—'),__('DE: TÉCNICO QUE ELABORA:','informeglpi')=>getUserName((int)($report->fields['prepared_by_users_id']??0)),__('DE: RESPONSABLE QUE REVISA:','informeglpi')=>getUserName((int)($report->fields['reviewer_users_id']??0)),__('ASUNTO:','informeglpi')=>(string)($report->fields['subject']??'—')] as $label=>$value) echo '<div class="ig-row"><div class="ig-label">'.self::e($label).'</div><div class="ig-value">'.self::e($value).'</div></div>';
+        echo '</div>'; return (string)ob_get_clean();
+    }
+
     private static function renderReadOnlyDetails(Report $report): void
     {
         $reportId = (int) $report->getID();
+        echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO','informeglpi')) . '</div>';
         echo "<div class='ig-asset-table mb-3'>";
         foreach ([
-            'background' => __('ANTECEDENTES', 'informeglpi'),
-            'diagnosis' => __('DIAGNÓSTICO', 'informeglpi'),
-            'cause' => __('CAUSA', 'informeglpi'),
-            'recommendations' => __('RECOMENDACIONES', 'informeglpi'),
+            'background' => __('ANTECEDENTES:', 'informeglpi'),
+            'diagnosis' => __('DIAGNÓSTICO:', 'informeglpi'),
+            'cause' => __('CAUSA:', 'informeglpi'),
+            'recommendations' => __('RECOMENDACIONES:', 'informeglpi'),
         ] as $field => $label) {
             $value = trim((string) ($report->fields[$field] ?? ''));
             echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>" . ($value !== '' ? nl2br(self::e($value)) : '—') . '</div></div>';
         }
         echo '</div>';
-        echo "<h5>" . self::e(__('Fotografías y evidencias', 'informeglpi')) . '</h5>';
+        echo '<div class="ig-section-title">' . self::e(__('FOTOS DEL EQUIPO','informeglpi')) . '</div>';
         self::renderEvidenceGallery($reportId);
         global $DB;
         $history = [];
