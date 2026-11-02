@@ -277,7 +277,7 @@ final class ReportTab extends CommonGLPI
                 }
 
                 if (!empty($device['manufacturers_id'])) {
-                    $manufacturer = \\Dropdown::getDropdownName(\\Manufacturer::getTable(), (int) $device['manufacturers_id']);
+                    $manufacturer = \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $device['manufacturers_id']);
                     if ($manufacturer !== '' && !in_array($manufacturer, $parts, true)) {
                         $parts[] = $manufacturer;
                     }
