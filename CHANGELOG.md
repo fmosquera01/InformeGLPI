@@ -1,3 +1,9 @@
+## 0.5.49
+
+- Add return navigation from supervisor review to the assigned pending inbox and from finalized report detail to the finalized list.
+- Present supervisor read-only report details in the same institutional document blocks and header layout as the creation form.
+- Add an **Informes finalizados** dashboard option and entity-filtered finalized report list.
+
 ## 0.5.48
 
 - Replace the two separate GLPI plugin submenu entries with one **Informe Técnico** landing page containing two visual actions: cellphone report creation and supervisor inbox.
