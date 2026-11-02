@@ -491,7 +491,7 @@ final class ReportPdf
         }
         $y += 8;
         $photoTitleH = 15.0;
-        $signatureReserve = 116.0;
+        $signatureReserve = 87.65;
         $availablePhotoHeight = $bottom - $y - $photoTitleH - $signatureReserve;
         if ($availablePhotoHeight < 48) {
             throw new RuntimeException(__('El contenido del informe no deja espacio suficiente para fotografías y firmas en una sola página Letter. Reduzca la extensión de los textos.', 'informeglpi'));
