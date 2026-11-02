@@ -483,11 +483,11 @@ final class ReportPdf
         $y = $row('TIPO DE DAÑO:', $damageText, $y, 236, false);
         $y = $row('RECOMENDACIONES:', trim((string) ($report['recommendations'] ?? '')), $y, 236, true);
 
-        // Reservar espacio para las firmas; las fotos se distribuyen en una
-        // cuadrícula de hasta tres columnas, manteniendo la proporción.
+        // Fotografías ampliadas y firmas alineadas en dos columnas.
+        // Se omite deliberadamente el nombre/leyenda de cada archivo de imagen.
         $photos = [];
         foreach ($evidences as $i => $evidence) {
-            $photos[] = ['path' => self::compressedImage($evidence['path'], $i, $tempFiles), 'caption' => (string) ($evidence['caption'] ?? '')];
+            $photos[] = self::compressedImage($evidence['path'], $i, $tempFiles);
         }
         $y += 8;
         $photoTitleH = 15.0;
@@ -496,14 +496,21 @@ final class ReportPdf
         if ($availablePhotoHeight < 48) {
             throw new RuntimeException(__('El contenido del informe no deja espacio suficiente para fotografías y firmas en una sola página Letter. Reduzca la extensión de los textos.', 'informeglpi'));
         }
+
         $cols = max(1, min(3, count($photos)));
-        $photoRows = (int) ceil(count($photos) / $cols);
+        $photoRows = max(1, (int) ceil(count($photos) / $cols));
         $cellW = ($width - 12) / $cols;
-        $cellH = min(105.0, ($availablePhotoHeight - 8) / max(1, $photoRows));
-        $imageH = max(25.0, $cellH - 15);
+        // Con una sola fotografía se aprovecha casi toda la altura libre.
+        // Con varias, cada fila recibe un espacio mayor que en la versión anterior.
+        if ($photoRows === 1) {
+            $cellH = min(300.0, max(90.0, $availablePhotoHeight - 8));
+        } else {
+            $cellH = min(190.0, ($availablePhotoHeight - 8) / $photoRows);
+        }
         if ($photoRows * $cellH > $availablePhotoHeight) {
             throw new RuntimeException(__('La cantidad de fotografías excede el espacio disponible para mantener el informe en una sola página Letter.', 'informeglpi'));
         }
+        $imageH = max(35.0, $cellH - 8.0);
 
         $pdf->SetDrawColor(...$borderBlue);
         $pdf->SetFillColor(255, 255, 255);
@@ -513,49 +520,59 @@ final class ReportPdf
         $y += $photoTitleH;
         $pdf->SetFillColor(...$rowBlue);
         $pdf->Rect($x, $y, $width, $photoRows * $cellH, 'DF');
-        foreach ($photos as $i => $photo) {
+
+        foreach ($photos as $i => $path) {
             $col = $i % $cols;
             $r = intdiv($i, $cols);
             $cx = $x + 6 + $col * $cellW;
-            $cy = $y + $r * $cellH + 4;
-            $pdf->Image($photo['path'], $cx, $cy, $cellW - 12, $imageH, '', '', '', true, 150, '', false, false, 0, 'CM', false, false);
-            if ($photo['caption'] !== '') {
-                $pdf->SetFont($regular, '', 6.5);
-                $pdf->SetXY($cx, $cy + $imageH);
-                $pdf->MultiCell($cellW - 12, 10, $photo['caption'], 0, 'C', false, 0);
-            }
+            $cy = $y + 4 + $r * $cellH;
+            // TCPDF conserva la proporción de la fotografía dentro de la celda.
+            $pdf->Image($path, $cx, $cy, $cellW - 12, $imageH, '', '', '', true, 200, '', false, false, 0, 'CM', false, false);
         }
         $y += $photoRows * $cellH + 8;
 
-        // Firmas originales verificadas, con sus usuarios reales.
         $pdf->SetFont($regular, '', 9.5);
+        $pdf->SetTextColor(0, 0, 0);
         $pdf->SetXY(85, $y);
         $pdf->Cell(200, 12, 'Atentamente,', 0, 1, 'L');
         $y += 17;
-        $pdf->SetFont($regular, '', 8.5);
-        $pdf->SetXY(85, $y);
-        $pdf->Cell(200, 12, 'Elaborador por:', 0, 0, 'L');
-        $pdf->SetXY(380, $y);
-        $pdf->Cell(180, 12, 'Supervisado por:', 0, 0, 'R');
-        $lineY = $y + 55;
-        foreach (['technical' => [90.0, 140.0, 'Técnico Infraestructura Sistemas'], 'supervisor' => [380.0, 180.0, 'Jefe de Infraestructura Sistemas']] as $type => [$sx, $sw, $role]) {
-            $sig = $signatures[$type];
-            $lineW = 140.0;
-            $lx = $type === 'supervisor' ? $sx + $sw - $lineW : $sx;
-            if (!empty($sig['path']) && is_file($sig['path'])) {
-                $pdf->Image($sig['path'], $lx, $y + 13, $lineW, 38, '', '', '', true, 150, '', false, false, 0, 'CB', false, false);
-            }
-            $pdf->SetDrawColor(0, 0, 0);
-            $pdf->Line($lx, $lineY, $lx + $lineW, $lineY);
+
+        // Cada rótulo queda centrado exactamente sobre su bloque de firma y cargo.
+        $centerLeft = $x + ($width * 0.27);
+        $centerRight = $x + ($width * 0.75);
+        $signatureBlock = static function (array $sig, string $label, string $role, float $center) use ($pdf, $y, $regular, $bold): void {
+            $lineW = 190.0;
+            $blockW = 230.0;
+            $left = $center - ($blockW / 2);
+            $lineX = $center - ($lineW / 2);
+            $lineY = $y + 62.0;
+
             $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont($regular, '', 9.5);
+            $pdf->SetXY($left, $y);
+            $pdf->Cell($blockW, 12, $label, 0, 0, 'C');
+
+            if (!empty($sig['path']) && is_file($sig['path'])) {
+                $pdf->Image($sig['path'], $lineX, $y + 14, $lineW, 46, '', '', '', true, 180, '', false, false, 0, 'CB', false, false);
+            }
+
+            $pdf->SetDrawColor(0, 0, 0);
+            $pdf->SetLineWidth(0.5);
+            $pdf->Line($lineX, $lineY, $lineX + $lineW, $lineY);
+
             $pdf->SetFont($bold, 'B', 8);
-            $pdf->SetXY($lx - 20, $lineY + 2);
-            $pdf->Cell($lineW + 40, 10, (string) $sig['user'], 0, 0, 'C');
-            $pdf->SetFont($regular, '', 7.5);
-            $pdf->SetXY($lx - 20, $lineY + 12);
-            $pdf->Cell($lineW + 40, 10, $role, 0, 0, 'C');
-        }
-        if ($lineY + 25 > $bottom) {
+            $pdf->SetXY($left, $lineY + 2);
+            $pdf->Cell($blockW, 10, (string) ($sig['user'] ?? ''), 0, 0, 'C');
+
+            $pdf->SetFont($regular, '', 8.5);
+            $pdf->SetXY($left, $lineY + 12);
+            $pdf->Cell($blockW, 11, $role, 0, 0, 'C');
+        };
+
+        $signatureBlock($signatures['technical'], 'Elaborador por:', 'Técnico Infraestructura Sistemas', $centerLeft);
+        $signatureBlock($signatures['supervisor'], 'Supervisado por:', 'Jefe de Infraestructura Sistemas', $centerRight);
+
+        if ($y + 62.0 + 25.0 > $bottom) {
             throw new RuntimeException(__('Las firmas exceden el espacio de la página Letter. Reduzca el contenido del informe.', 'informeglpi'));
         }
     }
