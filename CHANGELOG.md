@@ -1,3 +1,9 @@
+## 0.5.48
+
+- Replace the two separate GLPI plugin submenu entries with one **Informe Técnico** landing page containing two visual actions: cellphone report creation and supervisor inbox.
+- Show the supervisor's pending-review count on the inbox card, filtered by assigned reviewer and accessible entities; hide the count/action for users without review permission.
+- Keep the existing cellphone form and inbox pages as the destinations of their respective dashboard actions.
+
 ## 0.5.47
 
 - Render the supervisor inbox inside the standard GLPI page layout with the Plugins breadcrumb/header.
