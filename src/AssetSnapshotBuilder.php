@@ -31,6 +31,22 @@ final class AssetSnapshotBuilder
         $itemsId = (int) ($item->fields['id'] ?? 0);
         $fields = self::scalarFields($item->fields ?? []);
 
+        // GLPI stores purchase/accounting information in glpi_infocoms,
+        // not in the main asset table (Computer, Monitor, etc.).
+        global $DB;
+        foreach ($DB->request([
+            'SELECT' => ['date_buy'],
+            'FROM'   => 'glpi_infocoms',
+            'WHERE'  => [
+                'itemtype' => $itemtype,
+                'items_id' => $itemsId,
+            ],
+            'LIMIT'  => 1,
+        ]) as $infocom) {
+            $fields['date_buy'] = $infocom['date_buy'] ?? null;
+            break;
+        }
+
         $snapshot = [
             'schema_version' => 2,
             'captured_at'    => date('Y-m-d H:i:s'),
