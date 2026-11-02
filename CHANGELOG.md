@@ -1,3 +1,8 @@
+## 0.5.52
+
+- Refine the plugin landing page with compact action cards, small leading icons, and clear button-style links for cellphone report creation, the supervisor inbox, and finalized reports.
+- Reduce card spacing and improve responsive layout without changing permissions, counters, or destination pages.
+
 ## 0.5.51
 
 - Fix incorrectly escaped namespace separators in the finalized reports page that caused a PHP syntax error during plugin loading.
