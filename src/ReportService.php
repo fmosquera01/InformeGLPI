@@ -355,16 +355,13 @@ final class ReportService
 
         if (($report->fields['itemtype'] ?? '') === 'ManualCellphone' && (int) ($report->fields['items_id'] ?? -1) === 0) {
             $manual = is_array($input['manual_asset'] ?? null) ? $input['manual_asset'] : [];
-            foreach (['asset_code', 'description', 'manufacturer', 'model', 'serial', 'responsible', 'area'] as $required) {
-                if (trim((string) ($manual[$required] ?? '')) === '') {
-                    throw new RuntimeException(__('Complete código de activo, descripción, marca, modelo, IMEI, usuario responsable y área.', 'informeglpi'));
-                }
-            }
-            $imei = trim((string) $manual['serial']);
-            if (!preg_match('/^[0-9]{14,16}$/', $imei)) {
+            $imei = trim((string) ($manual['serial'] ?? ''));
+            if ($imei !== '' && !preg_match('/^[0-9]{14,16}$/', $imei)) {
                 throw new RuntimeException(__('La serie debe corresponder al IMEI numérico del celular (14 a 16 dígitos).', 'informeglpi'));
             }
-            self::assertManualCellphoneNotRegistered($imei, trim((string) $manual['asset_code']));
+            if ($imei !== '') {
+                self::assertManualCellphoneNotRegistered($imei, trim((string) ($manual['asset_code'] ?? '')));
+            }
             $oldSnapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
             $newSnapshot = self::buildManualCellphoneSnapshot($manual);
             $updates['asset_snapshot'] = json_encode($newSnapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
