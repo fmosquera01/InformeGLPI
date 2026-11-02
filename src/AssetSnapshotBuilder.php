@@ -111,13 +111,17 @@ final class AssetSnapshotBuilder
             return [];
         }
 
+        // GLPI 11 Item_Devices relations use the common columns itemtype/items_id.
+        // Do not rely on the undocumented itemtype_1/items_id_1 property names:
+        // they are not defined consistently by all relation classes.
         $relationTable = $relationClass::getTable();
-        $itemtypeField = $relationClass::$itemtype_1 ?? 'itemtype';
-        $itemsIdField = $relationClass::$items_id_1 ?? 'items_id';
-        $deviceType = $relationClass::$itemtype_2 ?? null;
-        $deviceIdField = $relationClass::$items_id_2 ?? null;
+        $deviceType = $relationClass::getDeviceType();
+        if (!is_string($deviceType) || !class_exists($deviceType)) {
+            return [];
+        }
 
-        if (!is_string($deviceType) || !is_string($deviceIdField) || !class_exists($deviceType)) {
+        $deviceIdField = $deviceType::getForeignKeyField();
+        if (!is_string($deviceIdField) || $deviceIdField === '') {
             return [];
         }
 
@@ -126,14 +130,20 @@ final class AssetSnapshotBuilder
             'SELECT' => '*',
             'FROM'   => $relationTable,
             'WHERE'  => [
-                $itemtypeField => $itemtype,
-                $itemsIdField  => $itemsId,
+                'itemtype'   => $itemtype,
+                'items_id'   => $itemsId,
+                'is_deleted' => 0,
             ],
+            'ORDER' => ['id ASC'],
         ]) as $relation) {
             $deviceId = (int) ($relation[$deviceIdField] ?? 0);
+            if ($deviceId < 1) {
+                continue;
+            }
+
             $device = new $deviceType();
             $deviceFields = [];
-            if ($deviceId > 0 && $device->getFromDB($deviceId)) {
+            if ($device->getFromDB($deviceId)) {
                 $deviceFields = self::scalarFields($device->fields ?? []);
             }
 
