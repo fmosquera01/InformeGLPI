@@ -40,18 +40,26 @@ final class UserSignatureTab extends CommonGLPI
 
         $userId = (int) \Session::getLoginUserID();
         $configured = false;
+        $signatureHash = '';
         if ($DB->tableExists('glpi_plugin_informeglopi_user_signatures')) {
             $configured = $DB->request([
-                'SELECT' => ['id'],
+                'SELECT' => ['id', 'signature_sha256'],
                 'FROM' => 'glpi_plugin_informeglopi_user_signatures',
                 'WHERE' => ['users_id' => $userId],
                 'LIMIT' => 1,
-            ])->count() > 0;
+            ]);
+            foreach ($rows as $row) {
+                $configured = true;
+                $signatureHash = (string) ($row['signature_sha256'] ?? '');
+                break;
+            }
         }
 
         echo "<div class='card mb-3'><div class='card-header'><strong>" . self::e(__('Firma personal para informes técnicos', 'informeglpi')) . "</strong></div><div class='card-body'>";
         echo "<p>" . self::e(__('Registre una sola vez su firma manuscrita. Se utilizará únicamente cuando usted autorice la firma de un informe técnico.', 'informeglpi')) . "</p>";
         if ($configured) {
+            $previewUrl = '/plugins/informeglpi/front/user-signature.image.php?v=' . rawurlencode($signatureHash);
+            echo "<div class='mb-3'><label class='form-label fw-bold'>" . self::e(__('Firma actualmente registrada', 'informeglpi')) . "</label><div class='border rounded bg-white p-3' style='max-width:760px'><img src='" . self::e($previewUrl) . "' alt='" . self::e(__('Firma personal registrada', 'informeglpi')) . "' style='display:block;max-width:100%;max-height:180px;object-fit:contain;margin:auto'></div><small class='text-muted'>" . self::e(__('Esta es la firma que se utilizará cuando autorice un informe. Para reemplazarla, dibuje una nueva debajo.', 'informeglpi')) . "</small></div>";
             echo "<div class='alert alert-success'>" . self::e(__('Ya tiene una firma y un PIN registrados. Para reemplazar la firma o cambiar el PIN deberá ingresar su PIN actual.', 'informeglpi')) . "</div>";
         } else {
             echo "<div class='alert alert-info'>" . self::e(__('Todavía no tiene una firma registrada. Dibuje su firma y cree un PIN personal de 6 dígitos.', 'informeglpi')) . "</div>";
