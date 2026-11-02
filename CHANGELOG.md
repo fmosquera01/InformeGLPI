@@ -1,3 +1,8 @@
+## 0.5.29
+
+- Fix purchase-date retrieval for GLPI 11 by reading `buy_date` from `glpi_infocoms` and mapping it to the report snapshot field `date_buy`.
+- Check that the table and column exist before querying, preventing the asset tab from crashing on installations with a different schema.
+
 ## 0.5.28
 
 - Always display **FECHA DE COMPRA** directly above **VALOR EN LIBROS (USD)** inside **DESCRIPCIÓN DEL ACTIVO**, showing a dash when GLPI has no valid purchase date.
