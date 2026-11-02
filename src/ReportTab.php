@@ -489,10 +489,10 @@ final class ReportTab extends CommonGLPI
     public static function renderFinalizedReportsPage(): void
     {
         global $DB;
-        if (!\\Session::haveRight(Report::$rightname, READ)) \\Html::displayRightError();
+        if (!\Session::haveRight(Report::$rightname, READ)) \Html::displayRightError();
         $rows = [];
         foreach ($DB->request(['SELECT'=>['id','report_number','itemtype','items_id','asset_snapshot','date_mod','date_creation','prepared_by_users_id','entities_id','is_recursive'],'FROM'=>'glpi_plugin_informeglopi_reports','WHERE'=>['status'=>'finalized'],'ORDER'=>['date_mod DESC','id DESC']]) as $row) {
-            if (\\Session::haveAccessToEntity((int)$row['entities_id'], (bool)$row['is_recursive'])) $rows[]=$row;
+            if (\Session::haveAccessToEntity((int)$row['entities_id'], (bool)$row['is_recursive'])) $rows[]=$row;
         }
         self::renderStyles();
         echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'><h2 class='h4 mb-0'>" . self::e(__('Informes finalizados','informeglpi')) . "</h2><a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/home.php'>← " . self::e(__('Regresar a Informe Técnico','informeglpi')) . "</a></div><div class='card'><div class='card-header d-flex justify-content-between'><strong>" . self::e(__('Historial de informes finalizados','informeglpi')) . "</strong><span class='badge bg-success'>" . count($rows) . "</span></div><div class='card-body'>";
@@ -618,7 +618,7 @@ final class ReportTab extends CommonGLPI
         $recipients=json_decode((string)($report->fields['recipients_json']??'[]'),true);
         $names=[]; foreach(is_array($recipients)?$recipients:[] as $id) $names[]=getUserName((int)$id);
         echo "<div class='ig-asset-table mb-3'>";
-        foreach ([__('FECHA:','informeglpi')=>($date!==''?\\Html::convDate($date):'—'),__('PARA:','informeglpi')=>($names?implode(', ',$names):'—'),__('DE: TÉCNICO QUE ELABORA:','informeglpi')=>getUserName((int)($report->fields['prepared_by_users_id']??0)),__('DE: RESPONSABLE QUE REVISA:','informeglpi')=>getUserName((int)($report->fields['reviewer_users_id']??0)),__('ASUNTO:','informeglpi')=>(string)($report->fields['subject']??'—')] as $label=>$value) echo '<div class="ig-row"><div class="ig-label">'.self::e($label).'</div><div class="ig-value">'.self::e($value).'</div></div>';
+        foreach ([__('FECHA:','informeglpi')=>($date!==''?\Html::convDate($date):'—'),__('PARA:','informeglpi')=>($names?implode(', ',$names):'—'),__('DE: TÉCNICO QUE ELABORA:','informeglpi')=>getUserName((int)($report->fields['prepared_by_users_id']??0)),__('DE: RESPONSABLE QUE REVISA:','informeglpi')=>getUserName((int)($report->fields['reviewer_users_id']??0)),__('ASUNTO:','informeglpi')=>(string)($report->fields['subject']??'—')] as $label=>$value) echo '<div class="ig-row"><div class="ig-label">'.self::e($label).'</div><div class="ig-value">'.self::e($value).'</div></div>';
         echo '</div>'; return (string)ob_get_clean();
     }
 
