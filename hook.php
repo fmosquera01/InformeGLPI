@@ -140,6 +140,11 @@ function plugin_informeglpi_install(): bool
         }
     }
 
+    // Workflow states such as pending_supervisor_signature require more than 24 characters.
+    if ($DB->tableExists($reportTable) && $DB->fieldExists($reportTable, 'status')) {
+        $migration->changeField($reportTable, 'status', 'status', "varchar(40) NOT NULL DEFAULT 'draft'");
+    }
+
     $migration->executeMigration();
 
     // Register native GLPI profile rights idempotently.
