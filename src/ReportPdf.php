@@ -142,18 +142,18 @@ final class ReportPdf
         global $DB;
         $report = new Report();
         if (!$report->getFromDB($reportId)) {
-            \\Html::displayNotFoundError();
+            \Html::displayNotFoundError();
         }
         $f = $report->fields;
         if ((string) $f['status'] !== 'finalized'
             || !Session::haveRight(Report::$rightname, READ)
             || !Session::haveAccessToEntity((int) $f['entities_id'], (bool) $f['is_recursive'])) {
-            \\Html::displayRightError();
+            \Html::displayRightError();
         }
         $path = self::privatePath((string) ($f['pdf_path'] ?? ''));
         $hash = hash_file('sha256', $path);
         if (!is_string($hash) || !hash_equals((string) $f['pdf_sha256'], $hash)) {
-            \\Html::displayErrorAndDie(__('El PDF no supera la verificación de integridad.', 'informeglpi'));
+            \Html::displayErrorAndDie(__('El PDF no supera la verificación de integridad.', 'informeglpi'));
         }
         header('Content-Type: application/pdf');
         header('Content-Length: ' . filesize($path));
@@ -178,9 +178,9 @@ final class ReportPdf
         ];
         foreach ($labels as $key => $label) {
             $value = $asset[$key] ?? '';
-            if ($key === 'manufacturers_id' && (int) $value > 0) $value = \\Dropdown::getDropdownName(\\Manufacturer::getTable(), (int) $value);
-            if ($key === 'locations_id' && (int) $value > 0) $value = \\Dropdown::getDropdownName(\\Location::getTable(), (int) $value);
-            if ($key === 'date_buy' && $value) $value = \\Html::convDate((string) $value);
+            if ($key === 'manufacturers_id' && (int) $value > 0) $value = \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $value);
+            if ($key === 'locations_id' && (int) $value > 0) $value = \Dropdown::getDropdownName(\Location::getTable(), (int) $value);
+            if ($key === 'date_buy' && $value) $value = \Html::convDate((string) $value);
             if (trim((string) $value) !== '' && $value !== null) $assetRows[] = '<td><b>' . $esc($label) . '</b><br>' . $esc($value) . '</td>';
         }
         $components = is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [];
