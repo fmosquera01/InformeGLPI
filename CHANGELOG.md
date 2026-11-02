@@ -1,3 +1,7 @@
+## 0.5.58
+- Centra «Elaborador por» y «Supervisado por» sobre sus respectivos bloques de firma y cargo.
+- Aumenta el espacio disponible para las fotografías y elimina las leyendas con nombres de archivo debajo de las imágenes.
+
 ## 0.5.57
 - Sustituye la composición HTML del PDF por renderizado TCPDF con coordenadas para reproducir el formato institucional en papel Letter.
 - Adapta destinatarios, activo, descripción, fecha de compra, valor en libros, componentes de Computer, información técnica, evidencias y firmas desde los datos reales del plugin.
