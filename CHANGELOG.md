@@ -1,3 +1,10 @@
+## 0.5.41
+
+- Add a personal-signature tab to the authenticated user's own GLPI user record; other users' records do not expose or permit editing that signature.
+- Allow the user to register or replace a handwritten PNG signature and a six-digit personal PIN; replacing either requires the current PIN.
+- Store signature images privately under GLPI_VAR_DIR, persist only a password hash for the PIN, and add temporary lockout after five failed PIN checks.
+- Add a dedicated user-signature table through the existing non-destructive, idempotent plugin migration.
+
 ## 0.5.40
 
 - Correct PHP namespace separators in the component catalog lookups introduced with the JOIN-free retrieval.
