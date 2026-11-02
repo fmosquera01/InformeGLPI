@@ -483,7 +483,7 @@ final class ReportService
                     $missing[] = 'Activo registrado en GLPI';
                 } else {
                     $f = $item->fields;
-                    $short = (new \\ReflectionClass($itemtype))->getShortName();
+                    $short = (new \ReflectionClass($itemtype))->getShortName();
                     $typeField = strtolower($short) . 'types_id';
                     $modelField = strtolower($short) . 'models_id';
                     $checks = [
