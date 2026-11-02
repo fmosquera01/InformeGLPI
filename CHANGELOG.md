@@ -1,3 +1,9 @@
+## 0.5.28
+
+- Always display **FECHA DE COMPRA** directly above **VALOR EN LIBROS (USD)** inside **DESCRIPCIÓN DEL ACTIVO**, showing a dash when GLPI has no valid purchase date.
+- Place the description block before the remaining registered-asset identification details in the creation and editing form.
+- Apply the same purchase-date presentation in the report detail view.
+
 ## 0.5.27
 
 - Place **VALOR EN LIBROS (USD)** inside the **DESCRIPCIÓN DEL ACTIVO** block for registered GLPI assets, alongside the GLPI purchase date and asset description.
