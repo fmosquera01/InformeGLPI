@@ -34,17 +34,21 @@ final class AssetSnapshotBuilder
         // GLPI stores purchase/accounting information in glpi_infocoms,
         // not in the main asset table (Computer, Monitor, etc.).
         global $DB;
-        foreach ($DB->request([
-            'SELECT' => ['date_buy'],
-            'FROM'   => 'glpi_infocoms',
-            'WHERE'  => [
-                'itemtype' => $itemtype,
-                'items_id' => $itemsId,
-            ],
-            'LIMIT'  => 1,
-        ]) as $infocom) {
-            $fields['date_buy'] = $infocom['date_buy'] ?? null;
-            break;
+        // GLPI 11 stores the purchase date in glpi_infocoms.buy_date.
+        // Keep the snapshot key as date_buy because the report renderer consumes it.
+        if ($DB->tableExists('glpi_infocoms') && $DB->fieldExists('glpi_infocoms', 'buy_date')) {
+            foreach ($DB->request([
+                'SELECT' => ['buy_date'],
+                'FROM'   => 'glpi_infocoms',
+                'WHERE'  => [
+                    'itemtype' => $itemtype,
+                    'items_id' => $itemsId,
+                ],
+                'LIMIT'  => 1,
+            ]) as $infocom) {
+                $fields['date_buy'] = $infocom['buy_date'] ?? null;
+                break;
+            }
         }
 
         $snapshot = [
