@@ -313,8 +313,9 @@ final class ReportService
         if (!$isCreator && !$canManage) {
             throw new RuntimeException(__('Solo el creador o un usuario con permiso de edición puede modificar este borrador.', 'informeglpi'));
         }
-        if (($report->fields['status'] ?? '') !== 'draft') {
-            throw new RuntimeException(__('El informe ya no está en borrador y no puede modificarse desde este formulario.', 'informeglpi'));
+        $currentStatus = (string) ($report->fields['status'] ?? '');
+        if (!in_array($currentStatus, ['draft', 'returned_for_correction'], true)) {
+            throw new RuntimeException(__('El informe ya no está disponible para edición.', 'informeglpi'));
         }
 
         $recipients = array_values(array_unique(array_filter(array_map('intval', (array) ($input['recipients_ids'] ?? [])), static fn($id) => $id > 0)));
@@ -419,18 +420,21 @@ final class ReportService
                 $updates,
                 [
                     'id' => $reportId,
-                    'status' => 'draft',
+                    'status' => $currentStatus,
                 ]
             );
+            if ($currentStatus === 'returned_for_correction') {
+                $DB->update('glpi_plugin_informeglopi_reports', ['status' => 'draft'], ['id' => $reportId, 'status' => 'returned_for_correction']);
+            }
 
-            if ($changes !== []) {
+            if ($changes !== [] || $currentStatus === 'returned_for_correction') {
                 $DB->insert('glpi_plugin_informeglopi_history', [
                     'reports_id' => $reportId,
                     'action' => 'updated',
-                    'old_status' => 'draft',
+                    'old_status' => $currentStatus,
                     'new_status' => 'draft',
                     'changes_json' => json_encode($changes, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-                    'comment' => __('Actualización de campos del borrador.', 'informeglpi'),
+                    'comment' => $currentStatus === 'returned_for_correction' ? __('Correcciones guardadas; el informe vuelve a preparación.', 'informeglpi') : __('Actualización de campos del borrador.', 'informeglpi'),
                     'users_id' => $userId,
                 ]);
             }
@@ -454,8 +458,8 @@ final class ReportService
         if (!$report->getFromDB($reportId)) {
             throw new RuntimeException(__('No se encontró el informe para adjuntar fotografías.', 'informeglpi'));
         }
-        if (($report->fields['status'] ?? '') !== 'draft') {
-            throw new RuntimeException(__('Solo se pueden adjuntar fotografías mientras el informe está en borrador.', 'informeglpi'));
+        if (!in_array((string) ($report->fields['status'] ?? ''), ['draft', 'returned_for_correction'], true)) {
+            throw new RuntimeException(__('Solo se pueden adjuntar fotografías mientras el informe está en preparación.', 'informeglpi'));
         }
         $userId = (int) Session::getLoginUserID();
         if ($userId !== (int) ($report->fields['users_id'] ?? 0)
