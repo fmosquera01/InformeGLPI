@@ -1,3 +1,8 @@
+## 0.5.47
+
+- Render the supervisor inbox inside the standard GLPI page layout with the Plugins breadcrumb/header.
+- Rename the review queue to **Bandeja de entrada** and remove the redundant cellphone-page link from the inbox; both destinations remain separate options under **Plugins > Informe Técnico**.
+
 ## 0.5.46
 
 - Consolidate the manual cellphone report and supervisor review inbox under the single **Plugins > Informe Técnico** menu entry using GLPI 11 submenu options.
