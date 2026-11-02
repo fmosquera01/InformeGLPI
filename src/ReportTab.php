@@ -63,7 +63,7 @@ final class ReportTab extends CommonGLPI
         }
         echo '</div>';
         echo "<div id='ig-panel-drafts' class='ig-report-panel'>";
-        self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature', 'returned_for_correction']);
+        self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature', 'returned_for_correction', 'approved_pending_pdf']);
         echo '</div>';
         echo "<div id='ig-panel-approved' class='ig-report-panel'>";
         self::renderReportList($itemtype, $itemsId, $tabUrl, ['finalized']);
@@ -499,6 +499,7 @@ final class ReportTab extends CommonGLPI
                 self::renderWorkflowActions($report);
             }
         } else {
+            echo $assetHtml;
             self::renderReadOnlyDetails($report);
             self::renderWorkflowActions($report);
         }
