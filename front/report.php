@@ -60,19 +60,28 @@ echo "</div>";
 echo "<div class='alert alert-info'>" . $e(__('Este informe conserva los datos del activo capturados al momento de crear el borrador. La edición del contenido y las firmas se incorporarán en la siguiente etapa.', 'informeglpi')) . "</div>";
 echo "<h4>" . $e(__('Datos del activo (snapshot)', 'informeglpi')) . "</h4>";
 echo "<div class='table-responsive'><table class='table table-sm table-striped'><tbody>";
-$assetDescription = trim((string) ($assetFields['name'] ?? '') . ((string) ($assetFields['comment'] ?? '') !== '' ? "\n" . $assetFields['comment'] : ''));
-if (!empty($assetFields['date_buy'])) {
-    $assetDescription .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . Html::convDate($assetFields['date_buy']);
-}
-if (($report->fields['book_value'] ?? '') !== '' && $report->fields['book_value'] !== null) {
-    $assetDescription .= "\n" . __('VALOR EN LIBROS (USD):', 'informeglpi') . ' $' . number_format((float) $report->fields['book_value'], 2, '.', ',');
-}
-echo "<tr><th style='width:30%'>" . $e(__('DESCRIPCIÓN DEL ACTIVO', 'informeglpi')) . "</th><td>" . nl2br($e($assetDescription)) . "</td></tr>";
-foreach ($assetFields as $key => $value) {
-    if (is_array($value) || is_object($value) || in_array($key, ['name', 'comment', 'date_buy'], true)) {
-        continue;
+if (($report->fields['itemtype'] ?? '') === 'ManualCellphone') {
+    foreach ($assetFields as $key => $value) {
+        if (is_array($value) || is_object($value)) {
+            continue;
+        }
+        echo "<tr><th style='width:30%'>" . $e($key) . "</th><td>" . nl2br($e($value)) . "</td></tr>";
     }
-    echo "<tr><th style='width:30%'>" . $e($key) . "</th><td>" . nl2br($e($value)) . "</td></tr>";
+} else {
+    $assetDescription = trim((string) ($assetFields['name'] ?? '') . ((string) ($assetFields['comment'] ?? '') !== '' ? "\n" . $assetFields['comment'] : ''));
+    if (!empty($assetFields['date_buy'])) {
+        $assetDescription .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . Html::convDate($assetFields['date_buy']);
+    }
+    if (($report->fields['book_value'] ?? '') !== '' && $report->fields['book_value'] !== null) {
+        $assetDescription .= "\n" . __('VALOR EN LIBROS (USD):', 'informeglpi') . ' $' . number_format((float) $report->fields['book_value'], 2, '.', ',');
+    }
+    echo "<tr><th style='width:30%'>" . $e(__('DESCRIPCIÓN DEL ACTIVO', 'informeglpi')) . "</th><td>" . nl2br($e($assetDescription)) . "</td></tr>";
+    foreach ($assetFields as $key => $value) {
+        if (is_array($value) || is_object($value) || in_array($key, ['name', 'comment', 'date_buy'], true)) {
+            continue;
+        }
+        echo "<tr><th style='width:30%'>" . $e($key) . "</th><td>" . nl2br($e($value)) . "</td></tr>";
+    }
 }
 echo "</tbody></table></div>";
 $damageLabels = [
@@ -83,6 +92,9 @@ $damageType = (string) ($report->fields['damage_type'] ?? '');
 echo "<h4>" . $e(__('Información técnica del informe', 'informeglpi')) . "</h4>";
 echo "<dl class='row'>";
 echo "<dt class='col-sm-3'>" . $e(__('Clasificación', 'informeglpi')) . "</dt><dd class='col-sm-9'>" . $e($damageLabels[$damageType] ?? '—') . "</dd>";
+if (($report->fields['itemtype'] ?? '') === 'ManualCellphone') {
+    echo "<dt class='col-sm-3'>" . $e(__('Valor en libros', 'informeglpi')) . "</dt><dd class='col-sm-9'>" . $e($report->fields['book_value'] ?? '—') . "</dd>";
+}
 
 echo "</dl>";
 foreach ([
