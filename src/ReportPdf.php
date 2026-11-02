@@ -73,18 +73,16 @@ final class ReportPdf
 
         $tempFiles = [];
         try {
-            $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+            $pdf = new \TCPDF('P', 'pt', 'LETTER', true, 'UTF-8', false);
             $pdf->SetCreator('GLPI - Informe Técnico');
             $pdf->SetAuthor('Songa - Infraestructura IT');
             $pdf->SetTitle((string) $fields['report_number']);
-            $pdf->SetMargins(10, 8, 10);
-            $pdf->SetAutoPageBreak(true, 8);
+            $pdf->SetMargins(36, 30, 33);
+            $pdf->SetAutoPageBreak(false);
             $pdf->setPrintHeader(false);
             $pdf->setPrintFooter(false);
             $pdf->AddPage();
-            $pdf->SetFont('helvetica', '', 7.2);
-            $html = self::buildHtml($fields, $assetFields, $snapshot, $evidences, $signatures, $tempFiles);
-            $pdf->writeHTML($html, true, false, true, false, '');
+            self::drawInstitutionalPdf($pdf, $fields, $assetFields, $snapshot, $evidences, $signatures, $tempFiles);
             if ($pdf->getNumPages() !== 1) {
                 throw new RuntimeException(__('El contenido excede una página A4. Reduzca la extensión del texto o la cantidad de fotografías y vuelva a generar.', 'informeglpi'));
             }
@@ -317,6 +315,249 @@ final class ReportPdf
             . '<br><table cellpadding="2" cellspacing="0" border="0" width="100%"><tr><td align="center"><b>FOTOS DEL EQUIPO:</b></td></tr></table>'
             . $photoHtml
             . '<br><table cellpadding="3" cellspacing="0" border="0" width="100%"><tr><td colspan="2" align="left">Atentamente,</td></tr><tr>' . $signatureHtml . '</tr></table>';
+    }
+
+    /**
+     * Dibuja el formato institucional directamente con TCPDF.
+     * Las medidas están en puntos y corresponden a papel Letter, como el
+     * formato de referencia compartido por el usuario.
+     */
+    private static function drawInstitutionalPdf(\TCPDF $pdf, array $report, array $asset, array $snapshot, array $evidences, array $signatures, array &$tempFiles): void
+    {
+        $blue = [0, 112, 192];
+        $headerBlue = [68, 114, 196];
+        $rowBlue = [217, 226, 243];
+        $borderBlue = [142, 170, 219];
+        $x = 36.0;
+        $width = 543.0;
+        $bottom = 742.0;
+        $regular = 'helvetica';
+        $bold = 'helvetica';
+        $pdf->SetDrawColor(...$borderBlue);
+        $pdf->SetLineWidth(0.5);
+        $pdf->SetTextColor(0, 0, 0);
+
+        $recipients = json_decode((string) ($report['recipients_json'] ?? '[]'), true);
+        $recipientNames = [];
+        foreach (is_array($recipients) ? $recipients : [] as $id) {
+            $recipientNames[] = getUserName((int) $id);
+        }
+        $preparedBy = getUserName((int) ($report['prepared_by_users_id'] ?? 0));
+        $reviewer = getUserName((int) ($report['reviewer_users_id'] ?? 0));
+        $date = (string) ($report['report_date'] ?? '');
+        $ts = $date !== '' ? strtotime($date) : false;
+        if ($ts !== false) {
+            $months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+            $date = date('d', $ts) . ' – ' . $months[(int) date('n', $ts) - 1] . ' - ' . date('Y', $ts);
+        }
+
+        // Título y correlativo.
+        $pdf->SetTextColor(...$blue);
+        $pdf->SetFont($bold, 'B', 19);
+        $pdf->SetXY($x, 33);
+        $pdf->MultiCell($width, 24, "INFORME TÉCNICO DE ÍTEMS DE PROPIEDAD,\nPLANTA Y EQUIPOS", 0, 'C', false, 1);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont($bold, 'B', 12);
+        $pdf->SetXY($x, 95);
+        $pdf->Cell($width, 16, (string) ($report['report_number'] ?? ''), 0, 1, 'R');
+        $y = 116.0;
+
+        // Metadatos sin cuadrícula.
+        $metadata = [
+            ['Fecha:', $date],
+            ['Para:', implode(' – ', $recipientNames)],
+            ['De:', $preparedBy],
+            ['Asunto:', (string) ($report['subject'] ?? 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.')],
+        ];
+        foreach ($metadata as [$label, $value]) {
+            $pdf->SetFont($bold, 'B', 8.5);
+            $pdf->SetXY(56.8, $y);
+            $pdf->Cell(64, 11, $label, 0, 0, 'L');
+            $pdf->SetFont($label === 'Asunto:' ? $regular : $bold, $label === 'Asunto:' ? '' : 'B', 8.5);
+            $pdf->SetXY(120, $y);
+            $h = max(11.0, $pdf->getStringHeight(440, (string) $value));
+            $pdf->MultiCell(440, $h, (string) $value, 0, 'L', false, 1);
+            $y += $h;
+        }
+        $y += 5;
+
+        $section = static function (string $title, float $at) use ($pdf, $x, $width, $headerBlue, $borderBlue): float {
+            $pdf->SetFillColor(...$headerBlue);
+            $pdf->SetDrawColor(...$borderBlue);
+            $pdf->SetLineWidth(0.5);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont('helvetica', 'B', 11);
+            $pdf->SetXY($x, $at);
+            $pdf->Cell($width, 18, $title, 1, 1, 'C', true);
+            return $at + 18;
+        };
+
+        $row = static function (string $label, string $value, float $at, float $labelWidth, bool $filled) use ($pdf, $x, $width, $rowBlue, $borderBlue): float {
+            $valueWidth = $width - $labelWidth;
+            $pdf->SetFont('helvetica', '', 8.5);
+            $value = trim($value) !== '' ? $value : '—';
+            $h = max(13.0, $pdf->getStringHeight($valueWidth - 8, $value) + 4);
+            $pdf->SetDrawColor(...$borderBlue);
+            $pdf->SetLineWidth(0.5);
+            $pdf->SetFillColor(...($filled ? $rowBlue : [255, 255, 255]));
+            $pdf->Rect($x, $at, $labelWidth, $h, 'DF');
+            $pdf->Rect($x + $labelWidth, $at, $valueWidth, $h, 'DF');
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont('helvetica', 'B', 8.2);
+            $pdf->MultiCell($labelWidth - 5, $h, $label, 0, 'L', false, 0, $x + 3, $at, true, 0, false, true, $h, 'M');
+            $pdf->SetFont('helvetica', '', 8.2);
+            $pdf->MultiCell($valueWidth - 6, $h, $value, 0, 'L', false, 0, $x + $labelWidth + 3, $at, true, 0, false, true, $h, 'M');
+            return $at + $h;
+        };
+
+        // Tipo de activo y datos del snapshot.
+        $itemType = (string) ($snapshot['itemtype'] ?? $report['itemtype'] ?? '');
+        $get = static function (array $source, array $keys): string {
+            foreach ($keys as $key) {
+                if (isset($source[$key]) && $source[$key] !== '') return trim((string) $source[$key]);
+            }
+            return '';
+        };
+        $assetType = $itemType === 'ManualCellphone' ? 'CELULAR' : $get($asset, ['computertypes_id','phonestypes_id','monitortypes_id','TIPO']);
+        if ($assetType !== '' && ctype_digit($assetType)) {
+            foreach (['ComputerType','PhoneType','MonitorType'] as $class) {
+                if (class_exists($class)) {
+                    $name = (string) \Dropdown::getDropdownName($class::getTable(), (int) $assetType);
+                    if ($name !== '') { $assetType = $name; break; }
+                }
+            }
+        }
+        if ($assetType === '') $assetType = strtoupper(str_replace(['Glpi\\Asset\\', '_'], ['', ' '], $itemType));
+
+        $purchaseDate = $get($asset, ['date_buy','FECHA DE COMPRA']);
+        $purchaseTs = $purchaseDate !== '' ? strtotime($purchaseDate) : false;
+        if ($purchaseTs !== false) $purchaseDate = date('d/m/Y', $purchaseTs);
+        $bookValue = $report['book_value'] ?? null;
+        $bookValueText = $bookValue !== null && $bookValue !== '' ? '$ ' . number_format((float) $bookValue, 2, '.', ',') : '—';
+        $description = $get($asset, ['comment','description','DESCRIPCIÓN DEL ACTIVO']);
+        if ($description === '') $description = $get($asset, ['name']) ?: (string) ($snapshot['asset_name'] ?? '');
+        $descriptionLines = ['FECHA DE COMPRA: ' . ($purchaseDate !== '' ? $purchaseDate : '—'), 'VALOR EN LIBRO: ' . $bookValueText];
+        if ($description !== '') $descriptionLines[] = $description;
+        $components = is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [];
+        if ($itemType === 'Computer') {
+            foreach (['processors' => 'Procesador', 'memories' => 'RAM', 'hard_drives' => 'DISCO DURO'] as $key => $caption) {
+                foreach (($components[$key] ?? []) as $component) {
+                    $line = trim((string) ($component['device']['report_label'] ?? ''));
+                    if ($line !== '') $descriptionLines[] = $caption . ': ' . $line;
+                }
+            }
+        }
+
+        $y = $section('INFORMACIÓN DEL ACTIVO', $y + 3);
+        $y = $row('CÓDIGO DE ACTIVO:', $get($asset, ['otherserial','asset_code','CÓDIGO DE ACTIVO']), $y, 296, true);
+        $y = $row('TIPO:', $assetType, $y, 296, false);
+        $y = $row('DESCRIPCIÓN DEL ACTIVO:', implode("\n", $descriptionLines), $y, 296, true);
+
+        $manufacturer = $get($asset, ['manufacturers_id','MARCA']);
+        if ($manufacturer !== '' && ctype_digit($manufacturer)) $manufacturer = (string) \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $manufacturer);
+        $model = $get($asset, ['computermodels_id','phonemodels_id','monitormodels_id','model','MODELO']);
+        if ($model !== '' && ctype_digit($model)) {
+            foreach (['ComputerModel','PhoneModel','MonitorModel'] as $class) {
+                if (class_exists($class)) {
+                    $name = (string) \Dropdown::getDropdownName($class::getTable(), (int) $model);
+                    if ($name !== '') { $model = $name; break; }
+                }
+            }
+        }
+        $y = $row('MARCA:', $manufacturer, $y, 296, false);
+        $y = $row('MODELO:', $model, $y, 296, true);
+        $y = $row('SERIE:', $get($asset, ['serial','imei','SERIE']), $y, 296, false);
+        $responsibleId = (int) ($asset['users_id'] ?? 0);
+        $responsible = $responsibleId > 0 ? getUserName($responsibleId) : $get($asset, ['responsible','USUARIO RESPONSABLE']);
+        $y = $row('USUARIO RESPONSABLE:', $responsible, $y, 296, true);
+        $location = $get($asset, ['locations_id','area','ÁREA DONDE SE ENCONTRABA EL EQUIPO']);
+        if ($location !== '' && ctype_digit($location)) $location = (string) \Dropdown::getDropdownName(\Location::getTable(), (int) $location);
+        $y = $row('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', $location, $y, 296, false);
+
+        $y = $section('INFORMACIÓN TÉCNICA DEL ACTIVO', $y + 7);
+        foreach (['background' => 'ANTECEDENTES:', 'diagnosis' => 'DIAGNÓSTICO:', 'cause' => 'CAUSA:'] as $key => $label) {
+            $y = $row($label, trim((string) ($report[$key] ?? '')), $y, 236, (($y % 2) < 1));
+        }
+        $damage = (string) ($report['damage_type'] ?? '');
+        $damageText = $damage === 'wear' ? 'Desgaste  -X-       Daño a la propiedad  ---' : ($damage === 'property_damage' ? 'Desgaste  ---       Daño a la propiedad  -X-' : 'Desgaste  ---       Daño a la propiedad  ---');
+        $y = $row('TIPO DE DAÑO:', $damageText, $y, 236, false);
+        $y = $row('RECOMENDACIONES:', trim((string) ($report['recommendations'] ?? '')), $y, 236, true);
+
+        // Reservar espacio para las firmas; las fotos se distribuyen en una
+        // cuadrícula de hasta tres columnas, manteniendo la proporción.
+        $photos = [];
+        foreach ($evidences as $i => $evidence) {
+            $photos[] = ['path' => self::compressedImage($evidence['path'], $i, $tempFiles), 'caption' => (string) ($evidence['caption'] ?? '')];
+        }
+        $y += 8;
+        $photoTitleH = 15.0;
+        $signatureReserve = 112.0;
+        $availablePhotoHeight = $bottom - $y - $photoTitleH - $signatureReserve;
+        if ($availablePhotoHeight < 48) {
+            throw new RuntimeException(__('El contenido del informe no deja espacio suficiente para fotografías y firmas en una sola página Letter. Reduzca la extensión de los textos.', 'informeglpi'));
+        }
+        $cols = max(1, min(3, count($photos)));
+        $photoRows = (int) ceil(count($photos) / $cols);
+        $cellW = ($width - 12) / $cols;
+        $cellH = min(105.0, ($availablePhotoHeight - 8) / max(1, $photoRows));
+        $imageH = max(25.0, $cellH - 15);
+        if ($photoRows * $cellH > $availablePhotoHeight) {
+            throw new RuntimeException(__('La cantidad de fotografías excede el espacio disponible para mantener el informe en una sola página Letter.', 'informeglpi'));
+        }
+
+        $pdf->SetDrawColor(...$borderBlue);
+        $pdf->SetFillColor(255, 255, 255);
+        $pdf->SetFont($bold, 'B', 8.5);
+        $pdf->SetXY($x, $y);
+        $pdf->Cell($width, $photoTitleH, 'FOTOS DEL EQUIPO:', 1, 1, 'C', true);
+        $y += $photoTitleH;
+        $pdf->SetFillColor(...$rowBlue);
+        $pdf->Rect($x, $y, $width, $photoRows * $cellH, 'DF');
+        foreach ($photos as $i => $photo) {
+            $col = $i % $cols;
+            $r = intdiv($i, $cols);
+            $cx = $x + 6 + $col * $cellW;
+            $cy = $y + $r * $cellH + 4;
+            $pdf->Image($photo['path'], $cx, $cy, $cellW - 12, $imageH, '', '', '', true, 150, '', false, false, 0, 'CM', false, false);
+            if ($photo['caption'] !== '') {
+                $pdf->SetFont($regular, '', 6.5);
+                $pdf->SetXY($cx, $cy + $imageH);
+                $pdf->MultiCell($cellW - 12, 10, $photo['caption'], 0, 'C', false, 0);
+            }
+        }
+        $y += $photoRows * $cellH + 8;
+
+        // Firmas originales verificadas, con sus usuarios reales.
+        $pdf->SetFont($regular, '', 9.5);
+        $pdf->SetXY(85, $y);
+        $pdf->Cell(200, 12, 'Atentamente,', 0, 1, 'L');
+        $y += 17;
+        $pdf->SetFont($regular, '', 8.5);
+        $pdf->SetXY(85, $y);
+        $pdf->Cell(200, 12, 'Elaborador por:', 0, 0, 'L');
+        $pdf->SetXY(380, $y);
+        $pdf->Cell(180, 12, 'Supervisado por:', 0, 0, 'R');
+        $lineY = $y + 55;
+        foreach (['technical' => [90.0, 140.0, 'Técnico Infraestructura Sistemas'], 'supervisor' => [380.0, 180.0, 'Jefe de Infraestructura Sistemas']] as $type => [$sx, $sw, $role]) {
+            $sig = $signatures[$type];
+            $lineW = 140.0;
+            $lx = $type === 'supervisor' ? $sx + $sw - $lineW : $sx;
+            if (!empty($sig['path']) && is_file($sig['path'])) {
+                $pdf->Image($sig['path'], $lx, $y + 13, $lineW, 38, '', '', '', true, 150, '', false, false, 0, 'CB', false, false);
+            }
+            $pdf->SetDrawColor(0, 0, 0);
+            $pdf->Line($lx, $lineY, $lx + $lineW, $lineY);
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetFont($bold, 'B', 8);
+            $pdf->SetXY($lx - 20, $lineY + 2);
+            $pdf->Cell($lineW + 40, 10, (string) $sig['user'], 0, 0, 'C');
+            $pdf->SetFont($regular, '', 7.5);
+            $pdf->SetXY($lx - 20, $lineY + 12);
+            $pdf->Cell($lineW + 40, 10, $role, 0, 0, 'C');
+        }
+        if ($lineY + 25 > $bottom) {
+            throw new RuntimeException(__('Las firmas exceden el espacio de la página Letter. Reduzca el contenido del informe.', 'informeglpi'));
+        }
     }
 
     private static function compressedImage(string $source, int $index, array &$tempFiles): string
