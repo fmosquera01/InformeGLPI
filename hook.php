@@ -31,7 +31,7 @@ function plugin_informeglpi_install(): bool
             `items_id` int unsigned NOT NULL,
             `entities_id` int unsigned NOT NULL DEFAULT 0,
             `is_recursive` tinyint NOT NULL DEFAULT 0,
-            `status` varchar(24) NOT NULL DEFAULT 'draft',
+            `status` varchar(40) NOT NULL DEFAULT 'draft',
             `damage_type` varchar(24) DEFAULT NULL,
             `asset_snapshot` longtext NOT NULL,
             `book_value` decimal(14,2) DEFAULT NULL,
