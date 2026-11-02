@@ -18,6 +18,16 @@ final class ManualPhoneMenu extends CommonGLPI
         return [
             'title' => __('Informe Técnico', 'informeglpi'),
             'page'  => '/plugins/informeglpi/front/manual-phone.php',
+            'options' => [
+                'create_manual_phone_report' => [
+                    'title' => __('Crear informe para celular', 'informeglpi'),
+                    'page'  => '/plugins/informeglpi/front/manual-phone.php',
+                ],
+                'supervisor_review_inbox' => [
+                    'title' => __('Bandeja de revisión', 'informeglpi'),
+                    'page'  => '/plugins/informeglpi/front/report-inbox.php',
+                ],
+            ],
         ];
     }
 }
