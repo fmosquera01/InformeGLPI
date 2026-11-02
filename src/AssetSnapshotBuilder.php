@@ -111,55 +111,82 @@ final class AssetSnapshotBuilder
             return [];
         }
 
-        // Explicit joins reproduce the verified GLPI inventory query.
-        // The ID is cast to integer before being inserted into the SQL.
-        $id = (int) $itemsId;
+        // Use GLPI 11's query builder; direct SQL execution is prohibited.
         $queries = [
-            'Item_DeviceProcessor' => "
-                SELECT dp.*
-                FROM glpi_items_deviceprocessors idp
-                INNER JOIN glpi_deviceprocessors dp
-                    ON dp.id = idp.deviceprocessors_id
-                WHERE idp.items_id = {$id}
-                  AND idp.itemtype = 'Computer'
-            ",
-            'Item_DeviceMemory' => "
-                SELECT dm.*, idm.size AS _relation_size, dmt.name AS _memory_type_name
-                FROM glpi_items_devicememories idm
-                INNER JOIN glpi_devicememories dm
-                    ON dm.id = idm.devicememories_id
-                LEFT JOIN glpi_devicememorytypes dmt
-                    ON dmt.id = dm.devicememorytypes_id
-                WHERE idm.items_id = {$id}
-                  AND idm.itemtype = 'Computer'
-            ",
-            'Item_DeviceHardDrive' => "
-                SELECT dh.*, idh.capacity AS _relation_capacity, it.name AS _interface_name
-                FROM glpi_items_deviceharddrives idh
-                INNER JOIN glpi_deviceharddrives dh
-                    ON dh.id = idh.deviceharddrives_id
-                LEFT JOIN glpi_interfacetypes it
-                    ON it.id = dh.interfacetypes_id
-                WHERE idh.items_id = {$id}
-                  AND idh.itemtype = 'Computer'
-                  AND idh.is_deleted = 0
-                  AND idh.capacity > 0
-                  AND dh.designation IS NOT NULL
-                  AND (it.name IS NULL OR it.name NOT LIKE '%USB%')
-            ",
+            'Item_DeviceProcessor' => [
+                'SELECT' => ['dp.*'],
+                'FROM' => 'glpi_items_deviceprocessors AS idp',
+                'INNER JOIN' => [
+                    'glpi_deviceprocessors AS dp' => [
+                        'ON' => ['idp.deviceprocessors_id' => 'dp.id'],
+                    ],
+                ],
+                'WHERE' => [
+                    'idp.items_id' => $id,
+                    'idp.itemtype' => 'Computer',
+                ],
+            ],
+            'Item_DeviceMemory' => [
+                'SELECT' => [
+                    'dm.*',
+                    'idm.size AS _relation_size',
+                    'dmt.name AS _memory_type_name',
+                ],
+                'FROM' => 'glpi_items_devicememories AS idm',
+                'INNER JOIN' => [
+                    'glpi_devicememories AS dm' => [
+                        'ON' => ['idm.devicememories_id' => 'dm.id'],
+                    ],
+                ],
+                'LEFT JOIN' => [
+                    'glpi_devicememorytypes AS dmt' => [
+                        'ON' => ['dm.devicememorytypes_id' => 'dmt.id'],
+                    ],
+                ],
+                'WHERE' => [
+                    'idm.items_id' => $id,
+                    'idm.itemtype' => 'Computer',
+                ],
+            ],
+            'Item_DeviceHardDrive' => [
+                'SELECT' => [
+                    'dh.*',
+                    'idh.capacity AS _relation_capacity',
+                    'it.name AS _interface_name',
+                ],
+                'FROM' => 'glpi_items_deviceharddrives AS idh',
+                'INNER JOIN' => [
+                    'glpi_deviceharddrives AS dh' => [
+                        'ON' => ['idh.deviceharddrives_id' => 'dh.id'],
+                    ],
+                ],
+                'LEFT JOIN' => [
+                    'glpi_interfacetypes AS it' => [
+                        'ON' => ['dh.interfacetypes_id' => 'it.id'],
+                    ],
+                ],
+                'WHERE' => [
+                    'idh.items_id' => $id,
+                    'idh.itemtype' => 'Computer',
+                    'idh.is_deleted' => 0,
+                    'idh.capacity' => ['>', 0],
+                    'dh.designation' => ['<>', null],
+                    [
+                        'OR' => [
+                            'it.name' => null,
+                            'it.name' => ['NOT LIKE', '%USB%'],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         if (!isset($queries[$relationClass])) {
             return [];
         }
 
-        $result = $DB->query($queries[$relationClass]);
-        if ($result === false) {
-            return [];
-        }
-
         $records = [];
-        while ($row = $DB->fetchAssoc($result)) {
+        foreach ($DB->request($queries[$relationClass]) as $row) {
             $deviceFields = self::scalarFields($row);
             $relationFields = [];
             $labelParts = [];
@@ -176,7 +203,7 @@ final class AssetSnapshotBuilder
                     $labelParts[] = (string) $row['frequency'] . ' MHz';
                 }
                 if (!empty($row['manufacturers_id'])) {
-                    $manufacturer = (string) \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $row['manufacturers_id']);
+                    $manufacturer = (string) \\Dropdown::getDropdownName(\\Manufacturer::getTable(), (int) $row['manufacturers_id']);
                     if ($manufacturer !== '') {
                         $labelParts[] = $manufacturer;
                     }
