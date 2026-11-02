@@ -84,7 +84,7 @@ final class ReportPdf
             $pdf->AddPage();
             self::drawInstitutionalPdf($pdf, $fields, $assetFields, $snapshot, $evidences, $signatures, $tempFiles);
             if ($pdf->getNumPages() !== 1) {
-                throw new RuntimeException(__('El contenido excede una página A4. Reduzca la extensión del texto o la cantidad de fotografías y vuelva a generar.', 'informeglpi'));
+                throw new RuntimeException(__('El contenido excede una página Letter. Reduzca la extensión del texto o la cantidad de fotografías y vuelva a generar.', 'informeglpi'));
             }
 
             $base = rtrim(GLPI_VAR_DIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '_plugins' . DIRECTORY_SEPARATOR . 'informeglpi' . DIRECTORY_SEPARATOR . 'reports';
