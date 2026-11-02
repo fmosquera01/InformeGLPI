@@ -1,3 +1,7 @@
+## 0.5.62
+- Cambia el PDF institucional de tamaño Letter a A4 y calcula el ancho y límite inferior según las dimensiones reales de la página.
+- Reduce moderadamente la altura de las imágenes de firma y el espacio reservado para ellas, liberando más área para ampliar las fotografías sin sacar las firmas de la página.
+
 ## 0.5.61
 - Corrige el cálculo del espacio inferior del PDF Letter: restablece la reserva segura para los bloques de firma y evita que el validador rechace informes por el espacio adicional consumido al posicionar las firmas.
 
