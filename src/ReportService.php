@@ -25,16 +25,13 @@ final class ReportService
         $item = null;
         if ($isManualPhone) {
             $manual = is_array($input['manual_asset'] ?? null) ? $input['manual_asset'] : [];
-            foreach (['asset_code', 'description', 'manufacturer', 'model', 'serial', 'responsible', 'area'] as $required) {
-                if (trim((string) ($manual[$required] ?? '')) === '') {
-                    throw new RuntimeException(__('Complete código de activo, descripción, marca, modelo, IMEI, usuario responsable y área.', 'informeglpi'));
-                }
-            }
-            $imei = trim((string) $manual['serial']);
-            if (!preg_match('/^[0-9]{14,16}$/', $imei)) {
+            $imei = trim((string) ($manual['serial'] ?? ''));
+            if ($imei !== '' && !preg_match('/^[0-9]{14,16}$/', $imei)) {
                 throw new RuntimeException(__('La serie debe corresponder al IMEI numérico del celular (14 a 16 dígitos).', 'informeglpi'));
             }
-            self::assertManualCellphoneNotRegistered($imei, trim((string) $manual['asset_code']));
+            if ($imei !== '') {
+                self::assertManualCellphoneNotRegistered($imei, trim((string) ($manual['asset_code'] ?? '')));
+            }
             $entityId = (int) Session::getActiveEntity();
             $isRecursive = 0;
             $snapshot = self::buildManualCellphoneSnapshot($manual);
@@ -58,23 +55,19 @@ final class ReportService
         }
 
         $recipients = array_values(array_unique(array_filter(array_map('intval', (array) ($input['recipients_ids'] ?? [])), static fn($id) => $id > 0)));
-        if ($recipients === []) {
-            throw new RuntimeException(__('Debe seleccionar al menos un destinatario en el campo Para.', 'informeglpi'));
-        }
         foreach ($recipients as $recipientId) {
             self::assertActiveUser($recipientId);
         }
         $preparedBy = $userId;
         $reviewer = (int) ($input['reviewer_users_id'] ?? 0);
         self::assertActiveUser($preparedBy);
-        self::assertActiveUser($reviewer);
-        if ($preparedBy === $reviewer) {
+        if ($reviewer > 0) {
+            self::assertActiveUser($reviewer);
+        }
+        if ($reviewer > 0 && $preparedBy === $reviewer) {
             throw new RuntimeException(__('El técnico y el responsable que revisa deben ser usuarios distintos.', 'informeglpi'));
         }
         $subject = trim((string) ($input['subject'] ?? ''));
-        if ($subject === '') {
-            throw new RuntimeException(__('El asunto es obligatorio.', 'informeglpi'));
-        }
 
         $year = (int) date('Y');
         $bookValueRaw = trim((string) ($input['book_value'] ?? ''));
@@ -222,9 +215,6 @@ final class ReportService
     private static function buildManualCellphoneSnapshot(array $manual): array
     {
         $value = static fn(string $key): string => trim((string) ($manual[$key] ?? ''));
-        if ($value('description') === '') {
-            throw new RuntimeException(__('La descripción del activo es obligatoria.', 'informeglpi'));
-        }
         if (mb_strlen($value('description')) > 255) {
             throw new RuntimeException(__('La descripción del activo no puede superar los 255 caracteres.', 'informeglpi'));
         }
@@ -318,9 +308,6 @@ final class ReportService
         }
 
         $recipients = array_values(array_unique(array_filter(array_map('intval', (array) ($input['recipients_ids'] ?? [])), static fn($id) => $id > 0)));
-        if ($recipients === []) {
-            throw new RuntimeException(__('Debe seleccionar al menos un destinatario en el campo Para.', 'informeglpi'));
-        }
         foreach ($recipients as $recipientId) {
             self::assertActiveUser($recipientId);
         }
@@ -328,14 +315,13 @@ final class ReportService
         $preparedBy = (int) ($report->fields['prepared_by_users_id'] ?? 0);
         $reviewer = (int) ($input['reviewer_users_id'] ?? 0);
         self::assertActiveUser($preparedBy);
-        self::assertActiveUser($reviewer);
-        if ($preparedBy === $reviewer) {
+        if ($reviewer > 0) {
+            self::assertActiveUser($reviewer);
+        }
+        if ($reviewer > 0 && $preparedBy === $reviewer) {
             throw new RuntimeException(__('El técnico y el responsable que revisa deben ser usuarios distintos.', 'informeglpi'));
         }
         $subject = trim((string) ($input['subject'] ?? ''));
-        if ($subject === '') {
-            throw new RuntimeException(__('El asunto es obligatorio.', 'informeglpi'));
-        }
 
         $damageType = (string) ($input['damage_type'] ?? '');
         if (!in_array($damageType, ['', 'property_damage', 'wear'], true)) {
@@ -444,6 +430,88 @@ final class ReportService
         }
     }
 
+
+    /**
+     * Re-read the live GLPI asset and return every mandatory item still missing.
+     * The report never writes to the asset record.
+     */
+    public static function getMissingFields(int $reportId): array
+    {
+        global $DB;
+        $report = new Report();
+        if (!$report->getFromDB($reportId)) {
+            throw new RuntimeException(__('No se encontró el informe técnico.', 'informeglpi'));
+        }
+        $missing = [];
+        $requiredReport = [
+            'Para (destinatarios)' => !empty(json_decode((string) ($report->fields['recipients_json'] ?? '[]'), true)),
+            'Responsable que revisa' => (int) ($report->fields['reviewer_users_id'] ?? 0) > 0,
+            'Asunto' => trim((string) ($report->fields['subject'] ?? '')) !== '',
+            'Antecedentes' => trim((string) ($report->fields['background'] ?? '')) !== '',
+            'Diagnóstico' => trim((string) ($report->fields['diagnosis'] ?? '')) !== '',
+            'Causa' => trim((string) ($report->fields['cause'] ?? '')) !== '',
+            'Recomendaciones' => trim((string) ($report->fields['recommendations'] ?? '')) !== '',
+            'Tipo de daño' => in_array((string) ($report->fields['damage_type'] ?? ''), ['wear', 'property_damage'], true),
+            'Valor en libros' => trim((string) ($report->fields['book_value'] ?? '')) !== '',
+        ];
+        foreach ($requiredReport as $label => $ok) {
+            if (!$ok) $missing[] = $label;
+        }
+
+        $itemtype = (string) ($report->fields['itemtype'] ?? '');
+        $itemsId = (int) ($report->fields['items_id'] ?? 0);
+        if ($itemtype === 'ManualCellphone' && $itemsId === 0) {
+            $snapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
+            $f = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
+            foreach ([
+                'Código de activo' => 'CÓDIGO DE ACTIVO',
+                'Descripción del activo' => 'DESCRIPCIÓN DEL ACTIVO',
+                'Fecha de compra' => 'FECHA DE COMPRA',
+                'Marca' => 'MARCA',
+                'Modelo' => 'MODELO',
+                'IMEI / serie' => 'SERIE',
+                'Usuario responsable' => 'USUARIO RESPONSABLE',
+                'Área / ubicación' => 'ÁREA DONDE SE ENCONTRABA EL EQUIPO',
+            ] as $label => $key) {
+                if (trim((string) ($f[$key] ?? '')) === '') $missing[] = 'Activo: ' . $label;
+            }
+            $imei = trim((string) ($f['SERIE'] ?? ''));
+            if ($imei !== '' && !preg_match('/^[0-9]{14,16}$/', $imei)) $missing[] = 'Activo: IMEI válido (14 a 16 dígitos)';
+        } else {
+            if (!class_exists($itemtype)) {
+                $missing[] = 'Tipo de activo';
+            } else {
+                $item = new $itemtype();
+                if (!$item->getFromDB($itemsId)) {
+                    $missing[] = 'Activo registrado en GLPI';
+                } else {
+                    $f = $item->fields;
+                    $short = (new \\ReflectionClass($itemtype))->getShortName();
+                    $typeField = strtolower($short) . 'types_id';
+                    $modelField = strtolower($short) . 'models_id';
+                    $checks = [
+                        'Código de activo' => trim((string) ($f['otherserial'] ?? '')) !== '',
+                        'Tipo de activo' => (int) ($f[$typeField] ?? 0) > 0 || str_contains($itemtype, 'Asset'),
+                        'Marca / fabricante' => (int) ($f['manufacturers_id'] ?? 0) > 0,
+                        'Modelo' => (int) ($f[$modelField] ?? 0) > 0,
+                        'Serie' => trim((string) ($f['serial'] ?? '')) !== '',
+                        'Usuario responsable' => (int) ($f['users_id'] ?? 0) > 0,
+                        'Área / ubicación' => (int) ($f['locations_id'] ?? 0) > 0,
+                    ];
+                    foreach ($checks as $label => $ok) if (!$ok) $missing[] = 'Activo: ' . $label;
+                    $buyDate = '';
+                    if ($DB->tableExists('glpi_infocoms')) {
+                        foreach ($DB->request(['SELECT'=>['buy_date'],'FROM'=>'glpi_infocoms','WHERE'=>['itemtype'=>$itemtype,'items_id'=>$itemsId],'LIMIT'=>1]) as $info) {
+                            $buyDate = trim((string) ($info['buy_date'] ?? ''));
+                            break;
+                        }
+                    }
+                    if ($buyDate === '' || in_array($buyDate, ['0000-00-00','0000-00-00 00:00:00'], true)) $missing[] = 'Activo: Fecha de compra';
+                }
+            }
+        }
+        return $missing;
+    }
 
     /**
      * Store evidence photographs for a report. Files are kept below GLPI_VAR_DIR,
