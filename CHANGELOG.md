@@ -1,3 +1,10 @@
+## 0.5.27
+
+- Place **VALOR EN LIBROS (USD)** inside the **DESCRIPCIÓN DEL ACTIVO** block for registered GLPI assets, alongside the GLPI purchase date and asset description.
+- Keep book value editable and persist it on initial report creation and draft updates; preserve its audit user and timestamp.
+- Remove the separate book-value row from the technical-information section for registered assets; leave the unregistered-cellphone form unchanged.
+- Display description, purchase date and book value together in the report detail view.
+
 ## 0.5.26
 
 - Configure **DESCRIPCIÓN DEL ACTIVO** as a required multiline text field in the manual cellphone form.
