@@ -192,14 +192,13 @@ final class ReportTab extends CommonGLPI
         $locationValue = !empty($fields['locations_id'])
             ? \Dropdown::getDropdownName(\Location::getTable(), (int) $fields['locations_id'])
             : '';
-        $description = trim((string) ($fields['name'] ?? '') . ((string) ($fields['comment'] ?? '') !== '' ? "\n" . $fields['comment'] : ''));
         $purchaseDate = trim((string) ($fields['date_buy'] ?? ''));
         $purchaseDateDisplay = ($purchaseDate !== '' && !in_array($purchaseDate, ['0000-00-00', '0000-00-00 00:00:00'], true))
-            ? \Html::convDate($purchaseDate)
+            ? \\Html::convDate($purchaseDate)
             : '—';
-        $description .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . $purchaseDateDisplay;
+        $comments = trim((string) ($fields['comment'] ?? ''));
         $assetRows = [
-            __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi') => $description,
+            __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi') => '',
             __('CÓDIGO DE ACTIVO:', 'informeglpi') => $fields['otherserial'] ?? '',
             __('TIPO:', 'informeglpi') => $typeValue,
             __('MARCA:', 'informeglpi') => $manufacturerValue,
@@ -213,21 +212,20 @@ final class ReportTab extends CommonGLPI
                 && (is_array($value) || is_object($value) || trim((string) $value) === '' || (string) $value === '0' || in_array(mb_strtolower(trim((string) $value)), ['no asset information', 'n/a', 'not available'], true))) {
                 continue;
             }
-            echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>" . nl2br(self::e($value));
+            echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>";
             if ($label === __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi')) {
-                echo "<div class='mt-2'><label class='form-label mb-1 fw-bold' for='field_book_value'>" . self::e(__('VALOR EN LIBROS (USD):', 'informeglpi')) . "</label><div class='input-group input-group-sm'><span class='input-group-text'>$</span><input class='form-control' type='number' min='0' step='0.01' name='book_value' id='field_book_value' value='" . self::e($bookValue) . "'></div></div>";
+                echo "<div><strong>" . self::e(__('FECHA DE COMPRA:', 'informeglpi')) . "</strong> " . self::e($purchaseDateDisplay) . "</div>";
+                echo "<div class='mt-1'><label class='fw-bold mb-0' for='field_book_value'>" . self::e(__('VALOR EN LIBROS:', 'informeglpi')) . "</label> <span>$</span> <input class='form-control form-control-sm d-inline-block' style='width:130px' type='number' min='0' step='0.01' name='book_value' id='field_book_value' value='" . self::e($bookValue) . "'></div>";
+                if ($comments !== '') {
+                    echo "<div class='mt-1'><strong>" . self::e(__('COMENTARIOS:', 'informeglpi')) . "</strong> " . nl2br(self::e($comments)) . "</div>";
+                }
+                if ($itemtype === 'Computer') {
+                    self::renderComputerComponents($components);
+                }
+            } else {
+                echo nl2br(self::e($value));
             }
             echo '</div></div>';
-        }
-        if ($itemtype === 'Computer') {
-            self::renderComputerComponents($components);
-        } elseif ($itemtype === 'Phone') {
-            // Phone types "Hand Held" and "Tablet" share the relevant
-            // inventory details: processor, RAM and internal storage.
-            $phoneType = mb_strtolower(trim((string) $typeValue));
-            if (in_array($phoneType, ['hand held', 'handheld', 'tablet'], true)) {
-                self::renderPhoneComponents($components);
-            }
         }
         echo '</div>';
         return (string) ob_get_clean();
