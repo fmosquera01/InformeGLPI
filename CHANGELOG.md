@@ -1,3 +1,6 @@
+## 0.5.60
+- Reduce la reserva inferior destinada a las firmas para ampliar aproximadamente 1 cm la altura disponible de las fotografías, manteniendo los bloques de firma dentro de la página Letter.
+
 ## 0.5.59
 - Aprovecha el espacio inferior de la página Letter para ampliar la fotografía de evidencia y bajar ligeramente los bloques de firma, manteniendo el diseño en una sola página.
 
