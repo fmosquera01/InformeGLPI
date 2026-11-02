@@ -192,7 +192,7 @@ final class ReportPdf
         if ($assetType !== '' && ctype_digit($assetType) && (int) $assetType > 0) {
             foreach (['ComputerType', 'PhoneType', 'MonitorType'] as $class) {
                 if (class_exists($class)) {
-                    $typeName = (string) \\Dropdown::getDropdownName($class::getTable(), (int) $assetType);
+                    $typeName = (string) \Dropdown::getDropdownName($class::getTable(), (int) $assetType);
                     if ($typeName !== '') { $assetType = $typeName; break; }
                 }
             }
