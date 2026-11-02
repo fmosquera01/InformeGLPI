@@ -105,57 +105,128 @@ final class AssetSnapshotBuilder
 
     private static function deviceRelations(string $relationClass, string $itemtype, int $itemsId): array
     {
+        global $DB;
+
         if (!class_exists($relationClass) || $itemsId < 1
-            || !is_a($relationClass, 'Item_Devices', true)
-            || !method_exists('Item_Devices', 'getItemsAssociatedTo')) {
+            || !is_a($relationClass, 'Item_Devices', true)) {
             return [];
         }
 
         $deviceType = $relationClass::getDeviceType();
-        if (!is_string($deviceType) || !class_exists($deviceType)) {
+        $relationTable = $relationClass::getTable();
+        $deviceIdField = match ($relationClass) {
+            'Item_DeviceProcessor' => 'deviceprocessors_id',
+            'Item_DeviceMemory' => 'devicememories_id',
+            'Item_DeviceHardDrive' => 'deviceharddrives_id',
+            default => null,
+        };
+
+        if (!is_string($deviceType) || !class_exists($deviceType)
+            || !is_string($relationTable) || !is_string($deviceIdField)
+            || !$DB->tableExists($relationTable)
+            || !$DB->fieldExists($relationTable, $deviceIdField)) {
             return [];
         }
 
-        // GLPI returns Item_Device* relation objects, not the Device* objects.
-        // The device foreign key is declared by the relation class in $items_id_2.
-        $deviceIdField = $relationClass::$items_id_2 ?? null;
-        if (!is_string($deviceIdField) || $deviceIdField === '') {
-            return [];
-        }
-
-        // The native method returns every component affinity for the item.
-        // Keep only the relation class requested by this call.
-        $associated = \Item_Devices::getItemsAssociatedTo($itemtype, $itemsId);
-        if (!is_array($associated)) {
-            return [];
+        // Read the same association tables used by GLPI's Components tab.
+        // This mirrors the proven SQL joins: items_id + itemtype, then the
+        // component catalog record referenced by the relation's device ID.
+        $where = [
+            'itemtype' => $itemtype,
+            'items_id' => $itemsId,
+        ];
+        if ($DB->fieldExists($relationTable, 'is_deleted')) {
+            $where['is_deleted'] = 0;
         }
 
         $records = [];
-        foreach ($associated as $entry) {
-            if (!$entry instanceof $relationClass) {
-                continue;
-            }
-
-            $relationFields = self::scalarFields($entry->fields ?? []);
+        foreach ($DB->request([
+            'SELECT' => '*',
+            'FROM'   => $relationTable,
+            'WHERE'  => $where,
+            'ORDER'  => ['id ASC'],
+        ]) as $relationRow) {
+            $relationFields = self::scalarFields($relationRow);
             $deviceId = (int) ($relationFields[$deviceIdField] ?? 0);
             if ($deviceId < 1) {
                 continue;
             }
 
             $device = new $deviceType();
-            $deviceFields = $device->getFromDB($deviceId)
-                ? self::scalarFields($device->fields ?? [])
-                : [];
-
-            if ($deviceFields !== []) {
-                $records[] = [
-                    'relation' => $relationFields,
-                    'device'   => $deviceFields,
-                ];
+            if (!$device->getFromDB($deviceId)) {
+                continue;
             }
+
+            $deviceFields = self::scalarFields($device->fields ?? []);
+            $deviceFields['report_label'] = self::componentLabel(
+                $relationClass,
+                $deviceFields,
+                $relationFields
+            );
+
+            $records[] = [
+                'relation' => $relationFields,
+                'device'   => $deviceFields,
+            ];
         }
 
         return $records;
+    }
+
+    private static function componentLabel(string $relationClass, array $device, array $relation): string
+    {
+        $designation = trim((string) ($device['designation'] ?? $device['name'] ?? ''));
+        $manufacturer = '';
+        if (!empty($device['manufacturers_id'])) {
+            $manufacturer = (string) \Dropdown::getDropdownName(
+                \Manufacturer::getTable(),
+                (int) $device['manufacturers_id']
+            );
+        }
+
+        if ($relationClass === 'Item_DeviceProcessor') {
+            return $designation;
+        }
+
+        if ($relationClass === 'Item_DeviceMemory') {
+            $parts = [];
+            $typeId = (int) ($device['devicememorytypes_id'] ?? 0);
+            if ($typeId > 0 && class_exists('DeviceMemoryType')) {
+                $parts[] = (string) \Dropdown::getDropdownName(
+                    \DeviceMemoryType::getTable(),
+                    $typeId
+                );
+            }
+            if (!empty($device['frequency'])) {
+                $parts[] = (string) $device['frequency'] . ' MHz';
+            }
+            if ($manufacturer !== '') {
+                $parts[] = $manufacturer;
+            }
+            $size = (float) ($relation['size'] ?? $device['size'] ?? 0);
+            if ($size > 0) {
+                $parts[] = rtrim(rtrim((string) $size, '0'), '.') . ' MB';
+            }
+            return trim(implode(' ', array_filter($parts)));
+        }
+
+        if ($relationClass === 'Item_DeviceHardDrive') {
+            $parts = [$designation];
+            $capacity = (float) ($relation['capacity'] ?? 0);
+            if ($capacity > 0) {
+                $parts[] = (string) (int) round($capacity / 1024) . ' GB';
+            }
+            $interfaceId = (int) ($device['interfacetypes_id'] ?? 0);
+            if ($interfaceId > 0) {
+                $parts[] = (string) \Dropdown::getDropdownName(
+                    'glpi_interfacetypes',
+                    $interfaceId
+                );
+            }
+            return trim(implode(' ', array_filter($parts)));
+        }
+
+        return $designation;
     }
 
     private static function disks(string $itemtype, int $itemsId): array
