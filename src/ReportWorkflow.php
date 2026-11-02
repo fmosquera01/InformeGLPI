@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GlpiPlugin\\Informeglopi;
+namespace GlpiPlugin\Informeglopi;
 
 use RuntimeException;
 use Session;
@@ -54,7 +54,7 @@ final class ReportWorkflow
 
         $signature = self::verifyUserPin($userId, $pin);
         $source = rtrim(GLPI_VAR_DIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $signature['signature_path']);
-        $source = self::privateFile($source, 'signatures' . DIRECTORY_SEPARATOR . 'users');
+        $source = self::privateFile($source);
         $binary = file_get_contents($source);
         if ($binary === false || !hash_equals($signature['signature_sha256'], hash('sha256', $binary))) {
             throw new RuntimeException(__('La firma personal no supera la verificación de integridad. Regístrela nuevamente desde su perfil.', 'informeglpi'));
@@ -133,6 +133,9 @@ final class ReportWorkflow
             throw new RuntimeException(__('No se encontró el informe.', 'informeglpi'));
         }
         $userId = (int) Session::getLoginUserID();
+        if (!Session::haveAccessToEntity((int) $report->fields['entities_id'], (bool) $report->fields['is_recursive'])) {
+            throw new RuntimeException(__('No tiene acceso a la entidad del informe.', 'informeglpi'));
+        }
         if ((string) $report->fields['status'] !== 'pending_supervisor_signature'
             || $userId !== (int) $report->fields['reviewer_users_id']
             || !Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
@@ -195,7 +198,7 @@ final class ReportWorkflow
         return $rowFound;
     }
 
-    private static function privateFile(string $path, string $expectedFolder): string
+    private static function privateFile(string $path): string
     {
         $root = realpath(rtrim(GLPI_VAR_DIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '_plugins' . DIRECTORY_SEPARATOR . 'informeglpi' . DIRECTORY_SEPARATOR . 'signatures' . DIRECTORY_SEPARATOR . 'users');
         $file = realpath($path);
