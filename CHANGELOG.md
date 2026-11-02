@@ -1,3 +1,6 @@
+## 0.5.56
+- Ajusta el PDF al formato institucional de referencia: elimina bordes de cuadrícula, compacta filas, centra y resalta los títulos de sección y ordena el tipo de daño antes de las recomendaciones.
+
 ## 0.5.55
 - Corrección crítica de sintaxis en ReportPdf.php: normaliza la referencia global a Dropdown para evitar error fatal al cargar el plugin.
 
