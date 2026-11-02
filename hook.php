@@ -62,6 +62,20 @@ function plugin_informeglpi_install(): bool
             KEY `idx_report_creator` (`users_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}",
 
+        'glpi_plugin_informeglopi_user_signatures' => "CREATE TABLE IF NOT EXISTS `glpi_plugin_informeglopi_user_signatures` (
+            `id` int unsigned NOT NULL AUTO_INCREMENT,
+            `users_id` int unsigned NOT NULL,
+            `signature_path` varchar(500) NOT NULL,
+            `signature_sha256` char(64) NOT NULL,
+            `pin_hash` varchar(255) NOT NULL,
+            `failed_attempts` tinyint unsigned NOT NULL DEFAULT 0,
+            `locked_until` datetime DEFAULT NULL,
+            `date_creation` datetime NOT NULL,
+            `date_mod` datetime NOT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `unicity_user_signature` (`users_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}",
+
         'glpi_plugin_informeglopi_signatures' => "CREATE TABLE IF NOT EXISTS `glpi_plugin_informeglopi_signatures` (
             `id` int unsigned NOT NULL AUTO_INCREMENT,
             `reports_id` int unsigned NOT NULL,
