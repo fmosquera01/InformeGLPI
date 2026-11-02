@@ -1,5 +1,11 @@
 ## 0.5.45
 
+- Restrict report editing and evidence uploads to the assigned preparer while a report is in preparation or returned for correction; the assigned supervisor receives a read-only review view with only approve/sign or return actions. Enforce this on the server as well as the interface.
+- Add a global GLPI Plugins > Informe Técnico > Bandeja de revisión entry listing only pending reports assigned to the logged-in supervisor and accessible entities.
+- Keep reports in approved-pending-PDF after both signatures; finalization remains reserved for successful institutional PDF generation.
+
+## 0.5.45
+
 - Restrict report editing to the assigned preparer while a report is in preparation or returned for correction; the assigned supervisor always receives a read-only review view with only approve/sign or return actions.
 - Add a global GLPI Plugins > Informe Técnico > Bandeja de revisión entry listing only pending reports assigned to the logged-in supervisor and accessible entities.
 - Keep reports in approved-pending-PDF after both signatures; finalization remains reserved for successful institutional PDF generation.
