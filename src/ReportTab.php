@@ -684,7 +684,7 @@ final class ReportTab extends CommonGLPI
         }
         if ($status === 'approved_pending_pdf') {
             echo "<div class='alert alert-success'>" . self::e(__('El informe cuenta con las dos firmas y está pendiente de generar el PDF institucional.', 'informeglpi')) . '</div>';
-            if ($userId === $reviewer && \\Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
+            if ($userId === $reviewer && \Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
                 self::renderWorkflowForm($actionUrl, $token, $id, 'generate_pdf', __('Generar PDF institucional', 'informeglpi'), false);
             }
             return;
@@ -708,7 +708,7 @@ final class ReportTab extends CommonGLPI
         echo "<input type='hidden' name='id' value='" . $reportId . "'><input type='hidden' name='workflow_action' value='" . self::e($action) . "'>";
         if ($withPin) {
             echo "<label class='form-label'>" . self::e(__('PIN personal de firma', 'informeglpi')) . "</label><input class='form-control mb-2' style='max-width:240px' type='password' name='pin' inputmode='numeric' pattern='[0-9]{6}' maxlength='6' required autocomplete='off'>";
-        } else {
+        } elseif ($action === 'return') {
             echo "<label class='form-label'>" . self::e(__('Motivo de devolución (obligatorio)', 'informeglpi')) . "</label><textarea class='form-control mb-2' name='comment' rows='3' maxlength='2000' required></textarea>";
         }
         echo "<button type='submit' class='btn btn-primary btn-sm'>" . self::e($label) . '</button></form>';
