@@ -42,7 +42,7 @@ final class UserSignatureTab extends CommonGLPI
         $configured = false;
         $signatureHash = '';
         if ($DB->tableExists('glpi_plugin_informeglopi_user_signatures')) {
-            $configured = $DB->request([
+            $rows = $DB->request([
                 'SELECT' => ['id', 'signature_sha256'],
                 'FROM' => 'glpi_plugin_informeglopi_user_signatures',
                 'WHERE' => ['users_id' => $userId],
