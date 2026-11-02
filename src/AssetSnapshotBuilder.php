@@ -170,13 +170,13 @@ final class AssetSnapshotBuilder
                     $row['_relation_size'] = $relation['size'] ?? null;
                     $memoryTypeId = (int) ($device['devicememorytypes_id'] ?? 0);
                     $row['_memory_type_name'] = $memoryTypeId > 0
-                        ? (string) \\Dropdown::getDropdownName('glpi_devicememorytypes', $memoryTypeId)
+                        ? (string) \Dropdown::getDropdownName('glpi_devicememorytypes', $memoryTypeId)
                         : '';
                 } elseif ($relationClass === 'Item_DeviceHardDrive') {
                     $row['_relation_capacity'] = $relation['capacity'] ?? null;
                     $interfaceId = (int) ($device['interfacetypes_id'] ?? 0);
                     $row['_interface_name'] = $interfaceId > 0
-                        ? (string) \\Dropdown::getDropdownName('glpi_interfacetypes', $interfaceId)
+                        ? (string) \Dropdown::getDropdownName('glpi_interfacetypes', $interfaceId)
                         : '';
 
                     $designation = trim((string) ($device['designation'] ?? $device['name'] ?? ''));
