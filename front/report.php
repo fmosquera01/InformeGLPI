@@ -69,9 +69,11 @@ if (($report->fields['itemtype'] ?? '') === 'ManualCellphone') {
     }
 } else {
     $assetDescription = trim((string) ($assetFields['name'] ?? '') . ((string) ($assetFields['comment'] ?? '') !== '' ? "\n" . $assetFields['comment'] : ''));
-    if (!empty($assetFields['date_buy'])) {
-        $assetDescription .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . Html::convDate($assetFields['date_buy']);
-    }
+    $purchaseDate = trim((string) ($assetFields['date_buy'] ?? ''));
+    $purchaseDateDisplay = ($purchaseDate !== '' && !in_array($purchaseDate, ['0000-00-00', '0000-00-00 00:00:00'], true))
+        ? Html::convDate($purchaseDate)
+        : '—';
+    $assetDescription .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . $purchaseDateDisplay;
     if (($report->fields['book_value'] ?? '') !== '' && $report->fields['book_value'] !== null) {
         $assetDescription .= "\n" . __('VALOR EN LIBROS (USD):', 'informeglpi') . ' $' . number_format((float) $report->fields['book_value'], 2, '.', ',');
     }
