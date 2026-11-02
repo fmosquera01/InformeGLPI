@@ -1,3 +1,6 @@
+## 0.5.55
+- Corrección crítica de sintaxis en ReportPdf.php: normaliza la referencia global a Dropdown para evitar error fatal al cargar el plugin.
+
 ## 0.5.54
 
 - Reformat the generated PDF to follow the institutional technical-report template: formal two-line heading, report number, date/recipients/preparer/reviewer/subject, centered asset and technical sections, equipment photos, and the two signature blocks.
