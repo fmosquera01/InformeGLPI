@@ -1,3 +1,10 @@
+## 0.5.64
+- Permite a técnicos con permiso CREATE guardar borradores incompletos; los campos obligatorios se validan al firmar.
+- Valida antes de la firma los datos del informe y los datos actuales del activo GLPI: código, tipo, fabricante, modelo, serie, responsable, ubicación y fecha de compra.
+- Mantiene los activos GLPI en solo lectura desde el plugin. El snapshot histórico del informe se actualiza desde la ficha actual del activo únicamente después de validar y justo antes de la firma técnica.
+- Integra la firma técnica en el formulario de creación/edición y conserva la aprobación independiente del supervisor y el requisito de fotografía.
+- Incorpora una bandeja personal del técnico para borradores, informes devueltos y seguimiento de informes enviados al supervisor; se conserva la bandeja de revisión del supervisor.
+
 ## 0.5.63
 - Corrige el cálculo del espacio reservado para las firmas en PDF A4: contempla también el espacio de «Atentamente» y el margen entre fotografías y firmas, evitando rechazos aunque los bloques sí puedan caber en la página.
 
