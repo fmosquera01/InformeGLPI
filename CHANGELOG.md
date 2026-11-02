@@ -1,3 +1,8 @@
+## 0.5.35
+
+- Fix the PHP syntax error in the RAM manufacturer lookup that prevented GLPI from loading the plugin.
+- Preserve the explicit SQL queries and component snapshot logic introduced in 0.5.34.
+
 ## 0.5.34
 
 - Query computer processors, memory modules, and physical disks with explicit SQL joins matching the verified GLPI inventory query.
