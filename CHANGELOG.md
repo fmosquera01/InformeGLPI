@@ -1,3 +1,7 @@
+## 0.5.50
+
+- Fix a PHP syntax error in the supervisor inbox renderer that caused GLPI to return HTTP 500 while loading the plugin.
+
 ## 0.5.49
 
 - Add return navigation from supervisor review to the assigned pending inbox and from finalized report detail to the finalized list.
