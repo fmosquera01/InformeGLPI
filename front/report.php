@@ -65,8 +65,16 @@ if (!empty($assetFields['date_buy'])) {
     $assetDescription .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . Html::convDate($assetFields['date_buy']);
 }
 if (($report->fields['book_value'] ?? '') !== '' && $report->fields['book_value'] !== null) {
-    $assetDescription .= "\n" . __('VALOR EN LIBROS (USD):', 'informeglpi') . ' 
-
+    $assetDescription .= "\n" . __('VALOR EN LIBROS (USD):', 'informeglpi') . ' $' . number_format((float) $report->fields['book_value'], 2, '.', ',');
+}
+echo "<tr><th style='width:30%'>" . $e(__('DESCRIPCIÓN DEL ACTIVO', 'informeglpi')) . "</th><td>" . nl2br($e($assetDescription)) . "</td></tr>";
+foreach ($assetFields as $key => $value) {
+    if (is_array($value) || is_object($value) || in_array($key, ['name', 'comment', 'date_buy'], true)) {
+        continue;
+    }
+    echo "<tr><th style='width:30%'>" . $e($key) . "</th><td>" . nl2br($e($value)) . "</td></tr>";
+}
+echo "</tbody></table></div>";
 $damageLabels = [
     'property_damage' => __('Daño a la propiedad', 'informeglpi'),
     'wear' => __('Desgaste', 'informeglpi'),
