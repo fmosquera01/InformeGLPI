@@ -1,3 +1,9 @@
+## 0.5.33
+
+- Replace the unreliable GLPI association-object lookup with direct reads from the same processor, memory, and hard-drive relation tables used by the Components tab.
+- Resolve each linked component through its catalog record, filter deleted associations when the column exists, and build one display line per RAM module and physical disk.
+- Keep component details limited to Computer assets; retain purchase date, book value, and comments behavior.
+
 ## 0.5.32
 
 - Fix component retrieval using GLPI's actual return contract: the native association method returns Item_Device relation objects.
