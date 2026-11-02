@@ -684,6 +684,14 @@ final class ReportTab extends CommonGLPI
         }
         if ($status === 'approved_pending_pdf') {
             echo "<div class='alert alert-success'>" . self::e(__('El informe cuenta con las dos firmas y está pendiente de generar el PDF institucional.', 'informeglpi')) . '</div>';
+            if ($userId === $reviewer && \\Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
+                self::renderWorkflowForm($actionUrl, $token, $id, 'generate_pdf', __('Generar PDF institucional', 'informeglpi'), false);
+            }
+            return;
+        }
+        if ($status === 'finalized' && !empty($report->fields['pdf_path'])) {
+            echo "<div class='alert alert-success'>" . self::e(__('El informe está finalizado y el PDF institucional se encuentra disponible.', 'informeglpi')) . "</div>";
+            echo "<a class='btn btn-primary btn-sm' target='_blank' rel='noopener' href='/plugins/informeglpi/front/report.pdf.php?id=" . $id . "'>" . self::e(__('Ver / descargar PDF', 'informeglpi')) . "</a>";
             return;
         }
         if ($status === 'returned_for_correction') {
