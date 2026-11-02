@@ -1,3 +1,9 @@
+## 0.5.54
+
+- Reformat the generated PDF to follow the institutional technical-report template: formal two-line heading, report number, date/recipients/preparer/reviewer/subject, centered asset and technical sections, equipment photos, and the two signature blocks.
+- Place purchase date and book value together inside **DESCRIPCIÓN DEL ACTIVO**, include asset description, and list processor, each RAM module, and each disk for Computer assets only.
+- Map both registered GLPI assets and manually reported cellphones into the same PDF layout while preserving the one-page A4 limit, private storage, and SHA-256 verification.
+
 ## 0.5.53
 
 - Add supervisor-only PDF generation after both report signatures.
