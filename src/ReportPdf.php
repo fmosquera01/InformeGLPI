@@ -188,9 +188,17 @@ final class ReportPdf
         $itemType = (string) ($snapshot['itemtype'] ?? $report['itemtype'] ?? '');
         $assetType = $itemType === 'ManualCellphone'
             ? 'CELULAR'
-            : strtoupper(str_replace(['Glpi\\\\Asset\\\\', '_'], ['', ' '], $itemType));
-        $assetName = $value($asset, ['name']) ?: (string) ($snapshot['asset_name'] ?? '');
-        $description = $value($asset, ['comment', 'description']);
+            : ($value($asset, ['computertypes_id', 'phonestypes_id', 'monitortypes_id', 'TIPO']) ?: strtoupper(str_replace(['Glpi\\Asset\\', '_'], ['', ' '], $itemType)));
+        if ($assetType !== '' && ctype_digit($assetType) && (int) $assetType > 0) {
+            foreach (['ComputerType', 'PhoneType', 'MonitorType'] as $class) {
+                if (class_exists($class)) {
+                    $typeName = (string) \\Dropdown::getDropdownName($class::getTable(), (int) $assetType);
+                    if ($typeName !== '') { $assetType = $typeName; break; }
+                }
+            }
+        }
+        $assetName = $value($asset, ['name', 'DESCRIPCIÓN DEL ACTIVO']) ?: (string) ($snapshot['asset_name'] ?? '');
+        $description = $value($asset, ['comment', 'description', 'DESCRIPCIÓN DEL ACTIVO']);
         if ($description === '') {
             $description = $assetName;
         }
