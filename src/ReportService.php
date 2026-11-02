@@ -308,10 +308,9 @@ final class ReportService
         }
 
         $userId = (int) Session::getLoginUserID();
-        $isCreator = $userId === (int) ($report->fields['users_id'] ?? 0);
-        $canManage = Session::haveRight(Report::$rightname, UPDATE);
-        if (!$isCreator && !$canManage) {
-            throw new RuntimeException(__('Solo el creador o un usuario con permiso de edición puede modificar este borrador.', 'informeglpi'));
+        $isAssignedPreparer = $userId === (int) ($report->fields['prepared_by_users_id'] ?? 0);
+        if (!$isAssignedPreparer) {
+            throw new RuntimeException(__('Solo el técnico asignado puede modificar este informe. El supervisor únicamente puede aprobarlo o devolverlo.', 'informeglpi'));
         }
         $currentStatus = (string) ($report->fields['status'] ?? '');
         if (!in_array($currentStatus, ['draft', 'returned_for_correction'], true)) {
@@ -462,9 +461,8 @@ final class ReportService
             throw new RuntimeException(__('Solo se pueden adjuntar fotografías mientras el informe está en preparación.', 'informeglpi'));
         }
         $userId = (int) Session::getLoginUserID();
-        if ($userId !== (int) ($report->fields['users_id'] ?? 0)
-            && !Session::haveRight(Report::$rightname, UPDATE)) {
-            throw new RuntimeException(__('No tiene permisos para adjuntar fotografías a este informe.', 'informeglpi'));
+        if ($userId !== (int) ($report->fields['prepared_by_users_id'] ?? 0)) {
+            throw new RuntimeException(__('Solo el técnico asignado puede adjuntar fotografías a este informe.', 'informeglpi'));
         }
 
         if (!isset($files['name']) || !is_array($files['name'])) {
