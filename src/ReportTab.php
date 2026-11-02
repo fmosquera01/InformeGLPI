@@ -193,13 +193,15 @@ final class ReportTab extends CommonGLPI
             ? \Dropdown::getDropdownName(\Location::getTable(), (int) $fields['locations_id'])
             : '';
         $description = trim((string) ($fields['name'] ?? '') . ((string) ($fields['comment'] ?? '') !== '' ? "\n" . $fields['comment'] : ''));
-        if (!empty($fields['date_buy'])) {
-            $description .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . \Html::convDate($fields['date_buy']);
-        }
+        $purchaseDate = trim((string) ($fields['date_buy'] ?? ''));
+        $purchaseDateDisplay = ($purchaseDate !== '' && !in_array($purchaseDate, ['0000-00-00', '0000-00-00 00:00:00'], true))
+            ? \Html::convDate($purchaseDate)
+            : '—';
+        $description .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . $purchaseDateDisplay;
         $assetRows = [
+            __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi') => $description,
             __('CÓDIGO DE ACTIVO:', 'informeglpi') => $fields['otherserial'] ?? '',
             __('TIPO:', 'informeglpi') => $typeValue,
-            __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi') => $description,
             __('MARCA:', 'informeglpi') => $manufacturerValue,
             __('MODELO:', 'informeglpi') => $modelValue,
             __('SERIE:', 'informeglpi') => $fields['serial'] ?? '',
