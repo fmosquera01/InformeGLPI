@@ -78,7 +78,7 @@ final class ReportPdf
             $pdf->SetAuthor('Songa - Infraestructura IT');
             $pdf->SetTitle((string) $fields['report_number']);
             $pdf->SetMargins(10, 8, 10);
-            $pdf->SetAutoPageBreak(false, 8);
+            $pdf->SetAutoPageBreak(true, 8);
             $pdf->setPrintHeader(false);
             $pdf->setPrintFooter(false);
             $pdf->AddPage();
