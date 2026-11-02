@@ -122,7 +122,7 @@ final class AssetSnapshotBuilder
                     ],
                 ],
                 'WHERE' => [
-                    'idp.items_id' => $id,
+                    'idp.items_id' => $itemsId,
                     'idp.itemtype' => 'Computer',
                 ],
             ],
@@ -144,7 +144,7 @@ final class AssetSnapshotBuilder
                     ],
                 ],
                 'WHERE' => [
-                    'idm.items_id' => $id,
+                    'idm.items_id' => $itemsId,
                     'idm.itemtype' => 'Computer',
                 ],
             ],
@@ -166,7 +166,7 @@ final class AssetSnapshotBuilder
                     ],
                 ],
                 'WHERE' => [
-                    'idh.items_id' => $id,
+                    'idh.items_id' => $itemsId,
                     'idh.itemtype' => 'Computer',
                     'idh.is_deleted' => 0,
                     'idh.capacity' => ['>', 0],
@@ -203,7 +203,7 @@ final class AssetSnapshotBuilder
                     $labelParts[] = (string) $row['frequency'] . ' MHz';
                 }
                 if (!empty($row['manufacturers_id'])) {
-                    $manufacturer = (string) \\Dropdown::getDropdownName(\\Manufacturer::getTable(), (int) $row['manufacturers_id']);
+                    $manufacturer = (string) \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $row['manufacturers_id']);
                     if ($manufacturer !== '') {
                         $labelParts[] = $manufacturer;
                     }
