@@ -125,7 +125,7 @@ final class AssetSnapshotBuilder
 
         // The native method returns every component affinity for the item.
         // Keep only the relation class requested by this call.
-        $associated = \\Item_Devices::getItemsAssociatedTo($itemtype, $itemsId);
+        $associated = \Item_Devices::getItemsAssociatedTo($itemtype, $itemsId);
         if (!is_array($associated)) {
             return [];
         }
