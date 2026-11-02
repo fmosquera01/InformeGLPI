@@ -27,6 +27,10 @@ try {
             ReportWorkflow::returnForCorrection($reportId, (string) ($_POST['comment'] ?? ''));
             Session::addMessageAfterRedirect(__('El informe fue devuelto al técnico para corrección.', 'informeglpi'), true, INFO);
             break;
+        case 'generate_pdf':
+            ReportPdf::generate($reportId);
+            Session::addMessageAfterRedirect(__('PDF institucional generado y el informe finalizado correctamente.', 'informeglpi'), true, INFO);
+            break;
         default:
             throw new RuntimeException(__('Acción de flujo no válida.', 'informeglpi'));
     }
