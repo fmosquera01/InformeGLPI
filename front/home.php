@@ -44,5 +44,11 @@ if ($canReview) {
 <p><?= htmlspecialchars(__('Consulte los informes enviados por los técnicos que esperan su revisión y firma.','informeglpi'),ENT_QUOTES,'UTF-8') ?></p>
 <?php if($canReview): ?><a class="ig-home-action" href="/plugins/informeglpi/front/report-inbox.php"><?= htmlspecialchars(__('Ver bandeja de entrada','informeglpi'),ENT_QUOTES,'UTF-8') ?> <span aria-hidden="true">→</span></a><?php else: ?><span class="text-muted small"><?= htmlspecialchars(__('Opción disponible para supervisores autorizados.','informeglpi'),ENT_QUOTES,'UTF-8') ?></span><?php endif; ?>
 </section>
+<section class="ig-home-card">
+<div class="ig-home-card-top"><span class="ig-home-icon" aria-hidden="true">✓</span></div>
+<h3><?= htmlspecialchars(__('Informes finalizados','informeglpi'),ENT_QUOTES,'UTF-8') ?></h3>
+<p><?= htmlspecialchars(__('Consulte los informes que completaron el proceso de revisión y firma.','informeglpi'),ENT_QUOTES,'UTF-8') ?></p>
+<a class="ig-home-action" href="/plugins/informeglpi/front/report-finalized.php"><?= htmlspecialchars(__('Ver informes finalizados','informeglpi'),ENT_QUOTES,'UTF-8') ?> <span aria-hidden="true">→</span></a>
+</section>
 </div></div>
 <?php Html::footer(); ?>
