@@ -265,12 +265,13 @@ final class ReportPdf
         $assetRows .= $field('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', $location);
 
         $technicalRows = '';
-        foreach (['background' => 'ANTECEDENTES:', 'diagnosis' => 'DIAGNÓSTICO', 'cause' => 'CAUSA:', 'recommendations' => 'RECOMENDACIONES.'] as $key => $label) {
+        foreach (['background' => 'ANTECEDENTES:', 'diagnosis' => 'DIAGNÓSTICO', 'cause' => 'CAUSA:'] as $key => $label) {
             $technicalRows .= $field($label, trim((string) ($report[$key] ?? '')), 25);
         }
         $damage = (string) ($report['damage_type'] ?? '');
         $damageText = $damage === 'wear' ? 'Desgaste -X-     Mal uso ---' : ($damage === 'property_damage' ? 'Desgaste ---     Mal uso -X-' : 'Desgaste ---     Mal uso ---');
         $technicalRows .= $field('TIPO DE DAÑO:', $damageText, 25);
+        $technicalRows .= $field('RECOMENDACIONES:', trim((string) ($report['recommendations'] ?? '')), 25);
 
         $photoHtml = '';
         $perRow = min(4, count($evidences));
@@ -302,17 +303,20 @@ final class ReportPdf
             . '</table>';
 
         return '<style>
-            table{font-size:7.2pt} td{border:0.25pt solid #aeb7c2;vertical-align:middle}
-            .field-label{font-weight:bold;background-color:#f3f5f7}
+            table{font-size:7.2pt;border-collapse:collapse}
+            td{border:0;padding:1.2pt 2pt;vertical-align:top}
+            .field-label{font-weight:bold}
+            .section-title{font-weight:bold;text-align:center;background-color:#eef1f4;border-bottom:0.6pt solid #7b8794;padding:4pt}
+            .report-heading{font-size:11pt;font-weight:bold}
         </style>'
             . $header . $metadata
-            . '<br><table cellpadding="3" cellspacing="0"><tr><td align="center"><b>INFORMACIÓN DEL ACTIVO</b></td></tr></table>'
-            . '<table cellpadding="2" cellspacing="0">' . $assetRows . '</table>'
-            . '<br><table cellpadding="3" cellspacing="0"><tr><td align="center"><b>INFORMACIÓN TÉCNICA DEL ACTIVO</b></td></tr></table>'
-            . '<table cellpadding="2" cellspacing="0">' . $technicalRows . '</table>'
-            . '<br><table cellpadding="2" cellspacing="0" border="0"><tr><td align="center"><b>FOTOS DEL EQUIPO:</b></td></tr></table>'
+            . '<br><table cellpadding="3" cellspacing="0" width="100%"><tr><td class="section-title" align="center">INFORMACIÓN DEL ACTIVO</td></tr></table>'
+            . '<table cellpadding="2" cellspacing="0" width="100%">' . $assetRows . '</table>'
+            . '<br><table cellpadding="3" cellspacing="0" width="100%"><tr><td class="section-title" align="center">INFORMACIÓN TÉCNICA DEL ACTIVO</td></tr></table>'
+            . '<table cellpadding="2" cellspacing="0" width="100%">' . $technicalRows . '</table>'
+            . '<br><table cellpadding="2" cellspacing="0" border="0" width="100%"><tr><td align="center"><b>FOTOS DEL EQUIPO:</b></td></tr></table>'
             . $photoHtml
-            . '<br><table cellpadding="3" cellspacing="0" border="0"><tr><td colspan="2" align="left">Atentamente,</td></tr><tr>' . $signatureHtml . '</tr></table>';
+            . '<br><table cellpadding="3" cellspacing="0" border="0" width="100%"><tr><td colspan="2" align="left">Atentamente,</td></tr><tr>' . $signatureHtml . '</tr></table>';
     }
 
     private static function compressedImage(string $source, int $index, array &$tempFiles): string
