@@ -105,14 +105,9 @@ final class AssetSnapshotBuilder
 
     private static function deviceRelations(string $relationClass, string $itemtype, int $itemsId): array
     {
-        if (!class_exists($relationClass) || $itemsId < 1) {
-            return [];
-        }
-
-        // Use GLPI's own Item_Devices association API. It applies the same
-        // affinity rules and relation criteria used by the native Components tab.
-        if (!is_a($relationClass, 'Item_Devices', true)
-            || !method_exists($relationClass, 'getItemsAssociatedTo')) {
+        if (!class_exists($relationClass) || $itemsId < 1
+            || !is_a($relationClass, 'Item_Devices', true)
+            || !method_exists('Item_Devices', 'getItemsAssociatedTo')) {
             return [];
         }
 
@@ -121,53 +116,42 @@ final class AssetSnapshotBuilder
             return [];
         }
 
-        $associated = $relationClass::getItemsAssociatedTo($itemtype, $itemsId);
+        // GLPI returns Item_Device* relation objects, not the Device* objects.
+        // The device foreign key is declared by the relation class in $items_id_2.
+        $deviceIdField = $relationClass::$items_id_2 ?? null;
+        if (!is_string($deviceIdField) || $deviceIdField === '') {
+            return [];
+        }
+
+        // The native method returns every component affinity for the item.
+        // Keep only the relation class requested by this call.
+        $associated = \\Item_Devices::getItemsAssociatedTo($itemtype, $itemsId);
         if (!is_array($associated)) {
             return [];
         }
 
         $records = [];
         foreach ($associated as $entry) {
-            // GLPI versions may return loaded component objects or relation rows.
-            if ($entry instanceof CommonDBTM) {
-                if (is_a($entry, $deviceType)) {
-                    $records[] = [
-                        'relation' => [],
-                        'device'   => self::scalarFields($entry->fields ?? []),
-                    ];
-                    continue;
-                }
-
-                $relationFields = self::scalarFields($entry->fields ?? []);
-                $deviceIdField = $deviceType::getForeignKeyField();
-                $deviceId = (int) ($relationFields[$deviceIdField] ?? 0);
-                if ($deviceId > 0) {
-                    $device = new $deviceType();
-                    $deviceFields = $device->getFromDB($deviceId)
-                        ? self::scalarFields($device->fields ?? [])
-                        : [];
-                    $records[] = [
-                        'relation' => $relationFields,
-                        'device'   => $deviceFields,
-                    ];
-                }
+            if (!$entry instanceof $relationClass) {
                 continue;
             }
 
-            if (is_array($entry)) {
-                $relationFields = self::scalarFields($entry);
-                $deviceIdField = $deviceType::getForeignKeyField();
-                $deviceId = (int) ($relationFields[$deviceIdField] ?? 0);
-                if ($deviceId > 0) {
-                    $device = new $deviceType();
-                    $deviceFields = $device->getFromDB($deviceId)
-                        ? self::scalarFields($device->fields ?? [])
-                        : [];
-                    $records[] = [
-                        'relation' => $relationFields,
-                        'device'   => $deviceFields,
-                    ];
-                }
+            $relationFields = self::scalarFields($entry->fields ?? []);
+            $deviceId = (int) ($relationFields[$deviceIdField] ?? 0);
+            if ($deviceId < 1) {
+                continue;
+            }
+
+            $device = new $deviceType();
+            $deviceFields = $device->getFromDB($deviceId)
+                ? self::scalarFields($device->fields ?? [])
+                : [];
+
+            if ($deviceFields !== []) {
+                $records[] = [
+                    'relation' => $relationFields,
+                    'device'   => $deviceFields,
+                ];
             }
         }
 
