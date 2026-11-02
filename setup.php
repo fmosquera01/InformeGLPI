@@ -29,6 +29,7 @@ function plugin_init_informeglpi(): void
     $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => [\GlpiPlugin\Informeglopi\ManualPhoneMenu::class, \GlpiPlugin\Informeglopi\ReportInboxMenu::class]];
     Plugin::registerClass(\GlpiPlugin\Informeglopi\ManualPhoneMenu::class);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\ReportInboxMenu::class);
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\ReportInboxMenu::class);
 
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
