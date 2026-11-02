@@ -118,7 +118,7 @@ final class AssetSnapshotBuilder
                 'FROM' => 'glpi_items_deviceprocessors AS idp',
                 'INNER JOIN' => [
                     'glpi_deviceprocessors AS dp' => [
-                        'ON' => ['idp.deviceprocessors_id' => 'dp.id'],
+                        'ON' => ['idp' => 'deviceprocessors_id', 'dp' => 'id'],
                     ],
                 ],
                 'WHERE' => [
@@ -135,12 +135,12 @@ final class AssetSnapshotBuilder
                 'FROM' => 'glpi_items_devicememories AS idm',
                 'INNER JOIN' => [
                     'glpi_devicememories AS dm' => [
-                        'ON' => ['idm.devicememories_id' => 'dm.id'],
+                        'ON' => ['idm' => 'devicememories_id', 'dm' => 'id'],
                     ],
                 ],
                 'LEFT JOIN' => [
                     'glpi_devicememorytypes AS dmt' => [
-                        'ON' => ['dm.devicememorytypes_id' => 'dmt.id'],
+                        'ON' => ['dm' => 'devicememorytypes_id', 'dmt' => 'id'],
                     ],
                 ],
                 'WHERE' => [
@@ -157,12 +157,12 @@ final class AssetSnapshotBuilder
                 'FROM' => 'glpi_items_deviceharddrives AS idh',
                 'INNER JOIN' => [
                     'glpi_deviceharddrives AS dh' => [
-                        'ON' => ['idh.deviceharddrives_id' => 'dh.id'],
+                        'ON' => ['idh' => 'deviceharddrives_id', 'dh' => 'id'],
                     ],
                 ],
                 'LEFT JOIN' => [
                     'glpi_interfacetypes AS it' => [
-                        'ON' => ['dh.interfacetypes_id' => 'it.id'],
+                        'ON' => ['dh' => 'interfacetypes_id', 'it' => 'id'],
                     ],
                 ],
                 'WHERE' => [
