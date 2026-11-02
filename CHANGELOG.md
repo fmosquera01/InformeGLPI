@@ -1,3 +1,9 @@
+## 0.5.34
+
+- Query computer processors, memory modules, and physical disks with explicit SQL joins matching the verified GLPI inventory query.
+- Build one display label per RAM module and physical disk using association capacity/size and the related type/interface catalogs.
+- Remove the previous component-record lookup through `getFromDB()` for computer hardware snapshots.
+
 ## 0.5.33
 
 - Replace the unreliable GLPI association-object lookup with direct reads from the same processor, memory, and hard-drive relation tables used by the Components tab.
