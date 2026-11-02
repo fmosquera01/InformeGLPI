@@ -105,52 +105,70 @@ final class AssetSnapshotBuilder
 
     private static function deviceRelations(string $relationClass, string $itemtype, int $itemsId): array
     {
-        global $DB;
-
         if (!class_exists($relationClass) || $itemsId < 1) {
             return [];
         }
 
-        // GLPI 11 Item_Devices relations use the common columns itemtype/items_id.
-        // Do not rely on the undocumented itemtype_1/items_id_1 property names:
-        // they are not defined consistently by all relation classes.
-        $relationTable = $relationClass::getTable();
+        // Use GLPI's own Item_Devices association API. It applies the same
+        // affinity rules and relation criteria used by the native Components tab.
+        if (!is_a($relationClass, 'Item_Devices', true)
+            || !method_exists($relationClass, 'getItemsAssociatedTo')) {
+            return [];
+        }
+
         $deviceType = $relationClass::getDeviceType();
         if (!is_string($deviceType) || !class_exists($deviceType)) {
             return [];
         }
 
-        $deviceIdField = $deviceType::getForeignKeyField();
-        if (!is_string($deviceIdField) || $deviceIdField === '') {
+        $associated = $relationClass::getItemsAssociatedTo($itemtype, $itemsId);
+        if (!is_array($associated)) {
             return [];
         }
 
         $records = [];
-        foreach ($DB->request([
-            'SELECT' => '*',
-            'FROM'   => $relationTable,
-            'WHERE'  => [
-                'itemtype'   => $itemtype,
-                'items_id'   => $itemsId,
-                'is_deleted' => 0,
-            ],
-            'ORDER' => ['id ASC'],
-        ]) as $relation) {
-            $deviceId = (int) ($relation[$deviceIdField] ?? 0);
-            if ($deviceId < 1) {
+        foreach ($associated as $entry) {
+            // GLPI versions may return loaded component objects or relation rows.
+            if ($entry instanceof CommonDBTM) {
+                if (is_a($entry, $deviceType)) {
+                    $records[] = [
+                        'relation' => [],
+                        'device'   => self::scalarFields($entry->fields ?? []),
+                    ];
+                    continue;
+                }
+
+                $relationFields = self::scalarFields($entry->fields ?? []);
+                $deviceIdField = $deviceType::getForeignKeyField();
+                $deviceId = (int) ($relationFields[$deviceIdField] ?? 0);
+                if ($deviceId > 0) {
+                    $device = new $deviceType();
+                    $deviceFields = $device->getFromDB($deviceId)
+                        ? self::scalarFields($device->fields ?? [])
+                        : [];
+                    $records[] = [
+                        'relation' => $relationFields,
+                        'device'   => $deviceFields,
+                    ];
+                }
                 continue;
             }
 
-            $device = new $deviceType();
-            $deviceFields = [];
-            if ($device->getFromDB($deviceId)) {
-                $deviceFields = self::scalarFields($device->fields ?? []);
+            if (is_array($entry)) {
+                $relationFields = self::scalarFields($entry);
+                $deviceIdField = $deviceType::getForeignKeyField();
+                $deviceId = (int) ($relationFields[$deviceIdField] ?? 0);
+                if ($deviceId > 0) {
+                    $device = new $deviceType();
+                    $deviceFields = $device->getFromDB($deviceId)
+                        ? self::scalarFields($device->fields ?? [])
+                        : [];
+                    $records[] = [
+                        'relation' => $relationFields,
+                        'device'   => $deviceFields,
+                    ];
+                }
             }
-
-            $records[] = [
-                'relation' => self::scalarFields($relation),
-                'device'   => $deviceFields,
-            ];
         }
 
         return $records;
