@@ -1,3 +1,10 @@
+## 0.5.53
+
+- Add supervisor-only PDF generation after both report signatures.
+- Store the one-page A4 PDF privately, verify its SHA-256 hash, and only then finalize the report.
+- Resize and compress evidence images for PDF composition without modifying original evidence.
+- Add permission-checked PDF streaming with integrity verification.
+
 ## 0.5.52
 
 - Refine the plugin landing page with compact action cards, small leading icons, and clear button-style links for cellphone report creation, the supervisor inbox, and finalized reports.
