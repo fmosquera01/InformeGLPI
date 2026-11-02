@@ -173,8 +173,8 @@ final class AssetSnapshotBuilder
                     'dh.designation' => ['<>', null],
                     [
                         'OR' => [
-                            'it.name' => null,
-                            'it.name' => ['NOT LIKE', '%USB%'],
+                            ['it.name' => null],
+                            ['it.name' => ['NOT LIKE', '%USB%']],
                         ],
                     ],
                 ],
