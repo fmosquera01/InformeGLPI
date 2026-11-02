@@ -1,3 +1,8 @@
+## 0.5.31
+
+- Read computer processors, RAM modules, and hard drives through GLPI's native `Item_Devices::getItemsAssociatedTo()` API, matching the association logic used by the Components tab.
+- Keep technical component output restricted to assets whose itemtype is `Computer`; comments and purchase-date handling remain unchanged.
+
 ## 0.5.30
 
 - Correct GLPI 11 component relation lookup for computers by querying the standard `itemtype`, `items_id`, and `is_deleted` columns.
