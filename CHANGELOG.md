@@ -1,3 +1,9 @@
+## 0.5.32
+
+- Fix component retrieval using GLPI's actual return contract: the native association method returns Item_Device relation objects.
+- Read the component foreign key from the relation class metadata and filter returned objects by the requested relation class before loading the processor, memory, or hard-drive record.
+- Keep technical component output limited to Computer assets.
+
 ## 0.5.31
 
 - Read computer processors, RAM modules, and hard drives through GLPI's native `Item_Devices::getItemsAssociatedTo()` API, matching the association logic used by the Components tab.
