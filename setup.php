@@ -17,6 +17,7 @@ require_once __DIR__ . '/src/ReportService.php';
 require_once __DIR__ . '/src/ReportWorkflow.php';
 require_once __DIR__ . '/src/ManualPhoneMenu.php';
 require_once __DIR__ . '/src/ReportInboxMenu.php';
+require_once __DIR__ . '/src/ReportInboxMenu.php';
 require_once __DIR__ . '/src/UserSignatureTab.php';
 
 function plugin_init_informeglpi(): void
@@ -25,8 +26,9 @@ function plugin_init_informeglpi(): void
 
     $PLUGIN_HOOKS['csrf_compliant']['informeglpi'] = true;
     $PLUGIN_HOOKS['menu_entry']['informeglpi'] = true;
-    $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => \GlpiPlugin\Informeglopi\ManualPhoneMenu::class];
+    $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => [\GlpiPlugin\Informeglopi\ManualPhoneMenu::class, \GlpiPlugin\Informeglopi\ReportInboxMenu::class]];
     Plugin::registerClass(\GlpiPlugin\Informeglopi\ManualPhoneMenu::class);
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\ReportInboxMenu::class);
 
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
