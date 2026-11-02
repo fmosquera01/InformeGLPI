@@ -258,7 +258,7 @@ final class ReportTab extends CommonGLPI
                 $relation = is_array($entry['relation'] ?? null) ? $entry['relation'] : [];
                 $parts = [];
 
-                // GLPI's designation is usually the most readable inventory value.
+                // Prefer the inventory designation; use technical attributes only as fallback.
                 foreach (['designation', 'name'] as $preferred) {
                     $value = trim((string) ($device[$preferred] ?? ''));
                     if ($value !== '' && $value !== '0') {
@@ -267,8 +267,6 @@ final class ReportTab extends CommonGLPI
                     }
                 }
 
-                // If no designation exists, build a concise description from
-                // the relevant technical attributes rather than dumping DB fields.
                 if ($parts === []) {
                     foreach (array_slice($definition['fields'], 2) as $field) {
                         $value = trim((string) ($device[$field] ?? $relation[$field] ?? ''));
@@ -279,7 +277,7 @@ final class ReportTab extends CommonGLPI
                 }
 
                 if (!empty($device['manufacturers_id'])) {
-                    $manufacturer = \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $device['manufacturers_id']);
+                    $manufacturer = \\Dropdown::getDropdownName(\\Manufacturer::getTable(), (int) $device['manufacturers_id']);
                     if ($manufacturer !== '' && !in_array($manufacturer, $parts, true)) {
                         $parts[] = $manufacturer;
                     }
@@ -292,11 +290,11 @@ final class ReportTab extends CommonGLPI
             }
 
             if ($lines !== []) {
-                echo "<div class='ig-row'><div class='ig-label'>" . self::e($definition['label']) . "</div><div class='ig-value'>";
+                echo "<div class='ig-component-group mt-1'><strong>" . self::e($definition['label']) . "</strong>";
                 foreach ($lines as $line) {
                     echo "<div class='ig-component-line'>" . self::e($line) . '</div>';
                 }
-                echo '</div></div>';
+                echo '</div>';
             }
         }
     }
