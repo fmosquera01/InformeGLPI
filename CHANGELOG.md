@@ -1,3 +1,8 @@
+## 0.5.44
+
+- Fix workflow signature failure on existing installations by expanding history old_status/new_status columns to 40 characters, matching the report workflow states.
+- Apply the same history column sizes to fresh installations and migrate existing tables safely.
+
 ## 0.5.43
 
 - Add PIN-authorized technical and supervisor signature actions using each user's saved profile signature; preserve a private, hash-verified copy per report.
