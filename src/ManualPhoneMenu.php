@@ -24,7 +24,7 @@ final class ManualPhoneMenu extends CommonGLPI
                     'page'  => '/plugins/informeglpi/front/manual-phone.php',
                 ],
                 'supervisor_review_inbox' => [
-                    'title' => __('Bandeja de revisión', 'informeglpi'),
+                    'title' => __('Bandeja de entrada', 'informeglpi'),
                     'page'  => '/plugins/informeglpi/front/report-inbox.php',
                 ],
             ],
