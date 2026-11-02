@@ -60,8 +60,51 @@ echo "</div>";
 echo "<div class='alert alert-info'>" . $e(__('Este informe conserva los datos del activo capturados al momento de crear el borrador. La edición del contenido y las firmas se incorporarán en la siguiente etapa.', 'informeglpi')) . "</div>";
 echo "<h4>" . $e(__('Datos del activo (snapshot)', 'informeglpi')) . "</h4>";
 echo "<div class='table-responsive'><table class='table table-sm table-striped'><tbody>";
+$assetDescription = trim((string) ($assetFields['name'] ?? '') . ((string) ($assetFields['comment'] ?? '') !== '' ? "\n" . $assetFields['comment'] : ''));
+if (!empty($assetFields['date_buy'])) {
+    $assetDescription .= "\n" . __('FECHA DE COMPRA:', 'informeglpi') . ' ' . Html::convDate($assetFields['date_buy']);
+}
+if (($report->fields['book_value'] ?? '') !== '' && $report->fields['book_value'] !== null) {
+    $assetDescription .= "\n" . __('VALOR EN LIBROS (USD):', 'informeglpi') . ' 
+
+$damageLabels = [
+    'property_damage' => __('Daño a la propiedad', 'informeglpi'),
+    'wear' => __('Desgaste', 'informeglpi'),
+];
+$damageType = (string) ($report->fields['damage_type'] ?? '');
+echo "<h4>" . $e(__('Información técnica del informe', 'informeglpi')) . "</h4>";
+echo "<dl class='row'>";
+echo "<dt class='col-sm-3'>" . $e(__('Clasificación', 'informeglpi')) . "</dt><dd class='col-sm-9'>" . $e($damageLabels[$damageType] ?? '—') . "</dd>";
+
+echo "</dl>";
+foreach ([
+    'background' => __('Antecedentes', 'informeglpi'),
+    'diagnosis' => __('Diagnóstico técnico', 'informeglpi'),
+    'cause' => __('Causa del daño o desgaste', 'informeglpi'),
+    'activities' => __('Actividades y observaciones realizadas', 'informeglpi'),
+    'recommendations' => __('Recomendaciones', 'informeglpi'),
+    'observations' => __('Observaciones adicionales', 'informeglpi'),
+] as $field => $label) {
+    $value = trim((string) ($report->fields[$field] ?? ''));
+    if ($value !== '') {
+        echo "<div class='mb-3'><strong>" . $e($label) . "</strong><div class='border rounded p-2'>" . nl2br($e($value)) . "</div></div>";
+    }
+}
+
+$itemtype = (string) ($report->fields['itemtype'] ?? '');
+$itemsId = (int) ($report->fields['items_id'] ?? 0);
+if ($itemtype !== '' && $itemsId > 0) {
+    $assetUrl = '/front/' . strtolower($itemtype) . '.form.php?id=' . $itemsId;
+    echo "<a class='btn btn-secondary' href='" . $e($assetUrl) . "'>" . $e(__('Volver al activo', 'informeglpi')) . "</a>";
+}
+echo "</div></div>";
+
+Html::footer();
+ . number_format((float) $report->fields['book_value'], 2, '.', ',');
+}
+echo "<tr><th style='width:30%'>" . $e(__('DESCRIPCIÓN DEL ACTIVO', 'informeglpi')) . "</th><td>" . nl2br($e($assetDescription)) . "</td></tr>";
 foreach ($assetFields as $key => $value) {
-    if (is_array($value) || is_object($value)) {
+    if (is_array($value) || is_object($value) || in_array($key, ['name', 'comment', 'date_buy'], true)) {
         continue;
     }
     echo "<tr><th style='width:30%'>" . $e($key) . "</th><td>" . nl2br($e($value)) . "</td></tr>";
