@@ -9,6 +9,15 @@ Session::checkLoginUser();
 Html::header(__('Informe Técnico', 'informeglpi'), $_SERVER['PHP_SELF'], 'plugins');
 
 $pendingCount = 0;
+$myPendingCount = 0;
+$canCreate = Session::haveRight(Report::$rightname, CREATE) && Session::haveRight(Report::$rightname, READ);
+if ($canCreate) {
+    global $DB;
+    $myUserId = (int) Session::getLoginUserID();
+    foreach ($DB->request(['SELECT'=>['id','entities_id','is_recursive'],'FROM'=>'glpi_plugin_informeglopi_reports','WHERE'=>['prepared_by_users_id'=>$myUserId,'status'=>['draft','returned_for_correction','pending_supervisor_signature']]]) as $mine) {
+        if (Session::haveAccessToEntity((int)$mine['entities_id'], (bool)$mine['is_recursive'])) $myPendingCount++;
+    }
+}
 $canReview = Session::haveRight(Report::$rightname, READ)
     && Session::haveRight('plugin_informeglpi_validate', UPDATE);
 if ($canReview) {
@@ -51,6 +60,14 @@ if ($canReview) {
 <p><?= htmlspecialchars(__('Registre un informe técnico para un teléfono celular que todavía no se encuentra registrado como activo en GLPI.','informeglpi'),ENT_QUOTES,'UTF-8') ?></p>
 <a class="ig-home-action" role="button" href="/plugins/informeglpi/front/manual-phone.php"><?= htmlspecialchars(__('Crear informe','informeglpi'),ENT_QUOTES,'UTF-8') ?> <span aria-hidden="true">→</span></a>
 </section>
+<?php if($canCreate): ?>
+<section class="ig-home-card">
+<div class="ig-home-card-top"><span class="ig-home-icon" aria-hidden="true">▤</span><span class="ig-home-count"><?= $myPendingCount ?></span></div>
+<h3><?= htmlspecialchars(__('Mis informes técnicos','informeglpi'),ENT_QUOTES,'UTF-8') ?></h3>
+<p><?= htmlspecialchars(__('Consulte sus borradores y dé seguimiento a los informes que ya envió al supervisor para revisión y firma.','informeglpi'),ENT_QUOTES,'UTF-8') ?></p>
+<a class="ig-home-action" href="/plugins/informeglpi/front/report-mine.php"><?= htmlspecialchars(__('Ver mis informes','informeglpi'),ENT_QUOTES,'UTF-8') ?> <span aria-hidden="true">→</span></a>
+</section>
+<?php endif; ?>
 <section class="ig-home-card">
 <div class="ig-home-card-top"><span class="ig-home-icon" aria-hidden="true">☷</span><?php if($canReview): ?><span class="ig-home-count" title="<?= htmlspecialchars(__('Informes pendientes de revisión','informeglpi'),ENT_QUOTES,'UTF-8') ?>"><?= $pendingCount ?></span><?php endif; ?></div>
 <h3><?= htmlspecialchars(__('Bandeja de entrada','informeglpi'),ENT_QUOTES,'UTF-8') ?></h3>
