@@ -152,7 +152,9 @@ final class ReportTab extends CommonGLPI
         $assetHtml = self::renderAssetInformation(
             $itemtype,
             is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [],
-            is_array($snapshot['components'] ?? null) ? $snapshot['components'] : []
+            is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [],
+            '',
+            true
         );
         self::renderFieldsForm('/plugins/informeglpi/front/report.form.php', [
             '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
@@ -163,10 +165,10 @@ final class ReportTab extends CommonGLPI
             'report_number' => ReportService::previewNextReportNumber(),
             'prepared_by_users_id' => (int) \Session::getLoginUserID(),
             'subject' => 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.',
-        ], $assetHtml);
+        ], $assetHtml, true);
     }
 
-    private static function renderAssetInformation(string $itemtype, array $fields, array $components): string
+    private static function renderAssetInformation(string $itemtype, array $fields, array $components, string $bookValue = ''): string
     {
         ob_start();
 
@@ -208,7 +210,11 @@ final class ReportTab extends CommonGLPI
             if (is_array($value) || is_object($value) || trim((string) $value) === '' || (string) $value === '0' || in_array(mb_strtolower(trim((string) $value)), ['no asset information', 'n/a', 'not available'], true)) {
                 continue;
             }
-            echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>" . nl2br(self::e($value)) . '</div></div>';
+            echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>" . nl2br(self::e($value));
+            if ($label === __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi')) {
+                echo "<div class='mt-2'><label class='form-label mb-1 fw-bold' for='field_book_value'>" . self::e(__('VALOR EN LIBROS (USD):', 'informeglpi')) . "</label><div class='input-group input-group-sm'><span class='input-group-text'>$</span><input class='form-control' type='number' min='0' step='0.01' name='book_value' id='field_book_value' value='" . self::e($bookValue) . "'></div></div>";
+            }
+            echo '</div></div>';
         }
         if ($itemtype === 'Computer') {
             self::renderComputerComponents($components);
@@ -477,13 +483,13 @@ final class ReportTab extends CommonGLPI
             }
             $assetHtml = self::renderManualPhoneInformation($manualValues, true);
         } else {
-            $assetHtml = self::renderAssetInformation($itemtype, $assetFields, is_array($snapshot['components'] ?? null) ? $snapshot['components'] : []);
+            $assetHtml = self::renderAssetInformation($itemtype, $assetFields, is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [], (string) ($report->fields['book_value'] ?? ''));
         }
         if ($isEditable) {
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
                 'id' => $reportId,
-            ], $report->fields, $assetHtml);
+            ], $report->fields, $assetHtml, !$isManualPhone);
         } else {
             echo "<div class='alert alert-warning mb-0'>" . self::e(__('Este informe no está disponible para edición con su usuario o su estado actual.', 'informeglpi')) . "</div>";
         }
@@ -532,7 +538,7 @@ final class ReportTab extends CommonGLPI
         echo "<div class='form-text mb-2'>" . self::e(__('Las fotografías guardadas se conservan. Las nuevas imágenes que seleccione se añadirán al informe.', 'informeglpi')) . '</div>';
     }
 
-    private static function renderFieldsForm(string $action, array $hidden, array $values, string $assetHtml = ''): void
+    private static function renderFieldsForm(string $action, array $hidden, array $values, string $assetHtml = '', bool $bookValueInAsset = false): void
     {
         echo "<form class='ig-report-form' method='post' enctype='multipart/form-data' action='" . self::e($action) . "'>";
         self::renderDocumentHeader($values['report_number'] ?? '');
@@ -586,13 +592,15 @@ final class ReportTab extends CommonGLPI
             echo "<input type='hidden' name='" . self::e($name) . "' value='" . self::e($value) . "'>";
         }
         $fields = [
-            'book_value' => __('VALOR EN LIBROS (USD):', 'informeglpi'),
             'background' => __('ANTECEDENTES:', 'informeglpi'),
             'diagnosis' => __('DIAGNÓSTICO:', 'informeglpi'),
             'cause' => __('CAUSA:', 'informeglpi'),
             'recommendations' => __('RECOMENDACIONES:', 'informeglpi'),
         ];
         echo "<div class='ig-asset-table'>";
+        if (!$bookValueInAsset) {
+            $fields = ['book_value' => __('VALOR EN LIBROS (USD):', 'informeglpi')] + $fields;
+        }
         foreach ($fields as $field => $label) {
             $value = $values[$field] ?? '';
             echo "<div class='ig-row'><label class='ig-label' for='field_" . self::e($field) . "'>" . self::e($label) . '</label><div class="ig-value">';
