@@ -120,7 +120,7 @@ final class ReportTab extends CommonGLPI
             $value = (string) ($fields[$key] ?? '');
             echo "<div class='ig-row'><label class='ig-label' for='manual_asset_" . self::e($key) . "'>" . self::e($label) . "</label><div class='ig-value'>";
             if ($editable) {
-                $required = in_array($key, ['asset_code', 'description', 'manufacturer', 'model', 'serial', 'responsible', 'area'], true) ? ' required' : '';
+                $required = ''; // Drafts must remain saveable while manual asset data is incomplete.
                 if ($key === 'description') {
                     echo "<textarea class='form-control' rows='2' maxlength='255' id='manual_asset_description' name='manual_asset[description]' placeholder='" . self::e(__('Ejemplo: TELEFONO CELULAR A24', 'informeglpi')) . "'" . $required . ">" . self::e($value) . "</textarea>";
                     echo "<small class='form-text text-muted'>" . self::e(__('Describa el activo de forma clara, por ejemplo: TELEFONO CELULAR A24.', 'informeglpi')) . "</small>";
@@ -208,10 +208,6 @@ final class ReportTab extends CommonGLPI
             __('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', 'informeglpi') => $locationValue,
         ];
         foreach ($assetRows as $label => $value) {
-            if ($label !== __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi')
-                && (is_array($value) || is_object($value) || trim((string) $value) === '' || (string) $value === '0' || in_array(mb_strtolower(trim((string) $value)), ['no asset information', 'n/a', 'not available'], true))) {
-                continue;
-            }
             echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>";
             if ($label === __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi')) {
                 echo "<div><strong>" . self::e(__('FECHA DE COMPRA:', 'informeglpi')) . "</strong> " . self::e($purchaseDateDisplay) . "</div>";
@@ -223,7 +219,8 @@ final class ReportTab extends CommonGLPI
                     self::renderComputerComponents($components);
                 }
             } else {
-                echo nl2br(self::e($value));
+                $displayValue = trim((string) $value) !== '' ? (string) $value : '— FALTA EN GLPI —';
+                echo nl2br(self::e($displayValue));
             }
             echo '</div></div>';
         }
