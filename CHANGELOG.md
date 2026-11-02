@@ -1,3 +1,8 @@
+## 0.5.38
+
+- Fix GLPI 11 query-builder JOIN foreign-key definitions by using table aliases and field names in the ON criteria for processor, memory, and hard-drive relations.
+- Preserve the existing filters and component-label generation.
+
 ## 0.5.37
 
 - Fix duplicated namespace separators that caused a PHP syntax error while loading the asset snapshot builder.
