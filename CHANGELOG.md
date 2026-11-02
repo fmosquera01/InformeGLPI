@@ -1,3 +1,9 @@
+## 0.5.30
+
+- Correct GLPI 11 component relation lookup for computers by querying the standard `itemtype`, `items_id`, and `is_deleted` columns.
+- Resolve component classes and foreign-key fields through GLPI's `getDeviceType()` and `getForeignKeyField()` APIs instead of relying on relation metadata properties that were not resolving correctly.
+- Preserve the purchase-date lookup from `glpi_infocoms.buy_date`, mapped to the report snapshot's `date_buy` field.
+
 ## 0.5.29
 
 - Fix purchase-date retrieval for GLPI 11 by reading `buy_date` from `glpi_infocoms` and mapping it to the report snapshot field `date_buy`.
