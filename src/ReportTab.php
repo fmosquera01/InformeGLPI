@@ -491,6 +491,9 @@ final class ReportTab extends CommonGLPI
             $assetHtml = self::renderAssetInformation($itemtype, $assetFields, is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [], (string) ($report->fields['book_value'] ?? ''));
         }
         if ($isEditable) {
+            if ($reportStatus === 'returned_for_correction') {
+                self::renderReturnNotice($reportId);
+            }
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
                 'id' => $reportId,
@@ -504,6 +507,21 @@ final class ReportTab extends CommonGLPI
             self::renderWorkflowActions($report);
         }
         echo '</div></div>';
+    }
+
+    private static function renderReturnNotice(int $reportId): void
+    {
+        global $DB;
+        foreach ($DB->request([
+            'SELECT' => ['comment', 'date_creation', 'users_id'],
+            'FROM' => 'glpi_plugin_informeglopi_history',
+            'WHERE' => ['reports_id' => $reportId, 'action' => 'returned'],
+            'ORDER' => ['date_creation DESC'],
+            'LIMIT' => 1,
+        ]) as $entry) {
+            echo "<div class='alert alert-warning'><strong>" . self::e(__('Observaciones del supervisor', 'informeglpi')) . '</strong><div>' . nl2br(self::e((string) ($entry['comment'] ?? ''))) . '</div><small>' . self::e(getUserName((int) $entry['users_id']) . ' · ' . (string) $entry['date_creation']) . '</small></div>';
+            break;
+        }
     }
 
     private static function renderReadOnlyDetails(Report $report): void
