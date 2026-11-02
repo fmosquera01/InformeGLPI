@@ -1,3 +1,6 @@
+## 0.5.59
+- Aprovecha el espacio inferior de la página Letter para ampliar la fotografía de evidencia y bajar ligeramente los bloques de firma, manteniendo el diseño en una sola página.
+
 ## 0.5.58
 - Centra «Elaborador por» y «Supervisado por» sobre sus respectivos bloques de firma y cargo.
 - Aumenta el espacio disponible para las fotografías y elimina las leyendas con nombres de archivo debajo de las imágenes.
