@@ -205,7 +205,7 @@ final class AssetSnapshotBuilder
             }
             $size = (float) ($relation['size'] ?? $device['size'] ?? 0);
             if ($size > 0) {
-                $parts[] = rtrim(rtrim((string) $size, '0'), '.') . ' MB';
+                $parts[] = (string) (int) round($size / 1024) . ' GB';
             }
             return trim(implode(' ', array_filter($parts)));
         }
