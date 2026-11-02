@@ -1,3 +1,8 @@
+## 0.5.39
+
+- Replace component JOIN queries with direct query-builder reads of association rows and individual component records, avoiding alias-dependent joins.
+- Keep per-module RAM and disk labels, resolve memory/interface catalog names separately, and exclude USB/deleted/empty disks.
+
 ## 0.5.38
 
 - Fix GLPI 11 query-builder JOIN foreign-key definitions by using table aliases and field names in the ON criteria for processor, memory, and hard-drive relations.
