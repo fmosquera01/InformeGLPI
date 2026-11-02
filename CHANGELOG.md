@@ -1,3 +1,9 @@
+## 0.5.45
+
+- Restrict report editing to the assigned preparer while a report is in preparation or returned for correction; the assigned supervisor always receives a read-only review view with only approve/sign or return actions.
+- Add a global GLPI Plugins > Informe Técnico > Bandeja de revisión entry listing only pending reports assigned to the logged-in supervisor and accessible entities.
+- Keep reports in approved-pending-PDF after both signatures; finalization remains reserved for successful institutional PDF generation.
+
 ## 0.5.44
 
 - Fix workflow signature failure on existing installations by expanding history old_status/new_status columns to 40 characters, matching the report workflow states.
