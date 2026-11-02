@@ -495,28 +495,70 @@ final class ReportTab extends CommonGLPI
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
                 'id' => $reportId,
             ], $report->fields, $assetHtml, !$isManualPhone);
+            if ($reportStatus === 'draft') {
+                self::renderWorkflowActions($report);
+            }
         } else {
+            self::renderReadOnlyDetails($report);
             self::renderWorkflowActions($report);
         }
         echo '</div></div>';
     }
 
+    private static function renderReadOnlyDetails(Report $report): void
+    {
+        $reportId = (int) $report->getID();
+        echo "<div class='ig-asset-table mb-3'>";
+        foreach ([
+            'background' => __('ANTECEDENTES', 'informeglpi'),
+            'diagnosis' => __('DIAGNÓSTICO', 'informeglpi'),
+            'cause' => __('CAUSA', 'informeglpi'),
+            'recommendations' => __('RECOMENDACIONES', 'informeglpi'),
+        ] as $field => $label) {
+            $value = trim((string) ($report->fields[$field] ?? ''));
+            echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>" . ($value !== '' ? nl2br(self::e($value)) : '—') . '</div></div>';
+        }
+        echo '</div>';
+        echo "<h5>" . self::e(__('Fotografías y evidencias', 'informeglpi')) . '</h5>';
+        self::renderEvidenceGallery($reportId);
+        global $DB;
+        $history = [];
+        foreach ($DB->request([
+            'SELECT' => ['action', 'comment', 'users_id', 'date_creation'],
+            'FROM' => 'glpi_plugin_informeglopi_history',
+            'WHERE' => ['reports_id' => $reportId],
+            'ORDER' => ['date_creation DESC'],
+        ]) as $entry) {
+            if (in_array((string) ($entry['action'] ?? ''), ['returned', 'technical_signed', 'supervisor_signed'], true)) {
+                $history[] = $entry;
+            }
+        }
+        if ($history !== []) {
+            echo "<h5 class='mt-3'>" . self::e(__('Historial de revisión', 'informeglpi')) . '</h5><ul class="list-group mb-3">';
+            foreach ($history as $entry) {
+                $who = getUserName((int) $entry['users_id']);
+                echo '<li class="list-group-item"><strong>' . self::e($who) . '</strong> — ' . self::e($entry['date_creation']) . '<div>' . nl2br(self::e((string) ($entry['comment'] ?? ''))) . '</div></li>';
+            }
+            echo '</ul>';
+        }
+    }
+
     private static function renderWorkflowActions(Report $report): void
     {
         $id = (int) $report->getID();
-        $userId = (int) \\Session::getLoginUserID();
+        $userId = (int) \Session::getLoginUserID();
         $status = (string) ($report->fields['status'] ?? '');
         $preparedBy = (int) ($report->fields['prepared_by_users_id'] ?? 0);
         $reviewer = (int) ($report->fields['reviewer_users_id'] ?? 0);
         $actionUrl = '/plugins/informeglpi/front/report.workflow.php';
-        $token = \\Session::getNewCSRFToken(true);
+        $token = \Session::getNewCSRFToken(true);
 
         if ($status === 'draft' && $userId === $preparedBy) {
             echo "<div class='alert alert-info'>" . self::e(__('Cuando el informe esté completo, firme con su PIN personal para enviarlo al supervisor.', 'informeglpi')) . '</div>';
             self::renderWorkflowForm($actionUrl, $token, $id, 'sign_technical', __('Firmar y enviar a revisión', 'informeglpi'), true);
             return;
         }
-        if ($status === 'pending_supervisor_signature' && $userId === $reviewer && \\Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
+        if ($status === 'pending_supervisor_signature' && $userId === $reviewer && \Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
             echo "<div class='alert alert-warning'>" . self::e(__('Revise el contenido y las evidencias. Puede aprobar firmando con su PIN o devolver el informe al técnico.', 'informeglpi')) . '</div>';
             self::renderWorkflowForm($actionUrl, $token, $id, 'sign_supervisor', __('Aprobar y firmar', 'informeglpi'), true);
             self::renderWorkflowForm($actionUrl, $token, $id, 'return', __('Devolver para corrección', 'informeglpi'), false);
@@ -774,6 +816,9 @@ final class ReportTab extends CommonGLPI
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
                 'id' => $reportId,
             ], $report->fields);
+            if (($report->fields['status'] ?? '') === 'draft') {
+                self::renderWorkflowActions($report);
+            }
         } else {
             echo "<div class='alert alert-secondary'>" . self::e(__('Este informe ya no está en edición. Su consulta y descarga se habilitarán según el flujo de aprobación y finalización.', 'informeglpi')) . '</div>';
             foreach ([
