@@ -194,7 +194,7 @@ final class ReportTab extends CommonGLPI
             : '';
         $purchaseDate = trim((string) ($fields['date_buy'] ?? ''));
         $purchaseDateDisplay = ($purchaseDate !== '' && !in_array($purchaseDate, ['0000-00-00', '0000-00-00 00:00:00'], true))
-            ? \\Html::convDate($purchaseDate)
+            ? \Html::convDate($purchaseDate)
             : '—';
         $comments = trim((string) ($fields['comment'] ?? ''));
         $assetRows = [
@@ -216,9 +216,7 @@ final class ReportTab extends CommonGLPI
             if ($label === __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi')) {
                 echo "<div><strong>" . self::e(__('FECHA DE COMPRA:', 'informeglpi')) . "</strong> " . self::e($purchaseDateDisplay) . "</div>";
                 echo "<div class='mt-1'><label class='fw-bold mb-0' for='field_book_value'>" . self::e(__('VALOR EN LIBROS:', 'informeglpi')) . "</label> <span>$</span> <input class='form-control form-control-sm d-inline-block' style='width:130px' type='number' min='0' step='0.01' name='book_value' id='field_book_value' value='" . self::e($bookValue) . "'></div>";
-                if ($comments !== '') {
-                    echo "<div class='mt-1'><strong>" . self::e(__('COMENTARIOS:', 'informeglpi')) . "</strong> " . nl2br(self::e($comments)) . "</div>";
-                }
+                echo "<div class='mt-1'><strong>" . self::e(__('COMENTARIOS:', 'informeglpi')) . "</strong> " . ($comments !== '' ? nl2br(self::e($comments)) : '—') . "</div>";
                 if ($itemtype === 'Computer') {
                     self::renderComputerComponents($components);
                 }
