@@ -63,7 +63,7 @@ final class ReportTab extends CommonGLPI
         }
         echo '</div>';
         echo "<div id='ig-panel-drafts' class='ig-report-panel'>";
-        self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature']);
+        self::renderReportList($itemtype, $itemsId, $tabUrl, ['draft', 'pending_technical_signature', 'pending_supervisor_signature', 'returned_for_correction']);
         echo '</div>';
         echo "<div id='ig-panel-approved' class='ig-report-panel'>";
         self::renderReportList($itemtype, $itemsId, $tabUrl, ['finalized']);
@@ -454,7 +454,8 @@ final class ReportTab extends CommonGLPI
             }
         }
         $userId = (int) \Session::getLoginUserID();
-        $isEditable = ($report->fields['status'] ?? '') === 'draft'
+        $reportStatus = (string) ($report->fields['status'] ?? '');
+        $isEditable = in_array($reportStatus, ['draft', 'returned_for_correction'], true)
             && ($userId === (int) ($report->fields['users_id'] ?? 0) || \Session::haveRight(Report::$rightname, UPDATE));
 
         self::renderStyles();
@@ -495,9 +496,54 @@ final class ReportTab extends CommonGLPI
                 'id' => $reportId,
             ], $report->fields, $assetHtml, !$isManualPhone);
         } else {
-            echo "<div class='alert alert-warning mb-0'>" . self::e(__('Este informe no está disponible para edición con su usuario o su estado actual.', 'informeglpi')) . "</div>";
+            self::renderWorkflowActions($report);
         }
         echo '</div></div>';
+    }
+
+    private static function renderWorkflowActions(Report $report): void
+    {
+        $id = (int) $report->getID();
+        $userId = (int) \\Session::getLoginUserID();
+        $status = (string) ($report->fields['status'] ?? '');
+        $preparedBy = (int) ($report->fields['prepared_by_users_id'] ?? 0);
+        $reviewer = (int) ($report->fields['reviewer_users_id'] ?? 0);
+        $actionUrl = '/plugins/informeglpi/front/report.workflow.php';
+        $token = \\Session::getNewCSRFToken(true);
+
+        if ($status === 'draft' && $userId === $preparedBy) {
+            echo "<div class='alert alert-info'>" . self::e(__('Cuando el informe esté completo, firme con su PIN personal para enviarlo al supervisor.', 'informeglpi')) . '</div>';
+            self::renderWorkflowForm($actionUrl, $token, $id, 'sign_technical', __('Firmar y enviar a revisión', 'informeglpi'), true);
+            return;
+        }
+        if ($status === 'pending_supervisor_signature' && $userId === $reviewer && \\Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
+            echo "<div class='alert alert-warning'>" . self::e(__('Revise el contenido y las evidencias. Puede aprobar firmando con su PIN o devolver el informe al técnico.', 'informeglpi')) . '</div>';
+            self::renderWorkflowForm($actionUrl, $token, $id, 'sign_supervisor', __('Aprobar y firmar', 'informeglpi'), true);
+            self::renderWorkflowForm($actionUrl, $token, $id, 'return', __('Devolver para corrección', 'informeglpi'), false);
+            return;
+        }
+        if ($status === 'approved_pending_pdf') {
+            echo "<div class='alert alert-success'>" . self::e(__('El informe cuenta con las dos firmas y está pendiente de generar el PDF institucional.', 'informeglpi')) . '</div>';
+            return;
+        }
+        if ($status === 'returned_for_correction') {
+            echo "<div class='alert alert-warning'>" . self::e(__('El informe fue devuelto para corrección. El técnico asignado puede editarlo y volver a firmarlo.', 'informeglpi')) . '</div>';
+            return;
+        }
+        echo "<div class='alert alert-secondary mb-0'>" . self::e(__('Este informe está en revisión o no tiene acciones disponibles para su usuario.', 'informeglpi')) . '</div>';
+    }
+
+    private static function renderWorkflowForm(string $actionUrl, string $token, int $reportId, string $action, string $label, bool $withPin): void
+    {
+        echo "<form method='post' action='" . self::e($actionUrl) . "' class='border rounded p-3 mb-3'>";
+        echo "<input type='hidden' name='_glpi_csrf_token' value='" . self::e($token) . "'>";
+        echo "<input type='hidden' name='id' value='" . $reportId . "'><input type='hidden' name='workflow_action' value='" . self::e($action) . "'>";
+        if ($withPin) {
+            echo "<label class='form-label'>" . self::e(__('PIN personal de firma', 'informeglpi')) . "</label><input class='form-control mb-2' style='max-width:240px' type='password' name='pin' inputmode='numeric' pattern='[0-9]{6}' maxlength='6' required autocomplete='off'>";
+        } else {
+            echo "<label class='form-label'>" . self::e(__('Motivo de devolución (obligatorio)', 'informeglpi')) . "</label><textarea class='form-control mb-2' name='comment' rows='3' maxlength='2000' required></textarea>";
+        }
+        echo "<button type='submit' class='btn btn-primary btn-sm'>" . self::e($label) . '</button></form>';
     }
 
     /**
@@ -752,6 +798,8 @@ final class ReportTab extends CommonGLPI
             'draft' => __('En preparación', 'informeglpi'),
             'pending_technical_signature' => __('Pendiente de firma técnica', 'informeglpi'),
             'pending_supervisor_signature' => __('Pendiente de supervisión', 'informeglpi'),
+            'returned_for_correction' => __('Devuelto para corrección', 'informeglpi'),
+            'approved_pending_pdf' => __('Aprobado, pendiente de PDF', 'informeglpi'),
             'finalized' => __('Finalizado', 'informeglpi'),
             default => $status,
         };
