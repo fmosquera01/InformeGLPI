@@ -73,7 +73,7 @@ final class ReportPdf
 
         $tempFiles = [];
         try {
-            $pdf = new \TCPDF('P', 'pt', 'LETTER', true, 'UTF-8', false);
+            $pdf = new \TCPDF('P', 'pt', 'A4', true, 'UTF-8', false);
             $pdf->SetCreator('GLPI - Informe Técnico');
             $pdf->SetAuthor('Songa - Infraestructura IT');
             $pdf->SetTitle((string) $fields['report_number']);
@@ -84,7 +84,7 @@ final class ReportPdf
             $pdf->AddPage();
             self::drawInstitutionalPdf($pdf, $fields, $assetFields, $snapshot, $evidences, $signatures, $tempFiles);
             if ($pdf->getNumPages() !== 1) {
-                throw new RuntimeException(__('El contenido excede una página Letter. Reduzca la extensión del texto o la cantidad de fotografías y vuelva a generar.', 'informeglpi'));
+                throw new RuntimeException(__('El contenido excede una página A4. Reduzca la extensión del texto o la cantidad de fotografías y vuelva a generar.', 'informeglpi'));
             }
 
             $base = rtrim(GLPI_VAR_DIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '_plugins' . DIRECTORY_SEPARATOR . 'informeglpi' . DIRECTORY_SEPARATOR . 'reports';
@@ -319,7 +319,7 @@ final class ReportPdf
 
     /**
      * Dibuja el formato institucional directamente con TCPDF.
-     * Las medidas están en puntos y corresponden a papel Letter, como el
+     * Las medidas están en puntos y corresponden a papel A4, como el
      * formato de referencia compartido por el usuario.
      */
     private static function drawInstitutionalPdf(\TCPDF $pdf, array $report, array $asset, array $snapshot, array $evidences, array $signatures, array &$tempFiles): void
@@ -329,8 +329,8 @@ final class ReportPdf
         $rowBlue = [217, 226, 243];
         $borderBlue = [142, 170, 219];
         $x = 36.0;
-        $width = 543.0;
-        $bottom = 760.0;
+        $width = $pdf->getPageWidth() - $x - 33.0;
+        $bottom = $pdf->getPageHeight() - 32.0;
         $regular = 'helvetica';
         $bold = 'helvetica';
         $pdf->SetDrawColor(...$borderBlue);
@@ -491,10 +491,10 @@ final class ReportPdf
         }
         $y += 8;
         $photoTitleH = 15.0;
-        $signatureReserve = 116.0;
+        $signatureReserve = 78.0;
         $availablePhotoHeight = $bottom - $y - $photoTitleH - $signatureReserve;
         if ($availablePhotoHeight < 48) {
-            throw new RuntimeException(__('El contenido del informe no deja espacio suficiente para fotografías y firmas en una sola página Letter. Reduzca la extensión de los textos.', 'informeglpi'));
+            throw new RuntimeException(__('El contenido del informe no deja espacio suficiente para fotografías y firmas en una sola página A4. Reduzca la extensión de los textos.', 'informeglpi'));
         }
 
         $cols = max(1, min(3, count($photos)));
@@ -508,7 +508,7 @@ final class ReportPdf
             $cellH = min(190.0, ($availablePhotoHeight - 8) / $photoRows);
         }
         if ($photoRows * $cellH > $availablePhotoHeight) {
-            throw new RuntimeException(__('La cantidad de fotografías excede el espacio disponible para mantener el informe en una sola página Letter.', 'informeglpi'));
+            throw new RuntimeException(__('La cantidad de fotografías excede el espacio disponible para mantener el informe en una sola página A4.', 'informeglpi'));
         }
         $imageH = max(35.0, $cellH - 8.0);
 
@@ -545,7 +545,7 @@ final class ReportPdf
             $blockW = 230.0;
             $left = $center - ($blockW / 2);
             $lineX = $center - ($lineW / 2);
-            $lineY = $y + 62.0;
+            $lineY = $y + 50.0;
 
             $pdf->SetTextColor(0, 0, 0);
             $pdf->SetFont($regular, '', 9.5);
@@ -553,7 +553,7 @@ final class ReportPdf
             $pdf->Cell($blockW, 12, $label, 0, 0, 'C');
 
             if (!empty($sig['path']) && is_file($sig['path'])) {
-                $pdf->Image($sig['path'], $lineX, $y + 14, $lineW, 46, '', '', '', true, 180, '', false, false, 0, 'CB', false, false);
+                $pdf->Image($sig['path'], $lineX, $y + 13, $lineW, 36, '', '', '', true, 180, '', false, false, 0, 'CB', false, false);
             }
 
             $pdf->SetDrawColor(0, 0, 0);
@@ -565,15 +565,15 @@ final class ReportPdf
             $pdf->Cell($blockW, 10, (string) ($sig['user'] ?? ''), 0, 0, 'C');
 
             $pdf->SetFont($regular, '', 8.5);
-            $pdf->SetXY($left, $lineY + 12);
+            $pdf->SetXY($left, $lineY + 11);
             $pdf->Cell($blockW, 11, $role, 0, 0, 'C');
         };
 
         $signatureBlock($signatures['technical'], 'Elaborador por:', 'Técnico Infraestructura Sistemas', $centerLeft);
         $signatureBlock($signatures['supervisor'], 'Supervisado por:', 'Jefe de Infraestructura Sistemas', $centerRight);
 
-        if ($y + 62.0 + 25.0 > $bottom) {
-            throw new RuntimeException(__('Las firmas exceden el espacio de la página Letter. Reduzca el contenido del informe.', 'informeglpi'));
+        if ($y + 50.0 + 22.0 > $bottom) {
+            throw new RuntimeException(__('Las firmas exceden el espacio de la página A4. Reduzca el contenido del informe.', 'informeglpi'));
         }
     }
 
