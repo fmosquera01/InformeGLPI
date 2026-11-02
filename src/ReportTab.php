@@ -454,7 +454,7 @@ final class ReportTab extends CommonGLPI
         }
 
         self::renderStyles();
-        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'><h2 class='h4 mb-0'>" . self::e(__('Bandeja de entrada', 'informeglpi')) . "</h2><a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/home.php'>← " . self::e(__('Regresar a Informe Técnico', 'informeglpi')) . "</a></div><div class='card'><div class='card-header d-flex justify-content-between align-items-center'><strong>" . self::e(__('Informes pendientes de firma', 'informeglpi')) . "</strong><span class='badge bg-warning text-dark'>" . count($rows) . "</span></div><div class='card-body'>"
+        echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'><h2 class='h4 mb-0'>" . self::e(__('Bandeja de entrada', 'informeglpi')) . "</h2><a class='btn btn-outline-secondary btn-sm' href='/plugins/informeglpi/front/home.php'>← " . self::e(__('Regresar a Informe Técnico', 'informeglpi')) . "</a></div><div class='card'><div class='card-header d-flex justify-content-between align-items-center'><strong>" . self::e(__('Informes pendientes de firma', 'informeglpi')) . "</strong><span class='badge bg-warning text-dark'>" . count($rows) . "</span></div><div class='card-body'>";
         echo "<p class='text-muted'>" . self::e(__('Informes enviados por los técnicos que esperan su revisión y firma.', 'informeglpi')) . '</p>';
         if ($rows === []) {
             echo "<div class='alert alert-success mb-0'>" . self::e(__('No tiene informes pendientes de revisión.', 'informeglpi')) . '</div>';
