@@ -262,7 +262,7 @@ final class ReportTab extends CommonGLPI
 
                 // Prefer the inventory designation; use technical attributes only as fallback.
                 foreach (['designation', 'name'] as $preferred) {
-                    $value = trim((string) ($device[$preferred] ?? ''));
+                    $value = trim((string) ($device[$preferred] ?? $relation[$preferred] ?? ''));
                     if ($value !== '' && $value !== '0') {
                         $parts[] = $value;
                         break;
