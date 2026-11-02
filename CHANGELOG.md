@@ -1,3 +1,8 @@
+## 0.5.36
+
+- Replace prohibited direct SQL execution with GLPI 11's database query builder for processor, memory, and hard-drive relations.
+- Preserve the existing component labels and filters while using iterable query results.
+
 ## 0.5.35
 
 - Fix the PHP syntax error in the RAM manufacturer lookup that prevented GLPI from loading the plugin.
