@@ -435,12 +435,12 @@ final class ReportTab extends CommonGLPI
     public static function renderSupervisorInboxPage(): void
     {
         global $DB;
-        if (!\\Session::haveRight(Report::$rightname, READ)
-            || !\\Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
-            \\Html::displayRightError();
+        if (!\Session::haveRight(Report::$rightname, READ)
+            || !\Session::haveRight('plugin_informeglpi_validate', UPDATE)) {
+            \Html::displayRightError();
         }
 
-        $userId = (int) \\Session::getLoginUserID();
+        $userId = (int) \Session::getLoginUserID();
         $rows = [];
         foreach ($DB->request([
             'SELECT' => ['id', 'report_number', 'itemtype', 'items_id', 'asset_snapshot', 'date_creation', 'prepared_by_users_id', 'entities_id', 'is_recursive'],
@@ -448,7 +448,7 @@ final class ReportTab extends CommonGLPI
             'WHERE' => ['reviewer_users_id' => $userId, 'status' => 'pending_supervisor_signature'],
             'ORDER' => ['date_creation ASC', 'id ASC'],
         ]) as $row) {
-            if (\\Session::haveAccessToEntity((int) $row['entities_id'], (bool) $row['is_recursive'])) {
+            if (\Session::haveAccessToEntity((int) $row['entities_id'], (bool) $row['is_recursive'])) {
                 $rows[] = $row;
             }
         }
@@ -511,7 +511,7 @@ final class ReportTab extends CommonGLPI
         $userId = (int) \Session::getLoginUserID();
         $reportStatus = (string) ($report->fields['status'] ?? '');
         $isEditable = in_array($reportStatus, ['draft', 'returned_for_correction'], true)
-            && ($userId === (int) ($report->fields['users_id'] ?? 0) || \Session::haveRight(Report::$rightname, UPDATE));
+            && $userId === (int) ($report->fields['prepared_by_users_id'] ?? 0);
 
         self::renderStyles();
         echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'>";
@@ -843,7 +843,7 @@ final class ReportTab extends CommonGLPI
 
         $currentUserId = (int) \Session::getLoginUserID();
         $isEditable = ($report->fields['status'] ?? '') === 'draft'
-            && ($currentUserId === (int) ($report->fields['users_id'] ?? 0) || \Session::haveRight(Report::$rightname, UPDATE));
+            && ($currentUserId === (int) ($report->fields['prepared_by_users_id'] ?? 0));
         $snapshot = json_decode((string) ($report->fields['asset_snapshot'] ?? '{}'), true);
         $snapshot = is_array($snapshot) ? $snapshot : [];
         $assetFields = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
@@ -894,7 +894,8 @@ final class ReportTab extends CommonGLPI
                 self::renderWorkflowActions($report);
             }
         } else {
-            echo "<div class='alert alert-secondary'>" . self::e(__('Este informe ya no está en edición. Su consulta y descarga se habilitarán según el flujo de aprobación y finalización.', 'informeglpi')) . '</div>';
+            echo "<div class='alert alert-secondary'>" . self::e(__('Este informe está en consulta. Sólo el técnico asignado puede editarlo durante la preparación o después de una devolución.', 'informeglpi')) . '</div>';
+            self::renderWorkflowActions($report);
             foreach ([
                 'background' => __('Antecedentes', 'informeglpi'),
                 'diagnosis' => __('Diagnóstico', 'informeglpi'),
