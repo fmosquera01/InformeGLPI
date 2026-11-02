@@ -584,9 +584,7 @@ final class ReportTab extends CommonGLPI
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
                 'id' => $reportId,
             ], $report->fields, $assetHtml, !$isManualPhone);
-            if ($reportStatus === 'draft') {
-                self::renderWorkflowActions($report);
-            }
+            // Technical signing is integrated into the same form above.
         } else {
             echo self::renderReadOnlyDocumentMetadata($report);
             echo $assetHtml;
@@ -802,7 +800,7 @@ final class ReportTab extends CommonGLPI
         ]);
         echo '</div></div>';
         $subject = (string) ($values['subject'] ?? 'Informe técnico del estado actual de ítems de Propiedad, Planta y Equipo.');
-        echo "<div class='ig-row'><label class='ig-label' for='ig_subject'>" . self::e(__('ASUNTO:', 'informeglpi')) . "</label><div class='ig-value'><input class='form-control' type='text' id='ig_subject' name='subject' required value='" . self::e($subject) . "'></div></div>";
+        echo "<div class='ig-row'><label class='ig-label' for='ig_subject'>" . self::e(__('ASUNTO:', 'informeglpi')) . "</label><div class='ig-value'><input class='form-control' type='text' id='ig_subject' name='subject' value='" . self::e($subject) . "'></div></div>";
         echo '</div>';
         echo $assetHtml;
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO', 'informeglpi')) . '</div>';
@@ -848,7 +846,14 @@ final class ReportTab extends CommonGLPI
         echo "<script>
         (function(){const input=document.getElementById('ig_evidence_files');const preview=document.getElementById('ig-evidence-preview');if(!input||!preview)return;input.addEventListener('change',function(){preview.replaceChildren();Array.from(input.files||[]).forEach(function(file){if(!file.type.startsWith('image/'))return;const figure=document.createElement('div');figure.className='border rounded p-1';figure.style.width='120px';const img=document.createElement('img');img.src=URL.createObjectURL(file);img.alt=file.name;img.style.width='100%';img.style.height='85px';img.style.objectFit='cover';const name=document.createElement('small');name.textContent=file.name;name.style.display='block';name.style.overflowWrap='anywhere';figure.append(img,name);preview.append(figure);});});})();
         </script>";
-        echo "<div class='d-flex justify-content-end mt-2'><button type='submit' class='btn btn-primary btn-sm'>" . self::e(__('Guardar borrador', 'informeglpi')) . '</button></div>';
+        $isExistingDraft = (int) ($values['id'] ?? 0) > 0;
+        echo "<div class='border rounded p-3 mt-3 bg-light'>";
+        echo "<label class='form-label fw-bold' for='ig_technical_pin'>" . self::e(__('PIN personal para firmar y enviar al supervisor', 'informeglpi')) . "</label>";
+        echo "<input class='form-control mb-2' style='max-width:240px' type='password' inputmode='numeric' pattern='[0-9]{6}' maxlength='6' id='ig_technical_pin' name='technical_pin' autocomplete='off' placeholder='••••••'>";
+        echo "<div class='d-flex justify-content-end gap-2 flex-wrap'>";
+        echo "<button type='submit' name='submit_action' value='save_draft' class='btn btn-outline-primary btn-sm'>" . self::e(__('Guardar borrador', 'informeglpi')) . "</button>";
+        echo "<button type='submit' name='submit_action' value='sign_technical' class='btn btn-primary btn-sm'>" . self::e(__('Firmar y enviar a revisión', 'informeglpi')) . "</button>";
+        echo "</div></div>";
         echo '</form>';
     }
 
@@ -942,9 +947,7 @@ final class ReportTab extends CommonGLPI
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
                 'id' => $reportId,
             ], $report->fields);
-            if (($report->fields['status'] ?? '') === 'draft') {
-                self::renderWorkflowActions($report);
-            }
+            // Technical signing is integrated into the same form above.
         } else {
             echo "<div class='alert alert-secondary'>" . self::e(__('Este informe está en consulta. Sólo el técnico asignado puede editarlo durante la preparación o después de una devolución.', 'informeglpi')) . '</div>';
             self::renderWorkflowActions($report);
