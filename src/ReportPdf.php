@@ -194,7 +194,7 @@ final class ReportPdf
         if ($description === '') {
             $description = $assetName;
         }
-        $purchaseDate = $value($asset, ['date_buy']);
+        $purchaseDate = $value($asset, ['date_buy', 'FECHA DE COMPRA']);
         if ($purchaseDate !== '') {
             $timestamp = strtotime($purchaseDate);
             if ($timestamp !== false) {
@@ -210,7 +210,7 @@ final class ReportPdf
             return '<tr><td width="' . $labelWidth . '%" class="field-label"><b>' . $esc($label) . '</b></td><td>' . nl2br($esc($content !== '' ? $content : '—')) . '</td></tr>';
         };
         $assetRows = '';
-        $assetRows .= $field('CÓDIGO DE ACTIVO:', $value($asset, ['otherserial', 'asset_code']));
+        $assetRows .= $field('CÓDIGO DE ACTIVO:', $value($asset, ['otherserial', 'asset_code', 'CÓDIGO DE ACTIVO']));
         $assetRows .= $field('TIPO', $assetType);
         $descriptionBlock = 'FECHA DE COMPRA: ' . ($purchaseDate !== '' ? $purchaseDate : '—')
             . "\nVALOR EN LIBRO: " . $bookValueText
@@ -231,11 +231,11 @@ final class ReportPdf
             }
         }
         $assetRows .= $field('DESCRIPCIÓN DEL ACTIVO:', $descriptionBlock);
-        $manufacturer = $value($asset, ['manufacturers_id']);
+        $manufacturer = $value($asset, ['manufacturers_id', 'MARCA']);
         if ($manufacturer !== '' && ctype_digit($manufacturer) && (int) $manufacturer > 0) {
             $manufacturer = (string) \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $manufacturer);
         }
-        $model = $value($asset, ['computermodels_id', 'phonemodels_id', 'monitormodels_id', 'model']);
+        $model = $value($asset, ['computermodels_id', 'phonemodels_id', 'monitormodels_id', 'model', 'MODELO']);
         if ($model !== '' && ctype_digit($model)) {
             foreach (['ComputerModel', 'PhoneModel', 'MonitorModel'] as $class) {
                 if (class_exists($class)) {
@@ -247,10 +247,10 @@ final class ReportPdf
         }
         $assetRows .= $field('MARCA:', $manufacturer);
         $assetRows .= $field('MODELO:', $model);
-        $assetRows .= $field('SERIE:', $value($asset, ['serial', 'imei']));
+        $assetRows .= $field('SERIE:', $value($asset, ['serial', 'imei', 'SERIE']));
         $userId = (int) ($asset['users_id'] ?? 0);
-        $assetRows .= $field('USUARIO RESPONSABLE:', $userId > 0 ? getUserName($userId) : $value($asset, ['responsible']));
-        $location = $value($asset, ['locations_id', 'area']);
+        $assetRows .= $field('USUARIO RESPONSABLE:', $userId > 0 ? getUserName($userId) : $value($asset, ['responsible', 'USUARIO RESPONSABLE']));
+        $location = $value($asset, ['locations_id', 'area', 'ÁREA DONDE SE ENCONTRABA EL EQUIPO']);
         if ($location !== '' && ctype_digit($location) && (int) $location > 0) {
             $location = (string) \Dropdown::getDropdownName(\Location::getTable(), (int) $location);
         }
