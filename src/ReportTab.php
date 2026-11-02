@@ -207,7 +207,8 @@ final class ReportTab extends CommonGLPI
             __('ÁREA DONDE SE ENCONTRABA EL EQUIPO:', 'informeglpi') => $locationValue,
         ];
         foreach ($assetRows as $label => $value) {
-            if (is_array($value) || is_object($value) || trim((string) $value) === '' || (string) $value === '0' || in_array(mb_strtolower(trim((string) $value)), ['no asset information', 'n/a', 'not available'], true)) {
+            if ($label !== __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi')
+                && (is_array($value) || is_object($value) || trim((string) $value) === '' || (string) $value === '0' || in_array(mb_strtolower(trim((string) $value)), ['no asset information', 'n/a', 'not available'], true))) {
                 continue;
             }
             echo "<div class='ig-row'><div class='ig-label'>" . self::e($label) . "</div><div class='ig-value'>" . nl2br(self::e($value));
