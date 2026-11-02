@@ -1,3 +1,8 @@
+## 0.5.51
+
+- Fix incorrectly escaped namespace separators in the finalized reports page that caused a PHP syntax error during plugin loading.
+- Correct the previous syntax repair by keeping PHP statements properly terminated in the supervisor inbox renderer.
+
 ## 0.5.50
 
 - Fix a PHP syntax error in the supervisor inbox renderer that caused GLPI to return HTTP 500 while loading the plugin.
