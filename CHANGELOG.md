@@ -1,6 +1,3 @@
-## 0.5.68
-- Protege los PDF institucionales finales con permisos de documento: permite abrir, visualizar, imprimir y copiar, pero restringe la modificación mediante contraseña de propietario aleatoria y cifrado AES-256. No solicita contraseña a los lectores.
-
 ## 0.5.67
 - Mejora la calidad de las fotografías en el PDF institucional: aumenta la resolución máxima de las copias temporales de 1000 a 2400 píxeles, eleva la calidad JPEG de 78 a 92 y configura TCPDF a 300 DPI para las evidencias. Los archivos originales almacenados no se modifican.
 
