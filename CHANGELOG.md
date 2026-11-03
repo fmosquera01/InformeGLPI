@@ -1,3 +1,6 @@
+## 0.5.66
+- Sustituye los campos DATETIME por TIMESTAMP en instalaciones nuevas y migra las columnas existentes durante la actualización para evitar advertencias de esquema en GLPI 11.
+
 ## 0.5.65
 - Elimina el aviso y el enlace redundantes para volver a la ficha del activo desde el formulario de informe, ya que el informe se crea directamente en la pestaña del activo.
 
