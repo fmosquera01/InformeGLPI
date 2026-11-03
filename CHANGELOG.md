@@ -1,3 +1,6 @@
+## 0.5.67
+- Mejora la calidad de las fotografías en el PDF institucional: aumenta la resolución máxima de las copias temporales de 1000 a 2400 píxeles, eleva la calidad JPEG de 78 a 92 y configura TCPDF a 300 DPI para las evidencias. Los archivos originales almacenados no se modifican.
+
 ## 0.5.66
 - Sustituye los campos DATETIME por TIMESTAMP en instalaciones nuevas y migra las columnas existentes durante la actualización para evitar advertencias de esquema en GLPI 11.
 
