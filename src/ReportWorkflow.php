@@ -49,15 +49,6 @@ final class ReportWorkflow
             $nextStatus = 'approved_pending_pdf';
         }
 
-        if ($type === 'technical' && $DB->request([
-            'SELECT' => ['id'],
-            'FROM' => 'glpi_plugin_informeglopi_evidences',
-            'WHERE' => ['reports_id' => $reportId],
-            'LIMIT' => 1,
-        ])->count() === 0) {
-            throw new RuntimeException(__('Debe adjuntar al menos una fotografía del equipo antes de firmar y enviar el informe.', 'informeglpi'));
-        }
-
         if ($type === 'technical') {
             $missing = ReportService::getMissingFields($reportId);
             if ($missing !== []) {
@@ -74,6 +65,15 @@ final class ReportWorkflow
                     'asset_snapshot' => json_encode(AssetSnapshotBuilder::build($item), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
                 ], ['id' => $reportId, 'status' => 'draft']);
             }
+        }
+
+        if ($type === 'technical' && $DB->request([
+            'SELECT' => ['id'],
+            'FROM' => 'glpi_plugin_informeglopi_evidences',
+            'WHERE' => ['reports_id' => $reportId],
+            'LIMIT' => 1,
+        ])->count() === 0) {
+            throw new RuntimeException(__('Debe adjuntar al menos una fotografía del equipo antes de firmar y enviar el informe.', 'informeglpi'));
         }
 
         if (!preg_match('/^[0-9]{6}$/', $pin)) {
