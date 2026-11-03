@@ -156,6 +156,7 @@ final class ReportTab extends CommonGLPI
             '',
             true
         );
+        echo "<div class='alert alert-info'><strong>" . self::e(__('Verifique la información del activo.', 'informeglpi')) . "</strong> " . self::e(__('Si observa campos marcados como faltantes, complete primero la ficha del activo en GLPI y luego regrese para firmar.', 'informeglpi')) . " <a target='_blank' rel='noopener' href='" . self::e($item->getFormURLWithID($itemsId)) . "'>" . self::e(__('Abrir ficha del activo', 'informeglpi')) . "</a></div>";
         self::renderFieldsForm('/plugins/informeglpi/front/report.form.php', [
             '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
             'itemtype' => $itemtype,
@@ -576,6 +577,9 @@ final class ReportTab extends CommonGLPI
         if ($isEditable) {
             if ($reportStatus === 'returned_for_correction') {
                 self::renderReturnNotice($reportId);
+            }
+            if (!$isManualPhone) {
+                echo "<div class='alert alert-info'><strong>" . self::e(__('Verifique la información del activo.', 'informeglpi')) . "</strong> " . self::e(__('Si observa campos marcados como faltantes, complete primero la ficha del activo en GLPI y luego regrese para firmar.', 'informeglpi')) . " <a target='_blank' rel='noopener' href='" . self::e($item->getFormURLWithID($itemsId)) . "'>" . self::e(__('Abrir ficha del activo', 'informeglpi')) . "</a></div>";
             }
             self::renderFieldsForm('/plugins/informeglpi/front/report.edit.form.php', [
                 '_glpi_csrf_token' => \Session::getNewCSRFToken(true),
