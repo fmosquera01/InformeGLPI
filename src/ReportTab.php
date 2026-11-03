@@ -196,7 +196,7 @@ final class ReportTab extends CommonGLPI
         $purchaseDate = trim((string) ($fields['date_buy'] ?? ''));
         $purchaseDateDisplay = ($purchaseDate !== '' && !in_array($purchaseDate, ['0000-00-00', '0000-00-00 00:00:00'], true))
             ? \Html::convDate($purchaseDate)
-            : '—';
+            : '— FALTA EN GLPI —';
         $comments = trim((string) ($fields['comment'] ?? ''));
         $assetRows = [
             __('DESCRIPCIÓN DEL ACTIVO:', 'informeglpi') => '',
