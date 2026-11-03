@@ -36,7 +36,7 @@ function plugin_informeglpi_install(): bool
             `asset_snapshot` longtext NOT NULL,
             `book_value` decimal(14,2) DEFAULT NULL,
             `book_value_users_id` int unsigned DEFAULT NULL,
-            `book_value_date` datetime DEFAULT NULL,
+            `book_value_date` timestamp DEFAULT NULL,
             `background` longtext DEFAULT NULL,
             `diagnosis` longtext DEFAULT NULL,
             `cause` longtext DEFAULT NULL,
@@ -50,7 +50,7 @@ function plugin_informeglpi_install(): bool
             `subject` varchar(255) DEFAULT NULL,
             `pdf_path` varchar(500) DEFAULT NULL,
             `pdf_sha256` char(64) DEFAULT NULL,
-            `finalized_at` datetime DEFAULT NULL,
+            `finalized_at` timestamp DEFAULT NULL,
             `finalized_users_id` int unsigned DEFAULT NULL,
             `users_id` int unsigned NOT NULL,
             `date_creation` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -69,9 +69,9 @@ function plugin_informeglpi_install(): bool
             `signature_sha256` char(64) NOT NULL,
             `pin_hash` varchar(255) NOT NULL,
             `failed_attempts` tinyint unsigned NOT NULL DEFAULT 0,
-            `locked_until` datetime DEFAULT NULL,
-            `date_creation` datetime NOT NULL,
-            `date_mod` datetime NOT NULL,
+            `locked_until` timestamp DEFAULT NULL,
+            `date_creation` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `date_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`),
             UNIQUE KEY `unicity_user_signature` (`users_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}",
@@ -83,7 +83,7 @@ function plugin_informeglpi_install(): bool
             `users_id` int unsigned NOT NULL,
             `signature_path` varchar(500) NOT NULL,
             `signature_sha256` char(64) NOT NULL,
-            `signed_at` datetime NOT NULL,
+            `signed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`),
             UNIQUE KEY `unicity_report_signature` (`reports_id`, `signature_type`),
             KEY `idx_signature_user_date` (`users_id`, `signed_at`)
@@ -153,6 +153,32 @@ function plugin_informeglpi_install(): bool
         }
         if ($DB->fieldExists($historyTable, 'new_status')) {
             $migration->changeField($historyTable, 'new_status', 'new_status', 'varchar(40) DEFAULT NULL');
+        }
+    }
+
+    // GLPI 11 discourages DATETIME columns. Migrate existing installations to TIMESTAMP too.
+    $timestampFields = [
+        'glpi_plugin_informeglopi_reports' => [
+            'book_value_date' => 'timestamp DEFAULT NULL',
+            'finalized_at' => 'timestamp DEFAULT NULL',
+        ],
+        'glpi_plugin_informeglopi_user_signatures' => [
+            'locked_until' => 'timestamp DEFAULT NULL',
+            'date_creation' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP',
+            'date_mod' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
+        ],
+        'glpi_plugin_informeglopi_signatures' => [
+            'signed_at' => 'timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP',
+        ],
+    ];
+    foreach ($timestampFields as $table => $fields) {
+        if (!$DB->tableExists($table)) {
+            continue;
+        }
+        foreach ($fields as $field => $definition) {
+            if ($DB->fieldExists($table, $field)) {
+                $migration->changeField($table, $field, $field, $definition);
+            }
         }
     }
 
