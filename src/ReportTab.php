@@ -572,7 +572,11 @@ final class ReportTab extends CommonGLPI
             }
             $assetHtml = self::renderManualPhoneInformation($manualValues, true);
         } else {
-            $assetHtml = self::renderAssetInformation($itemtype, $assetFields, is_array($snapshot['components'] ?? null) ? $snapshot['components'] : [], (string) ($report->fields['book_value'] ?? ''));
+            // Always show current inventory data from GLPI; do not write anything back to the asset.
+            $liveSnapshot = AssetSnapshotBuilder::build($item);
+            $liveFields = is_array($liveSnapshot['fields'] ?? null) ? $liveSnapshot['fields'] : [];
+            $liveComponents = is_array($liveSnapshot['components'] ?? null) ? $liveSnapshot['components'] : [];
+            $assetHtml = self::renderAssetInformation($itemtype, $liveFields, $liveComponents, (string) ($report->fields['book_value'] ?? ''));
         }
         if ($isEditable) {
             if ($reportStatus === 'returned_for_correction') {
