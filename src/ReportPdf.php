@@ -93,12 +93,6 @@ final class ReportPdf
             }
             $filename = 'informe_' . $reportId . '_' . bin2hex(random_bytes(8)) . '.pdf';
             $absolute = $base . DIRECTORY_SEPARATOR . $filename;
-            // Restringe la edición del PDF final. Se abre sin contraseña;
-            // la contraseña de propietario aleatoria administra los permisos.
-            // Se permite visualizar, imprimir y copiar, pero no modificar el documento.
-            $ownerPassword = bin2hex(random_bytes(32));
-            $pdf->SetProtection(['print', 'print-high', 'copy', 'extract'], '', $ownerPassword, 3);
-
             $pdf->Output($absolute, 'F');
             if (!is_file($absolute) || filesize($absolute) < 1000) {
                 throw new RuntimeException(__('TCPDF no generó un archivo PDF válido.', 'informeglpi'));
