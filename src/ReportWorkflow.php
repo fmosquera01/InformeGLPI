@@ -23,9 +23,6 @@ final class ReportWorkflow
     private static function sign(int $reportId, string $pin, string $type): void
     {
         global $DB;
-        if (!preg_match('/^[0-9]{6}$/', $pin)) {
-            throw new RuntimeException(__('Ingrese su PIN personal de 6 dígitos.', 'informeglpi'));
-        }
         if (!Session::haveRight(Report::$rightname, READ)) {
             throw new RuntimeException(__('No tiene permisos para consultar informes técnicos.', 'informeglpi'));
         }
@@ -77,6 +74,10 @@ final class ReportWorkflow
                     'asset_snapshot' => json_encode(AssetSnapshotBuilder::build($item), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
                 ], ['id' => $reportId, 'status' => 'draft']);
             }
+        }
+
+        if (!preg_match('/^[0-9]{6}$/', $pin)) {
+            throw new RuntimeException(__('Ingrese su PIN personal de 6 dígitos.', 'informeglpi'));
         }
 
         $signature = self::verifyUserPin($userId, $pin);
