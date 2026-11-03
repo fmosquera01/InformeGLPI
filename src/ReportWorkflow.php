@@ -64,7 +64,7 @@ final class ReportWorkflow
         if ($type === 'technical') {
             $missing = ReportService::getMissingFields($reportId);
             if ($missing !== []) {
-                throw new RuntimeException(__('No se puede firmar. Complete los siguientes campos antes de continuar:', 'informeglpi') . "\\n• " . implode("\\n• ", $missing));
+                throw new RuntimeException(__('No se puede firmar. Complete los siguientes campos antes de continuar:', 'informeglpi') . "\n• " . implode("\n• ", $missing));
             }
             // Capture the current GLPI inventory values at the moment of signature.
             if ((string) ($report->fields['itemtype'] ?? '') !== 'ManualCellphone') {
