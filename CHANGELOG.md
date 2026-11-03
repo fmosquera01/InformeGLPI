@@ -1,3 +1,6 @@
+## 0.5.65
+- Elimina el aviso y el enlace redundantes para volver a la ficha del activo desde el formulario de informe, ya que el informe se crea directamente en la pestaña del activo.
+
 ## 0.5.64
 - Permite a técnicos con permiso CREATE guardar borradores incompletos; los campos obligatorios se validan al firmar.
 - Valida antes de la firma los datos del informe y los datos actuales del activo GLPI: código, tipo, fabricante, modelo, serie, responsable, ubicación y fecha de compra.
