@@ -527,7 +527,7 @@ final class ReportPdf
             $cx = $x + 6 + $col * $cellW;
             $cy = $y + 4 + $r * $cellH;
             // TCPDF conserva la proporción de la fotografía dentro de la celda.
-            $pdf->Image($path, $cx, $cy, $cellW - 12, $imageH, '', '', '', true, 200, '', false, false, 0, 'CM', false, false);
+            $pdf->Image($path, $cx, $cy, $cellW - 12, $imageH, '', '', '', true, 300, '', false, false, 0, 'CM', false, false);
         }
         $y += $photoRows * $cellH + 8;
 
@@ -593,14 +593,14 @@ final class ReportPdf
         $image = @$loader($source);
         if (!$image) return $source;
         $width = imagesx($image); $height = imagesy($image);
-        $scale = min(1, 1000 / max($width, $height));
+        $scale = min(1, 2400 / max($width, $height));
         $newW = max(1, (int) round($width * $scale)); $newH = max(1, (int) round($height * $scale));
         $target = imagecreatetruecolor($newW, $newH);
         $white = imagecolorallocate($target, 255, 255, 255);
         imagefill($target, 0, 0, $white);
         imagecopyresampled($target, $image, 0, 0, 0, 0, $newW, $newH, $width, $height);
         $tmp = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'ig_pdf_' . $index . '_' . bin2hex(random_bytes(5)) . '.jpg';
-        imagejpeg($target, $tmp, 78);
+        imagejpeg($target, $tmp, 92);
         imagedestroy($image); imagedestroy($target);
         if (is_file($tmp)) { $tempFiles[] = $tmp; return $tmp; }
         return $source;
