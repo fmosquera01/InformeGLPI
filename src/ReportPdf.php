@@ -191,10 +191,8 @@ final class ReportPdf
             foreach (['glpi_assets_assettypes', 'ComputerType', 'PhoneType', 'MonitorType'] as $class) {
                 $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
                 if ($table === '') { continue; }
-                if (class_exists($class)) {
-                    $typeName = (string) \Dropdown::getDropdownName($table, (int) $assetType);
-                    if ($typeName !== '') { $assetType = $typeName; break; }
-                }
+                $typeName = (string) \\Dropdown::getDropdownName($table, (int) $assetType);
+                if ($typeName !== '') { $assetType = $typeName; break; }
             }
         }
         $assetName = $value($asset, ['name', 'DESCRIPCIÓN DEL ACTIVO']) ?: (string) ($snapshot['asset_name'] ?? '');
@@ -248,10 +246,8 @@ final class ReportPdf
             foreach (['glpi_assets_assetmodels', 'ComputerModel', 'PhoneModel', 'MonitorModel'] as $class) {
                 $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
                 if ($table === '') { continue; }
-                if (class_exists($class)) {
-                    $modelName = (string) \Dropdown::getDropdownName($table, (int) $model);
-                    if ($modelName !== '') { $model = $modelName; break; }
-                }
+                $modelName = (string) \\Dropdown::getDropdownName($table, (int) $model);
+                if ($modelName !== '') { $model = $modelName; break; }
             }
         }
         $assetRows .= $field('MARCA:', $manufacturer);
@@ -426,10 +422,8 @@ final class ReportPdf
             foreach (['glpi_assets_assettypes','ComputerType','PhoneType','MonitorType'] as $class) {
                 $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
                 if ($table === '') { continue; }
-                if (class_exists($class)) {
-                    $name = (string) \Dropdown::getDropdownName($class::getTable(), (int) $assetType);
-                    if ($name !== '') { $assetType = $name; break; }
-                }
+                $name = (string) \\Dropdown::getDropdownName($table, (int) $assetType);
+                if ($name !== '') { $assetType = $name; break; }
             }
         }
         if ($assetType === '') $assetType = strtoupper(str_replace(['Glpi\\Asset\\', '_'], ['', ' '], $itemType));
@@ -465,10 +459,8 @@ final class ReportPdf
             foreach (['glpi_assets_assetmodels','ComputerModel','PhoneModel','MonitorModel'] as $class) {
                 $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
                 if ($table === '') { continue; }
-                if (class_exists($class)) {
-                    $name = (string) \Dropdown::getDropdownName($table, (int) $model);
-                    if ($name !== '') { $model = $name; break; }
-                }
+                $name = (string) \\Dropdown::getDropdownName($table, (int) $model);
+                if ($name !== '') { $model = $name; break; }
             }
         }
         $y = $row('MARCA:', $manufacturer, $y, 296, false);
