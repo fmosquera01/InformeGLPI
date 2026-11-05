@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 /**
  * Informe Técnico - Songa.
- * Internal plugin key and installation directory: informeglpi.
+ * Internal plugin key and installation directory: informeglopi.
  */
 
-define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.67');
+define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.68');
 
 require_once __DIR__ . '/src/Report.php';
 require_once __DIR__ . '/src/AssetTypeRegistry.php';
@@ -25,18 +25,18 @@ function plugin_init_informeglpi(): void
 
     $PLUGIN_HOOKS['csrf_compliant']['informeglpi'] = true;
     $PLUGIN_HOOKS['menu_entry']['informeglpi'] = true;
-    $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => [\GlpiPlugin\Informeglopi\ManualPhoneMenu::class]];
-    Plugin::registerClass(\GlpiPlugin\Informeglopi\ManualPhoneMenu::class);
+    $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => [\\GlpiPlugin\\Informeglopi\\ManualPhoneMenu::class]];
+    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\ManualPhoneMenu::class);
 
-    Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
-    Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
+    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\Report::class);
+    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\Profile::class, [
         'addtabon' => ['Profile'],
     ]);
-    Plugin::registerClass(\GlpiPlugin\Informeglopi\UserSignatureTab::class, [
+    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\UserSignatureTab::class, [
         'addtabon' => ['User'],
     ]);
-    Plugin::registerClass(\GlpiPlugin\Informeglopi\ReportTab::class, [
-        'addtabon' => \GlpiPlugin\Informeglopi\AssetTypeRegistry::getItemtypes(),
+    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\ReportTab::class, [
+        'addtabon' => \\GlpiPlugin\\Informeglopi\\AssetTypeRegistry::getItemtypes(),
     ]);
 }
 
