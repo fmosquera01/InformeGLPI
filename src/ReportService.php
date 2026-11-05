@@ -484,8 +484,9 @@ final class ReportService
                 } else {
                     $f = $item->fields;
                     $short = (new \ReflectionClass($itemtype))->getShortName();
-                    $typeField = strtolower($short) . 'types_id';
-                    $modelField = strtolower($short) . 'models_id';
+                    $isCustomAsset = is_a($item, \Glpi\Asset\Asset::class);
+                    $typeField = $isCustomAsset ? 'assets_assettypes_id' : strtolower($short) . 'types_id';
+                    $modelField = $isCustomAsset ? 'assets_assetmodels_id' : strtolower($short) . 'models_id';
                     $checks = [
                         'Código de activo' => trim((string) ($f['otherserial'] ?? '')) !== '',
                         'Tipo de activo' => (int) ($f[$typeField] ?? 0) > 0 || str_contains($itemtype, 'Asset'),
