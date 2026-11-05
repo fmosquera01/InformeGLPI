@@ -25,18 +25,18 @@ function plugin_init_informeglpi(): void
 
     $PLUGIN_HOOKS['csrf_compliant']['informeglpi'] = true;
     $PLUGIN_HOOKS['menu_entry']['informeglpi'] = true;
-    $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => [\\GlpiPlugin\\Informeglopi\\ManualPhoneMenu::class]];
-    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\ManualPhoneMenu::class);
+    $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => [\GlpiPlugin\Informeglopi\ManualPhoneMenu::class]];
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\ManualPhoneMenu::class);
 
-    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\Report::class);
-    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\Profile::class, [
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
         'addtabon' => ['Profile'],
     ]);
-    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\UserSignatureTab::class, [
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\UserSignatureTab::class, [
         'addtabon' => ['User'],
     ]);
-    Plugin::registerClass(\\GlpiPlugin\\Informeglopi\\ReportTab::class, [
-        'addtabon' => \\GlpiPlugin\\Informeglopi\\AssetTypeRegistry::getItemtypes(),
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\ReportTab::class, [
+        'addtabon' => \GlpiPlugin\Informeglopi\AssetTypeRegistry::getItemtypes(),
     ]);
 }
 
