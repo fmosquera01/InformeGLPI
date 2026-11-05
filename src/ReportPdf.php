@@ -191,7 +191,7 @@ final class ReportPdf
             foreach (['glpi_assets_assettypes', 'ComputerType', 'PhoneType', 'MonitorType'] as $class) {
                 $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
                 if ($table === '') { continue; }
-                $typeName = (string) \\Dropdown::getDropdownName($table, (int) $assetType);
+                $typeName = (string) \Dropdown::getDropdownName($table, (int) $assetType);
                 if ($typeName !== '') { $assetType = $typeName; break; }
             }
         }
@@ -246,7 +246,7 @@ final class ReportPdf
             foreach (['glpi_assets_assetmodels', 'ComputerModel', 'PhoneModel', 'MonitorModel'] as $class) {
                 $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
                 if ($table === '') { continue; }
-                $modelName = (string) \\Dropdown::getDropdownName($table, (int) $model);
+                $modelName = (string) \Dropdown::getDropdownName($table, (int) $model);
                 if ($modelName !== '') { $model = $modelName; break; }
             }
         }
@@ -422,7 +422,7 @@ final class ReportPdf
             foreach (['glpi_assets_assettypes','ComputerType','PhoneType','MonitorType'] as $class) {
                 $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
                 if ($table === '') { continue; }
-                $name = (string) \\Dropdown::getDropdownName($table, (int) $assetType);
+                $name = (string) \Dropdown::getDropdownName($table, (int) $assetType);
                 if ($name !== '') { $assetType = $name; break; }
             }
         }
@@ -459,7 +459,7 @@ final class ReportPdf
             foreach (['glpi_assets_assetmodels','ComputerModel','PhoneModel','MonitorModel'] as $class) {
                 $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
                 if ($table === '') { continue; }
-                $name = (string) \\Dropdown::getDropdownName($table, (int) $model);
+                $name = (string) \Dropdown::getDropdownName($table, (int) $model);
                 if ($name !== '') { $model = $name; break; }
             }
         }
