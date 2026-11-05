@@ -186,11 +186,13 @@ final class ReportPdf
         $itemType = (string) ($snapshot['itemtype'] ?? $report['itemtype'] ?? '');
         $assetType = $itemType === 'ManualCellphone'
             ? 'CELULAR'
-            : ($value($asset, ['computertypes_id', 'phonestypes_id', 'monitortypes_id', 'TIPO']) ?: strtoupper(str_replace(['Glpi\\Asset\\', '_'], ['', ' '], $itemType)));
+            : ($value($asset, ['assets_assettypes_id', 'computertypes_id', 'phonestypes_id', 'monitortypes_id', 'TIPO']) ?: strtoupper(str_replace(['Glpi\\Asset\\', '_'], ['', ' '], $itemType)));
         if ($assetType !== '' && ctype_digit($assetType) && (int) $assetType > 0) {
-            foreach (['ComputerType', 'PhoneType', 'MonitorType'] as $class) {
+            foreach (['glpi_assets_assettypes', 'ComputerType', 'PhoneType', 'MonitorType'] as $class) {
+                $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
+                if ($table === '') { continue; }
                 if (class_exists($class)) {
-                    $typeName = (string) \Dropdown::getDropdownName($class::getTable(), (int) $assetType);
+                    $typeName = (string) \Dropdown::getDropdownName($table, (int) $assetType);
                     if ($typeName !== '') { $assetType = $typeName; break; }
                 }
             }
@@ -241,11 +243,12 @@ final class ReportPdf
         if ($manufacturer !== '' && ctype_digit($manufacturer) && (int) $manufacturer > 0) {
             $manufacturer = (string) \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $manufacturer);
         }
-        $model = $value($asset, ['computermodels_id', 'phonemodels_id', 'monitormodels_id', 'model', 'MODELO']);
+        $model = $value($asset, ['assets_assetmodels_id', 'computermodels_id', 'phonemodels_id', 'monitormodels_id', 'model', 'MODELO']);
         if ($model !== '' && ctype_digit($model)) {
-            foreach (['ComputerModel', 'PhoneModel', 'MonitorModel'] as $class) {
+            foreach (['glpi_assets_assetmodels', 'ComputerModel', 'PhoneModel', 'MonitorModel'] as $class) {
+                $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
+                if ($table === '') { continue; }
                 if (class_exists($class)) {
-                    $table = $class::getTable();
                     $modelName = (string) \Dropdown::getDropdownName($table, (int) $model);
                     if ($modelName !== '') { $model = $modelName; break; }
                 }
@@ -418,9 +421,11 @@ final class ReportPdf
             }
             return '';
         };
-        $assetType = $itemType === 'ManualCellphone' ? 'CELULAR' : $get($asset, ['computertypes_id','phonestypes_id','monitortypes_id','TIPO']);
+        $assetType = $itemType === 'ManualCellphone' ? 'CELULAR' : $get($asset, ['assets_assettypes_id','computertypes_id','phonestypes_id','monitortypes_id','TIPO']);
         if ($assetType !== '' && ctype_digit($assetType)) {
-            foreach (['ComputerType','PhoneType','MonitorType'] as $class) {
+            foreach (['glpi_assets_assettypes','ComputerType','PhoneType','MonitorType'] as $class) {
+                $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
+                if ($table === '') { continue; }
                 if (class_exists($class)) {
                     $name = (string) \Dropdown::getDropdownName($class::getTable(), (int) $assetType);
                     if ($name !== '') { $assetType = $name; break; }
@@ -455,11 +460,13 @@ final class ReportPdf
 
         $manufacturer = $get($asset, ['manufacturers_id','MARCA']);
         if ($manufacturer !== '' && ctype_digit($manufacturer)) $manufacturer = (string) \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $manufacturer);
-        $model = $get($asset, ['computermodels_id','phonemodels_id','monitormodels_id','model','MODELO']);
+        $model = $get($asset, ['assets_assetmodels_id','computermodels_id','phonemodels_id','monitormodels_id','model','MODELO']);
         if ($model !== '' && ctype_digit($model)) {
-            foreach (['ComputerModel','PhoneModel','MonitorModel'] as $class) {
+            foreach (['glpi_assets_assetmodels','ComputerModel','PhoneModel','MonitorModel'] as $class) {
+                $table = str_starts_with($class, 'glpi_') ? $class : (class_exists($class) ? $class::getTable() : '');
+                if ($table === '') { continue; }
                 if (class_exists($class)) {
-                    $name = (string) \Dropdown::getDropdownName($class::getTable(), (int) $model);
+                    $name = (string) \Dropdown::getDropdownName($table, (int) $model);
                     if ($name !== '') { $model = $name; break; }
                 }
             }
