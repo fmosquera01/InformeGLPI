@@ -1,3 +1,7 @@
+## 0.5.70
+- Corrige la consulta de los catálogos de tipos y modelos de Asset Definitions: las tablas de base de datos se consultan directamente, sin exigir que existan como clases PHP.
+- Aplica la corrección tanto al PDF HTML como al PDF institucional.
+
 ## 0.5.69
 - Corrige la lectura de Tipo y Modelo en activos creados mediante Asset Definitions de GLPI 11, utilizando los campos y listas desplegables propios de los activos personalizados.
 - Ajusta la validación de campos obligatorios para reconocer los identificadores de tipo y modelo de Asset Definitions.
