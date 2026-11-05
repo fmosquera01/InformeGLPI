@@ -1,3 +1,8 @@
+## 0.5.69
+- Corrige la lectura de Tipo y Modelo en activos creados mediante Asset Definitions de GLPI 11, utilizando los campos y listas desplegables propios de los activos personalizados.
+- Ajusta la validación de campos obligatorios para reconocer los identificadores de tipo y modelo de Asset Definitions.
+- Mantiene la compatibilidad con los activos nativos y sus listas desplegables.
+
 ## 0.5.68
 - Inicializa explícitamente AssetDefinitionManager con bootDefinitions() antes de enumerar los activos personalizados, para que la pestaña Informes técnicos se registre también en las clases dinámicas de Asset Definitions.
 - Almacena en caché la lista de tipos de activos por solicitud para evitar reinicializar las definiciones en cada comprobación.
