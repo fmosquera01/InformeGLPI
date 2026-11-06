@@ -62,6 +62,25 @@ final class AssetSnapshotBuilder
         ];
 
         if (is_a($item, Asset::class)) {
+            // Asset Definitions keep their shared type/model references in the
+            // common assets table. Read them explicitly so they are present in
+            // the historical snapshot even if the generated item class omits them.
+            if ($itemsId > 0
+                && $DB->tableExists('glpi_assets_assets')
+                && $DB->fieldExists('glpi_assets_assets', 'assets_assettypes_id')
+                && $DB->fieldExists('glpi_assets_assets', 'assets_assetmodels_id')) {
+                foreach ($DB->request([
+                    'SELECT' => ['assets_assettypes_id', 'assets_assetmodels_id'],
+                    'FROM' => 'glpi_assets_assets',
+                    'WHERE' => ['id' => $itemsId],
+                    'LIMIT' => 1,
+                ]) as $assetCommonFields) {
+                    $fields['assets_assettypes_id'] = $assetCommonFields['assets_assettypes_id'] ?? 0;
+                    $fields['assets_assetmodels_id'] = $assetCommonFields['assets_assetmodels_id'] ?? 0;
+                    break;
+                }
+            }
+            $snapshot['fields'] = $fields;
             $snapshot['asset_definition'] = [
                 'system_name' => $item::getDefinition()->fields['system_name'] ?? null,
                 'name' => $item::getDefinition()->getTranslatedName(),
