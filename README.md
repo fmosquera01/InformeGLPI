@@ -1,6 +1,6 @@
 # Informe Técnico - Songa
 
-Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.28.**
+Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.73.**
 
 ## Objetivo
 
@@ -100,3 +100,10 @@ Se corrige el registro de pestañas para usar el registro dinámico de tipos y s
 La pestaña de informes deja de depender de una lista cerrada de cinco tipos. El registro de tipos resuelve los activos nativos de GLPI 11 y consulta `AssetDefinitionManager` para descubrir las clases concretas generadas por cada definición activa de Asset Definitions. La creación del informe valida contra ese registro común. Para los activos genéricos se conserva también la definición asociada y los campos personalizados que GLPI expone en el registro del activo.
 
 La cobertura de componentes especializados continúa siendo específica de los activos que disponen de esas relaciones (por ahora, computadores). Para el resto se conserva el conjunto de campos y valores personalizados que GLPI proporciona. Debe validarse con definiciones reales y perfiles/entidades de la instancia de pruebas antes de producción.
+
+
+## Módulo independiente — Notificaciones Telegram (0.5.73)
+
+La configuración se administra desde **Configuración > General > Telegram**. Permite activar/desactivar el módulo, configurar el token del bot, Chat ID personal, usuario GLPI responsable de la firma, URL base de GLPI, aviso inmediato y horarios de recordatorio. El token se cifra en el servidor y la clave se conserva fuera de la base de datos, en el directorio privado de datos de GLPI.
+
+El aviso inmediato se dispara después de confirmar en base de datos la firma técnica y únicamente para informes asignados al usuario GLPI configurado como responsable. La tarea automática de GLPI revisa los informes pendientes y envía resúmenes en los horarios definidos (por defecto 07:00 y 17:00, todos los días, zona America/Guayaquil). Para ejecutar los recordatorios, la acción automática debe funcionar en modo externo y el cron del sistema debe invocar `front/cron.php` periódicamente.

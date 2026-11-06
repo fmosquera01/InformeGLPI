@@ -1,3 +1,8 @@
+## 0.5.73
+- Incorpora un módulo independiente de notificaciones Telegram configurable desde Configuración > General.
+- Envía aviso inmediato al firmar el técnico y recordatorios diarios configurables a las 07:00 y 17:00 (zona America/Guayaquil por defecto).
+- Protege el token del bot cifrándolo fuera de la base de datos y registra la tarea automática de GLPI para los recordatorios.
+
 ## 0.5.72
 - Corrige la etiqueta de clasificación de daño en el PDF institucional: ahora muestra «Mal uso» en lugar de «Daño a la propiedad», manteniendo la selección de Desgaste / Mal uso.
 

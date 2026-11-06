@@ -147,6 +147,20 @@ final class ReportWorkflow
             @unlink($destination);
             throw $e;
         }
+
+        // Telegram is deliberately sent after commit. A Telegram outage must never
+        // undo or block the technician's signature in the institutional workflow.
+        if ($type === 'technical') {
+            try {
+                TelegramNotification::notifyTechnicalSignature($reportId);
+            } catch (Throwable $notificationError) {
+                \\Toolbox::logInFile(
+                    'informeglopi',
+                    'Telegram: no se pudo notificar la firma técnica del informe #' . $reportId
+                    . ' (' . $notificationError->getMessage() . ')'
+                );
+            }
+        }
     }
 
     public static function returnForCorrection(int $reportId, string $comment): void
