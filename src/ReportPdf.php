@@ -496,7 +496,7 @@ final class ReportPdf
             $y = $row($label, trim((string) ($report[$key] ?? '')), $y, 236, (($y % 2) < 1));
         }
         $damage = (string) ($report['damage_type'] ?? '');
-        $damageText = $damage === 'wear' ? 'Desgaste  -X-       Daño a la propiedad  ---' : ($damage === 'property_damage' ? 'Desgaste  ---       Daño a la propiedad  -X-' : 'Desgaste  ---       Daño a la propiedad  ---');
+        $damageText = $damage === 'wear' ? 'Desgaste  -X-       Mal uso  ---' : ($damage === 'property_damage' ? 'Desgaste  ---       Mal uso  -X-' : 'Desgaste  ---       Mal uso  ---');
         $y = $row('TIPO DE DAÑO:', $damageText, $y, 236, false);
         $y = $row('RECOMENDACIONES:', trim((string) ($report['recommendations'] ?? '')), $y, 236, true);
 
