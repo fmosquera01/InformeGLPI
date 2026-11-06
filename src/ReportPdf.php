@@ -500,8 +500,8 @@ final class ReportPdf
         $y = $row('TIPO DE DAÑO:', $damageText, $y, 236, false);
         $y = $row('RECOMENDACIONES:', trim((string) ($report['recommendations'] ?? '')), $y, 236, true);
 
-        // Fotografías ampliadas y firmas alineadas en dos columnas.
-        // Se omite deliberadamente el nombre/leyenda de cada archivo de imagen.
+        // Fotografías ajustadas dinámicamente al espacio real disponible en la página.
+        // Se conserva la proporción de cada imagen y se reduce su altura cuando hay más filas.
         $photos = [];
         foreach ($evidences as $i => $evidence) {
             $photos[] = self::compressedImage($evidence['path'], $i, $tempFiles);
@@ -510,24 +510,19 @@ final class ReportPdf
         $photoTitleH = 15.0;
         $signatureReserve = 100.0;
         $availablePhotoHeight = $bottom - $y - $photoTitleH - $signatureReserve;
-        if ($availablePhotoHeight < 48) {
-            throw new RuntimeException(__('El contenido del informe no deja espacio suficiente para fotografías y firmas en una sola página A4. Reduzca la extensión de los textos.', 'informeglpi'));
+        if ($availablePhotoHeight < 16.0) {
+            throw new RuntimeException(__('El contenido de texto deja menos de 16 mm para fotografías. Reduzca la extensión de los textos para conservar las fotografías y firmas en una sola página A4.', 'informeglpi'));
         }
 
         $cols = max(1, min(3, count($photos)));
         $photoRows = max(1, (int) ceil(count($photos) / $cols));
         $cellW = ($width - 12) / $cols;
-        // Con una sola fotografía se aprovecha casi toda la altura libre.
-        // Con varias, cada fila recibe un espacio mayor que en la versión anterior.
-        if ($photoRows === 1) {
-            $cellH = min(300.0, max(90.0, $availablePhotoHeight - 8));
-        } else {
-            $cellH = min(190.0, ($availablePhotoHeight - 8) / $photoRows);
-        }
-        if ($photoRows * $cellH > $availablePhotoHeight) {
-            throw new RuntimeException(__('La cantidad de fotografías excede el espacio disponible para mantener el informe en una sola página A4.', 'informeglpi'));
-        }
-        $imageH = max(35.0, $cellH - 8.0);
+
+        // El alto de cada fila se calcula según el espacio disponible y la cantidad de filas.
+        // Así, 3 fotografías caben en una fila y 4 o más se distribuyen en filas más compactas.
+        $cellH = min(300.0, $availablePhotoHeight / $photoRows);
+        $imageH = max(8.0, $cellH - 8.0);
+        $photoGridHeight = $photoRows * $cellH;
 
         $pdf->SetDrawColor(...$borderBlue);
         $pdf->SetFillColor(255, 255, 255);
@@ -536,17 +531,17 @@ final class ReportPdf
         $pdf->Cell($width, $photoTitleH, 'FOTOS DEL EQUIPO:', 1, 1, 'C', true);
         $y += $photoTitleH;
         $pdf->SetFillColor(...$rowBlue);
-        $pdf->Rect($x, $y, $width, $photoRows * $cellH, 'DF');
+        $pdf->Rect($x, $y, $width, $photoGridHeight, 'DF');
 
         foreach ($photos as $i => $path) {
             $col = $i % $cols;
             $r = intdiv($i, $cols);
             $cx = $x + 6 + $col * $cellW;
             $cy = $y + 4 + $r * $cellH;
-            // TCPDF conserva la proporción de la fotografía dentro de la celda.
+            // TCPDF ajusta la imagen dentro de la celda sin deformarla ni recortarla.
             $pdf->Image($path, $cx, $cy, $cellW - 12, $imageH, '', '', '', true, 300, '', false, false, 0, 'CM', false, false);
         }
-        $y += $photoRows * $cellH + 8;
+        $y += $photoGridHeight + 8;
 
         $pdf->SetFont($regular, '', 9.5);
         $pdf->SetTextColor(0, 0, 0);
