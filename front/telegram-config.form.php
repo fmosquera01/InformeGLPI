@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Html::displayErrorAndDie(__('Método no permitido.', 'informeglpi'));
 }
 
-Session::checkCSRFToken();
+Session::checkCSRF($_POST);
 
 $action = (string) ($_POST['action'] ?? 'save');
 $config = Config::getConfigurationValues('plugin:informeglpi');
