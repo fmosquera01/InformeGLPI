@@ -368,6 +368,12 @@
 
 # Changelog
 
+## 0.5.71
+- Read Asset Definition type and model IDs directly from `glpi_assets_assets` when building report snapshots, ensuring historical PDFs receive the common GLPI fields.
+- Resolve Asset Definition type/model dropdowns in the live report form using `glpi_assets_assettypes` and `glpi_assets_assetmodels`.
+- Display the saved damage classification (Desgaste / Mal uso) in the supervisor's read-only report review before signing.
+
+
 ## 0.5.1 - Correcciones de integración
 - Se conecta el registro dinámico de activos con el registro de pestañas GLPI.
 - Se corrige la referencia de la clase base Asset y la navegación de retorno a la ficha de activos genéricos.
