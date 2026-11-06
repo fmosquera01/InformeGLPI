@@ -53,6 +53,24 @@ final class ReportPdf
         $snapshot = json_decode((string) $fields['asset_snapshot'], true);
         $snapshot = is_array($snapshot) ? $snapshot : [];
         $assetFields = is_array($snapshot['fields'] ?? null) ? $snapshot['fields'] : [];
+        // Refresh shared Asset Definition references at PDF time as well, so
+        // reports created before this fix can still resolve their type/model.
+        $snapshotItemtype = (string) ($snapshot['itemtype'] ?? $fields['itemtype'] ?? '');
+        $snapshotItemsId = (int) ($snapshot['items_id'] ?? $fields['items_id'] ?? 0);
+        if ($snapshotItemsId > 0
+            && (isset($snapshot['asset_definition']) || str_starts_with($snapshotItemtype, 'Glpi\\CustomAsset\\'))
+            && $DB->tableExists('glpi_assets_assets')) {
+            foreach ($DB->request([
+                'SELECT' => ['assets_assettypes_id', 'assets_assetmodels_id'],
+                'FROM' => 'glpi_assets_assets',
+                'WHERE' => ['id' => $snapshotItemsId],
+                'LIMIT' => 1,
+            ]) as $assetCommonFields) {
+                $assetFields['assets_assettypes_id'] = $assetCommonFields['assets_assettypes_id'] ?? 0;
+                $assetFields['assets_assetmodels_id'] = $assetCommonFields['assets_assetmodels_id'] ?? 0;
+                break;
+            }
+        }
         $evidences = [];
         foreach ($DB->request([
             'SELECT' => ['file_path', 'sha256', 'mime_type', 'caption', 'original_name'],
