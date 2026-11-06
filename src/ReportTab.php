@@ -175,16 +175,30 @@ final class ReportTab extends CommonGLPI
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN DEL ACTIVO', 'informeglpi')) . '</div>';
         echo "<div class='ig-asset-table'>";
         $shortName = (new \ReflectionClass($itemtype))->getShortName();
-        $typeField = strtolower($shortName) . 'types_id';
-        $modelField = strtolower($shortName) . 'models_id';
+        $isAssetDefinition = array_key_exists('assets_assettypes_id', $fields)
+            || str_starts_with($itemtype, 'Glpi\\CustomAsset\\');
+        $typeField = $isAssetDefinition ? 'assets_assettypes_id' : strtolower($shortName) . 'types_id';
+        $modelField = $isAssetDefinition ? 'assets_assetmodels_id' : strtolower($shortName) . 'models_id';
         $typeClass = $shortName . 'Type';
         $modelClass = $shortName . 'Model';
-        $typeValue = isset($fields[$typeField]) && class_exists($typeClass)
-            ? \Dropdown::getDropdownName($typeClass::getTable(), (int) $fields[$typeField])
-            : '';
-        $modelValue = isset($fields[$modelField]) && class_exists($modelClass)
-            ? \Dropdown::getDropdownName($modelClass::getTable(), (int) $fields[$modelField])
-            : '';
+        $typeValue = '';
+        if ((int) ($fields[$typeField] ?? 0) > 0) {
+            $typeTable = $isAssetDefinition
+                ? 'glpi_assets_assettypes'
+                : (class_exists($typeClass) ? $typeClass::getTable() : '');
+            if ($typeTable !== '') {
+                $typeValue = (string) \\Dropdown::getDropdownName($typeTable, (int) $fields[$typeField]);
+            }
+        }
+        $modelValue = '';
+        if ((int) ($fields[$modelField] ?? 0) > 0) {
+            $modelTable = $isAssetDefinition
+                ? 'glpi_assets_assetmodels'
+                : (class_exists($modelClass) ? $modelClass::getTable() : '');
+            if ($modelTable !== '') {
+                $modelValue = (string) \\Dropdown::getDropdownName($modelTable, (int) $fields[$modelField]);
+            }
+        }
         $manufacturerValue = !empty($fields['manufacturers_id'])
             ? \Dropdown::getDropdownName(\Manufacturer::getTable(), (int) $fields['manufacturers_id'])
             : '';
@@ -629,6 +643,13 @@ final class ReportTab extends CommonGLPI
         $reportId = (int) $report->getID();
         echo '<div class="ig-section-title">' . self::e(__('INFORMACIÓN TÉCNICA DEL ACTIVO','informeglpi')) . '</div>';
         echo "<div class='ig-asset-table mb-3'>";
+        $damageType = (string) ($report->fields['damage_type'] ?? '');
+        $damageLabel = match ($damageType) {
+            'wear' => __('DESGASTE', 'informeglpi'),
+            'property_damage' => __('MAL USO', 'informeglpi'),
+            default => '—',
+        };
+        echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('TIPO DE DAÑO:', 'informeglpi')) . "</div><div class='ig-value'><strong>" . self::e($damageLabel) . "</strong></div></div>";
         foreach ([
             'background' => __('ANTECEDENTES:', 'informeglpi'),
             'diagnosis' => __('DIAGNÓSTICO:', 'informeglpi'),
