@@ -1,3 +1,6 @@
+## 0.5.72
+- Corrige la etiqueta de clasificación de daño en el PDF institucional: ahora muestra «Mal uso» en lugar de «Daño a la propiedad», manteniendo la selección de Desgaste / Mal uso.
+
 ## 0.5.70
 - Corrige la consulta de los catálogos de tipos y modelos de Asset Definitions: las tablas de base de datos se consultan directamente, sin exigir que existan como clases PHP.
 - Aplica la corrección tanto al PDF HTML como al PDF institucional.
