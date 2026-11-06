@@ -187,7 +187,7 @@ final class ReportTab extends CommonGLPI
                 ? 'glpi_assets_assettypes'
                 : (class_exists($typeClass) ? $typeClass::getTable() : '');
             if ($typeTable !== '') {
-                $typeValue = (string) \\Dropdown::getDropdownName($typeTable, (int) $fields[$typeField]);
+                $typeValue = (string) \Dropdown::getDropdownName($typeTable, (int) $fields[$typeField]);
             }
         }
         $modelValue = '';
@@ -196,7 +196,7 @@ final class ReportTab extends CommonGLPI
                 ? 'glpi_assets_assetmodels'
                 : (class_exists($modelClass) ? $modelClass::getTable() : '');
             if ($modelTable !== '') {
-                $modelValue = (string) \\Dropdown::getDropdownName($modelTable, (int) $fields[$modelField]);
+                $modelValue = (string) \Dropdown::getDropdownName($modelTable, (int) $fields[$modelField]);
             }
         }
         $manufacturerValue = !empty($fields['manufacturers_id'])
