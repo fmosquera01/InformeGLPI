@@ -51,7 +51,6 @@ final class TelegramConfig extends \Config
         echo "<h3>" . $escape(__('Notificaciones de informes por Telegram', 'informeglpi')) . "</h3>";
         echo "<p class='text-muted'>" . $escape(__('Reciba un aviso cuando el técnico firme un informe y recordatorios de los informes que esperan su firma.', 'informeglpi')) . "</p>";
         echo "<form method='post' action='" . $escape($action) . "'>";
-        echo Html::hidden('_glpi_csrf_token', ['value' => Session::getNewCSRFToken(true)]);
 
         echo "<div class='form-field mb-3'>";
         echo "<label class='form-label' for='telegram_enabled'>" . $escape(__('Activar módulo Telegram', 'informeglpi')) . "</label>";
@@ -116,6 +115,7 @@ final class TelegramConfig extends \Config
         echo "<button class='btn btn-primary' type='submit' name='action' value='save'><i class='ti ti-device-floppy'></i> " . $escape(__('Guardar configuración', 'informeglpi')) . "</button>";
         echo "<button class='btn btn-outline-secondary' type='submit' name='action' value='test'><i class='ti ti-send'></i> " . $escape(__('Enviar mensaje de prueba', 'informeglpi')) . "</button>";
         echo "</div>";
-        echo "</form></div>";
+        echo Html::closeForm();
+        echo "</div>";
     }
 }
