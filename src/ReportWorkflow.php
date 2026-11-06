@@ -154,7 +154,7 @@ final class ReportWorkflow
             try {
                 TelegramNotification::notifyTechnicalSignature($reportId);
             } catch (Throwable $notificationError) {
-                \\Toolbox::logInFile(
+                \Toolbox::logInFile(
                     'informeglopi',
                     'Telegram: no se pudo notificar la firma técnica del informe #' . $reportId
                     . ' (' . $notificationError->getMessage() . ')'

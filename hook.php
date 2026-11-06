@@ -243,7 +243,7 @@ function plugin_informeglpi_install(): bool
 
     // Run once per minute in external mode; GLPI's system cron drives exact daily schedules.
     CronTask::register(
-        \\GlpiPlugin\\Informeglopi\\TelegramNotification::class,
+        \GlpiPlugin\Informeglopi\TelegramNotification::class,
         'reminders',
         MINUTE_TIMESTAMP,
         [

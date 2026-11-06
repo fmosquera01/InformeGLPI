@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GlpiPlugin\\Informeglopi;
+namespace GlpiPlugin\Informeglopi;
 
 use CommonDBTM;
 use CronTask;
@@ -75,19 +75,19 @@ final class TelegramNotification extends CommonDBTM
 
             $lastAttempt = trim((string) ($config[$attemptKey] ?? ''));
             if ($lastAttempt !== '') {
-                $lastAttemptTime = strtotime($lastAttempt);
-                if ($lastAttemptTime !== false && $lastAttemptTime > ($now->getTimestamp() - 900)) {
+                $lastAttemptTime = (int) $lastAttempt;
+                if ($lastAttemptTime > ($now->getTimestamp() - 900)) {
                     continue;
                 }
             }
 
-            \\Config::setConfigurationValues('plugin:informeglpi', [
-                $attemptKey => $now->format('Y-m-d H:i:s'),
+            \Config::setConfigurationValues('plugin:informeglpi', [
+                $attemptKey => (string) $now->getTimestamp(),
             ]);
 
             $pending = self::getPendingReports((int) $config['telegram_reviewer_users_id']);
             if ($pending === []) {
-                \\Config::setConfigurationValues('plugin:informeglpi', [
+                \Config::setConfigurationValues('plugin:informeglpi', [
                     $sentKey => $today,
                     $attemptKey => '',
                 ]);
@@ -102,7 +102,7 @@ final class TelegramNotification extends CommonDBTM
                     (string) $config['telegram_chat_id'],
                     self::buildDigestMessage($pending, $period, $config)
                 );
-                \\Config::setConfigurationValues('plugin:informeglpi', [
+                \Config::setConfigurationValues('plugin:informeglpi', [
                     $sentKey => $today,
                     $attemptKey => '',
                 ]);
@@ -110,7 +110,7 @@ final class TelegramNotification extends CommonDBTM
                 $config[$attemptKey] = '';
                 $sent++;
             } catch (Throwable $e) {
-                \\Toolbox::logInFile('informeglopi', 'Telegram: fallo en recordatorio ' . $period . ': ' . $e->getMessage());
+                \Toolbox::logInFile('informeglopi', 'Telegram: fallo en recordatorio ' . $period . ': ' . $e->getMessage());
             }
         }
 
@@ -186,14 +186,14 @@ final class TelegramNotification extends CommonDBTM
             $plain = sodium_crypto_secretbox_open($cipher, $nonce, self::getEncryptionKey(false));
             return is_string($plain) ? $plain : '';
         } catch (Throwable $e) {
-            \\Toolbox::logInFile('informeglopi', 'Telegram: no se pudo descifrar el token guardado.');
+            \Toolbox::logInFile('informeglopi', 'Telegram: no se pudo descifrar el token guardado.');
             return '';
         }
     }
 
     private static function getConfig(): array
     {
-        return \\Config::getConfigurationValues('plugin:informeglpi');
+        return \Config::getConfigurationValues('plugin:informeglpi');
     }
 
     private static function getEncryptionKey(bool $create): string
@@ -251,7 +251,7 @@ final class TelegramNotification extends CommonDBTM
             'WHERE' => $where,
             'ORDER' => ['date_creation ASC'],
         ]) as $row) {
-            $user = new \\User();
+            $user = new \User();
             $technician = '';
             if ($user->getFromDB((int) $row['prepared_by_users_id'])) {
                 $technician = trim((string) ($user->fields['firstname'] ?? '') . ' ' . (string) ($user->fields['realname'] ?? ''));
@@ -287,11 +287,13 @@ final class TelegramNotification extends CommonDBTM
     private static function buildDigestMessage(array $reports, string $period, array $config): string
     {
         $baseUrl = rtrim(trim((string) ($config['telegram_glpi_base_url'] ?? '')), '/');
+        $morningTime = (string) ($config['telegram_morning_time'] ?? '07:00');
+        $eveningTime = (string) ($config['telegram_evening_time'] ?? '17:00');
         $title = $period === 'immediate'
             ? '📋 <b>Informe técnico listo para tu firma</b>'
             : ($period === 'morning'
-                ? '🌅 <b>Recordatorio de informes pendientes (07:00)</b>'
-                : '🌇 <b>Recordatorio de informes pendientes (17:00)</b>');
+                ? '🌅 <b>Recordatorio de informes pendientes (' . self::escape($morningTime) . ')</b>'
+                : '🌇 <b>Recordatorio de informes pendientes (' . self::escape($eveningTime) . ')</b>');
 
         $lines = [
             '<b>Songa | Informe Técnico</b>',
@@ -302,7 +304,7 @@ final class TelegramNotification extends CommonDBTM
 
         $shown = 0;
         foreach ($reports as $report) {
-            if ($shown >= 20) {
+            if ($shown >= 10) {
                 break;
             }
             $shown++;

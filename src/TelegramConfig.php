@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GlpiPlugin\\Informeglopi;
+namespace GlpiPlugin\Informeglopi;
 
 use CommonGLPI;
 use Dropdown;
@@ -12,11 +12,11 @@ use Session;
  * Telegram configuration tab under GLPI Setup > General.
  * The bot token is never rendered back into the form.
  */
-final class TelegramConfig extends \\Config
+final class TelegramConfig extends \Config
 {
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
-        if ($item instanceof \\Config) {
+        if ($item instanceof \Config) {
             return self::createTabEntry(__('Telegram', 'informeglpi'));
         }
 
@@ -25,7 +25,7 @@ final class TelegramConfig extends \\Config
 
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
-        if ($item instanceof \\Config) {
+        if ($item instanceof \Config) {
             self::showTelegramConfig();
         }
 
@@ -37,13 +37,11 @@ final class TelegramConfig extends \\Config
         global $CFG_GLPI;
 
         if (!Session::haveRight('config', UPDATE)) {
-            echo Html::div(__('No tiene permisos para configurar las notificaciones Telegram.', 'informeglpi'), [
-                'class' => 'alert alert-warning',
-            ]);
+            echo "<div class='alert alert-warning'>" . htmlspecialchars(__('No tiene permisos para configurar las notificaciones Telegram.', 'informeglpi'), ENT_QUOTES, 'UTF-8') . "</div>";
             return;
         }
 
-        $config = \\Config::getConfigurationValues('plugin:informeglpi');
+        $config = \Config::getConfigurationValues('plugin:informeglpi');
         $hasToken = trim((string) ($config['telegram_bot_token_encrypted'] ?? '')) !== '';
         $rootDoc = rtrim((string) ($CFG_GLPI['root_doc'] ?? ''), '/');
         $action = $rootDoc . '/plugins/informeglpi/front/telegram-config.form.php';

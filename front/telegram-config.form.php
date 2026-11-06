@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use GlpiPlugin\\Informeglopi\\TelegramNotification;
+use GlpiPlugin\Informeglopi\TelegramNotification;
 
 include('../../../inc/includes.php');
 Session::checkLoginUser();
@@ -83,5 +83,5 @@ try {
 
 global $CFG_GLPI;
 $rootDoc = rtrim((string) ($CFG_GLPI['root_doc'] ?? ''), '/');
-Html::redirect($rootDoc . '/front/config.form.php?forcetab=' . rawurlencode(GlpiPlugin\\Informeglopi\\TelegramConfig::class . '$1'));
+Html::redirect($rootDoc . '/front/config.form.php?forcetab=' . rawurlencode(GlpiPlugin\Informeglopi\TelegramConfig::class . '$1'));
 exit;
