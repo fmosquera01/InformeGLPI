@@ -141,9 +141,9 @@ final class TelegramNotification extends CommonDBTM
             return;
         }
         $number = (string) $row['report_number'];
-        $url = self::reportUrl($reportId);
+        $url = self::reportPdfUrl($reportId);
         $message = '<b>Songa | Informe Técnico</b>' . "\n"
-            . '✅ <b>Informe aprobado y PDF generado</b>' . "\n"
+            . '✅ <b>Informe aprobado y PDF generado</b' . "\n"
             . 'Informe: <b>' . self::escape($number) . '</b>' . "\n"
             . 'El documento final ya está disponible para su descarga.' . "\n"
             . ($url !== '' ? '<a href="' . self::escape($url) . '">Abrir informe y descargar PDF</a>' : '');
@@ -222,6 +222,13 @@ final class TelegramNotification extends CommonDBTM
     }
 
     private static function reportUrl(int $reportId): string
+    {
+        $config = self::getConfig();
+        $base = rtrim(trim((string) ($config['telegram_glpi_base_url'] ?? '')), '/');
+        return $base !== '' ? $base . '/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId : '';
+    }
+
+    private static function reportPdfUrl(int $reportId): string
     {
         $config = self::getConfig();
         $base = rtrim(trim((string) ($config['telegram_glpi_base_url'] ?? '')), '/');
