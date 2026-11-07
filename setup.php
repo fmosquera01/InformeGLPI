@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Internal plugin key and installation directory: informeglopi.
  */
 
-define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.81');
+define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.82');
 
 require_once __DIR__ . '/src/Report.php';
 require_once __DIR__ . '/src/AssetTypeRegistry.php';
