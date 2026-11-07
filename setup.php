@@ -36,12 +36,6 @@ function plugin_init_informeglpi(): void
     Plugin::registerClass(\GlpiPlugin\Informeglopi\UserSignatureTab::class, [
         'addtabon' => ['User'],
     ]);
-    Plugin::registerClass(\GlpiPlugin\Informeglopi\UserTelegramTab::class, [
-        'addtabon' => ['User'],
-    ]);
-    Plugin::registerClass(\GlpiPlugin\Informeglopi\TelegramConfig::class, [
-        'addtabon' => ['Config'],
-    ]);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\ReportTab::class, [
         'addtabon' => \GlpiPlugin\Informeglopi\AssetTypeRegistry::getItemtypes(),
     ]);
