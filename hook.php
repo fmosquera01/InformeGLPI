@@ -62,16 +62,6 @@ function plugin_informeglpi_install(): bool
             KEY `idx_report_creator` (`users_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}",
 
-        'glpi_plugin_informeglopi_user_telegram' => "CREATE TABLE IF NOT EXISTS `glpi_plugin_informeglopi_user_telegram` (
-            `id` int unsigned NOT NULL AUTO_INCREMENT,
-            `users_id` int unsigned NOT NULL,
-            `chat_id` varchar(64) NOT NULL,
-            `date_creation` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            `date_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `unicity_user_telegram` (`users_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}",
-
         'glpi_plugin_informeglopi_user_signatures' => "CREATE TABLE IF NOT EXISTS `glpi_plugin_informeglopi_user_signatures` (
             `id` int unsigned NOT NULL AUTO_INCREMENT,
             `users_id` int unsigned NOT NULL,
@@ -226,29 +216,56 @@ function plugin_informeglpi_install(): bool
 
     ProfileRight::cleanAllPossibleRights();
 
-    // Telegram notification settings live in GLPI's native configuration table.
-    // Only initialize missing keys so plugin upgrades never overwrite admin settings.
-    $telegramDefaults = [
-        'telegram_enabled' => 0,
-        'telegram_bot_token_encrypted' => '',
-        'telegram_chat_id' => '',
-        'telegram_reviewer_users_id' => 0,
-        'telegram_glpi_base_url' => '',
-        'telegram_notify_immediate' => 1,
-        'telegram_notify_morning' => 1,
-        'telegram_notify_evening' => 1,
-        'telegram_morning_time' => '07:00',
-        'telegram_evening_time' => '17:00',
-        'telegram_timezone' => 'America/Guayaquil',
-        'telegram_last_morning_date' => '',
-        'telegram_last_evening_date' => '',
-        'telegram_last_morning_attempt' => '',
-        'telegram_last_evening_attempt' => '',
-    ];
-    $currentTelegramConfig = Config::getConfigurationValues('plugin:informeglpi');
-    $missingTelegramConfig = array_diff_key($telegramDefaults, $currentTelegramConfig);
-    if ($missingTelegramConfig !== []) {
-        Config::setConfigurationValues('plugin:informeglpi', $missingTelegramConfig);
+    // Migrate legacy per-user Chat IDs into FML Telegram destinations when available.
+    // The legacy table is retained as a non-active archive; no Chat IDs are discarded.
+    if ($DB->tableExists('glpi_plugin_informeglopi_user_telegram')
+        && $DB->tableExists('glpi_plugin_telegram_destinations')
+        && $DB->fieldExists('glpi_plugin_telegram_destinations', 'users_id')) {
+        foreach ($DB->request([
+            'SELECT' => ['id', 'users_id', 'chat_id'],
+            'FROM' => 'glpi_plugin_informeglopi_user_telegram',
+        ]) as $legacyDestination) {
+            $userId = (int) ($legacyDestination['users_id'] ?? 0);
+            $chatId = trim((string) ($legacyDestination['chat_id'] ?? ''));
+            if ($userId < 1 || !preg_match('/^-?[0-9]+$/', $chatId)) {
+                continue;
+            }
+
+            $alreadyMigrated = false;
+            foreach ($DB->request([
+                'SELECT' => ['id'],
+                'FROM' => 'glpi_plugin_telegram_destinations',
+                'WHERE' => ['users_id' => $userId, 'chat_id' => $chatId],
+                'LIMIT' => 1,
+            ]) as $existingDestination) {
+                $alreadyMigrated = true;
+                break;
+            }
+            if ($alreadyMigrated) {
+                continue;
+            }
+
+            $user = new User();
+            $displayName = 'GLPI user #' . $userId;
+            if ($user->getFromDB($userId)) {
+                $displayName = trim((string) ($user->fields['firstname'] ?? '') . ' ' . (string) ($user->fields['realname'] ?? ''));
+                if ($displayName === '') {
+                    $displayName = (string) ($user->fields['name'] ?? $displayName);
+                }
+            }
+
+            $legacyId = (int) ($legacyDestination['id'] ?? 0);
+            $alias = 'informeglpi_user_' . $userId . '_' . $legacyId;
+            $DB->insert('glpi_plugin_telegram_destinations', [
+                'name' => mb_substr($displayName . ' - Informe Técnico', 0, 120, 'UTF-8'),
+                'alias' => mb_substr($alias, 0, 120, 'UTF-8'),
+                'chat_id' => $chatId,
+                'users_id' => $userId,
+                'chat_type' => 'private',
+                'is_active' => 1,
+                'date_creation' => date('Y-m-d H:i:s'),
+            ]);
+        }
     }
 
     // Run once per minute in external mode; GLPI's system cron drives exact daily schedules.
