@@ -49,7 +49,7 @@ final class TelegramConfig extends \Config
 
         echo "<div class='spaced' style='max-width:900px'>";
         echo "<h3>" . $escape(__('Notificaciones de informes por Telegram', 'informeglpi')) . "</h3>";
-        echo "<p class='text-muted'>" . $escape(__('Reciba un aviso cuando el técnico firme un informe y recordatorios de los informes que esperan su firma.', 'informeglpi')) . "</p>";
+        echo "<p class='text-muted'>" . $escape(__('Cada usuario recibe avisos en su Chat ID personal, según su participación en el informe. Los recordatorios se envían a cada supervisor asignado que tenga Chat ID registrado.', 'informeglpi')) . "</p>";
         echo "<form method='post' action='" . $escape($action) . "'>";
         // Use GLPI's standard form token, generated in the current session.
 
@@ -66,21 +66,6 @@ final class TelegramConfig extends \Config
         echo "<label class='form-label' for='telegram_bot_token'>" . $escape(__('Token del bot (BotFather)', 'informeglpi')) . "</label>";
         echo "<input class='form-control' type='password' id='telegram_bot_token' name='telegram_bot_token' value='' autocomplete='new-password' placeholder='" . $escape($hasToken ? __('Token guardado; deje vacío para conservarlo', 'informeglpi') : __('Pegue aquí el token del bot', 'informeglpi')) . "'>";
         echo "<small class='form-text text-muted'>" . $escape($hasToken ? __('Hay un token cifrado guardado. Nunca se muestra nuevamente.', 'informeglpi') : __('El token se cifra en el servidor y no se almacena en texto plano en la base de datos.', 'informeglpi')) . "</small>";
-        echo "</div>";
-
-        echo "<div class='form-field mb-3'>";
-        echo "<label class='form-label' for='telegram_chat_id'>" . $escape(__('Chat ID personal de Telegram', 'informeglpi')) . "</label>";
-        echo "<input class='form-control' type='text' id='telegram_chat_id' name='telegram_chat_id' value='" . $escape($config['telegram_chat_id'] ?? '') . "' placeholder='Ej. 123456789'>";
-        echo "</div>";
-
-        echo "<div class='form-field mb-3'>";
-        echo "<label class='form-label'>" . $escape(__('Usuario GLPI responsable de firmar', 'informeglpi')) . "</label>";
-        Dropdown::show('User', [
-            'name' => 'telegram_reviewer_users_id',
-            'value' => (int) ($config['telegram_reviewer_users_id'] ?? 0),
-            'display_emptychoice' => true,
-        ]);
-        echo "<small class='form-text text-muted'>" . $escape(__('Solo se notificarán informes cuyo responsable de revisión sea este usuario.', 'informeglpi')) . "</small>";
         echo "</div>";
 
         echo "<div class='form-field mb-3'>";
@@ -114,7 +99,6 @@ final class TelegramConfig extends \Config
 
         echo "<div class='d-flex flex-wrap gap-2 mt-4'>";
         echo "<button class='btn btn-primary' type='submit' name='action' value='save'><i class='ti ti-device-floppy'></i> " . $escape(__('Guardar configuración', 'informeglpi')) . "</button>";
-        echo "<button class='btn btn-outline-secondary' type='submit' name='action' value='test'><i class='ti ti-send'></i> " . $escape(__('Enviar mensaje de prueba', 'informeglpi')) . "</button>";
         echo "</div>";
         echo Html::closeForm(false);
         echo "</div>";
