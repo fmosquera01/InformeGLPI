@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Internal plugin key and installation directory: informeglopi.
  */
 
-define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.80');
+define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.81');
 
 require_once __DIR__ . '/src/Report.php';
 require_once __DIR__ . '/src/AssetTypeRegistry.php';
@@ -20,6 +20,7 @@ require_once __DIR__ . '/src/TelegramNotification.php';
 require_once __DIR__ . '/src/ReportPdf.php';
 require_once __DIR__ . '/src/ManualPhoneMenu.php';
 require_once __DIR__ . '/src/UserSignatureTab.php';
+require_once __DIR__ . '/src/UserTelegramTab.php';
 
 function plugin_init_informeglpi(): void
 {
@@ -35,6 +36,9 @@ function plugin_init_informeglpi(): void
         'addtabon' => ['Profile'],
     ]);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\UserSignatureTab::class, [
+        'addtabon' => ['User'],
+    ]);
+    Plugin::registerClass(\GlpiPlugin\Informeglopi\UserTelegramTab::class, [
         'addtabon' => ['User'],
     ]);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\TelegramConfig::class, [
