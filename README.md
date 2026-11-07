@@ -1,6 +1,6 @@
 # Informe Técnico - Songa
 
-Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.73.**
+Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.89.**
 
 ## Objetivo
 
@@ -102,8 +102,10 @@ La pestaña de informes deja de depender de una lista cerrada de cinco tipos. El
 La cobertura de componentes especializados continúa siendo específica de los activos que disponen de esas relaciones (por ahora, computadores). Para el resto se conserva el conjunto de campos y valores personalizados que GLPI proporciona. Debe validarse con definiciones reales y perfiles/entidades de la instancia de pruebas antes de producción.
 
 
-## Módulo independiente — Notificaciones Telegram (0.5.73)
+## Integración con FML Telegram
 
-La configuración se administra desde **Configuración > General > Telegram**. Permite activar/desactivar el módulo, configurar el token del bot, Chat ID personal, usuario GLPI responsable de la firma, URL base de GLPI, aviso inmediato y horarios de recordatorio. El token se cifra en el servidor y la clave se conserva fuera de la base de datos, en el directorio privado de datos de GLPI.
+InformeGLPI no administra tokens, Chat IDs ni conexiones directas con Telegram. Las notificaciones de firma técnica, aprobación, devolución y recordatorios se encolan mediante la API pública `GlpiPlugin\\Telegram\\NotificationService::enqueue()` del plugin central **FML Telegram** (`fmosquera01/telegram`).
 
-El aviso inmediato se dispara después de confirmar en base de datos la firma técnica y únicamente para informes asignados al usuario GLPI configurado como responsable. La tarea automática de GLPI revisa los informes pendientes y envía resúmenes en los horarios definidos (por defecto 07:00 y 17:00, todos los días, zona America/Guayaquil). Para ejecutar los recordatorios, la acción automática debe funcionar en modo externo y el cron del sistema debe invocar `front/cron.php` periódicamente.
+Los destinos privados deben configurarse en FML Telegram y asociarse al usuario GLPI correspondiente. InformeGLPI identifica al destinatario por su ID de usuario; FML Telegram administra el bot, destinos, cola, reintentos e historial de entrega. Si FML Telegram no está instalado o el usuario no tiene un destino activo, el flujo de informes continúa normalmente.
+
+La tarea de InformeGLPI únicamente prepara los resúmenes diarios para cada supervisor con informes pendientes (07:00 y 17:00, zona `America/Guayaquil` por defecto) y los entrega a la cola central. La tarea de envío de FML Telegram procesa la cola cada minuto.
