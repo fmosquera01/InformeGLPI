@@ -810,8 +810,14 @@ final class ReportTab extends CommonGLPI
         ]);
         echo "<small class='text-muted'>" . self::e(__('Seleccione uno o varios destinatarios; mínimo uno obligatorio.', 'informeglpi')) . "</small></div></div>";
         $preparedById = (int) ($values['prepared_by_users_id'] ?? \Session::getLoginUserID());
-        $preparedByName = $preparedById > 0 ? getUserName($preparedById) : '';
-        echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('DE: TÉCNICO QUE ELABORA:', 'informeglpi')) . "</div><div class='ig-value'>" . self::e($preparedByName) . "</div></div>";
+        echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('DE: TÉCNICO QUE FIRMA:', 'informeglpi')) . "</div><div class='ig-value'>";
+        echo \Dropdown::showFromArray('prepared_by_users_id', $users, [
+            'value' => $preparedById,
+            'display' => false,
+            'class' => 'form-select',
+            'width' => '100%',
+        ]);
+        echo "<small class='text-muted'>" . self::e(__('Seleccione al técnico que realizará la firma técnica. Puede ser distinto de quien crea el informe.', 'informeglpi')) . "</small></div></div>";
         $field = 'reviewer_users_id';
         $label = __('DE: RESPONSABLE QUE REVISA:', 'informeglpi');
         $selected = (int) ($values[$field] ?? 0);
