@@ -4,7 +4,7 @@ declare(strict_types=1);
  * Informe Técnico - Songa.
  * Internal plugin key and installation directory: informeglopi.
  */
-define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.89');
+define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.90');
 require_once __DIR__ . '/src/Report.php';
 require_once __DIR__ . '/src/AssetTypeRegistry.php';
 require_once __DIR__ . '/src/Profile.php';
