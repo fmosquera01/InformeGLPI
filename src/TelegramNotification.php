@@ -44,6 +44,9 @@ final class TelegramNotification extends CommonDBTM
      */
     public static function cronReminders($task = null): int
     {
+        if (!class_exists(\\GlpiPlugin\\Telegram\\NotificationService::class)) {
+            return 0;
+        }
         $config = \\Config::getConfigurationValues('plugin:informeglpi');
         try {
             $timezone = new DateTimeZone('America/Guayaquil');
