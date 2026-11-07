@@ -378,15 +378,16 @@ final class TelegramNotification extends CommonDBTM
 
     private static function getBaseUrl(): string
     {
-        try {
-            $url = trim((string) \Toolbox::getSystemURL());
-            if ($url !== '') {
-                return rtrim($url, '/');
-            }
-        } catch (Throwable $exception) {
-            // Fall back to the URL saved by the former standalone integration.
+        global $CFG_GLPI;
+
+        // GLPI's canonical URL is available in web requests and CLI cron runs.
+        $url = trim((string) ($CFG_GLPI['url_base'] ?? ''));
+        if ($url !== '') {
+            return rtrim($url, '/');
         }
 
+        // Compatibility fallback for installations that configured the URL
+        // only in InformeGLPI's retired Telegram settings.
         $config = self::getConfig();
         return rtrim(trim((string) ($config['telegram_glpi_base_url'] ?? '')), '/');
     }
