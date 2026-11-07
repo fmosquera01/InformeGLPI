@@ -15,12 +15,10 @@ require_once __DIR__ . '/src/ReportTab.php';
 require_once __DIR__ . '/src/AssetSnapshotBuilder.php';
 require_once __DIR__ . '/src/ReportService.php';
 require_once __DIR__ . '/src/ReportWorkflow.php';
-require_once __DIR__ . '/src/TelegramConfig.php';
 require_once __DIR__ . '/src/TelegramNotification.php';
 require_once __DIR__ . '/src/ReportPdf.php';
 require_once __DIR__ . '/src/ManualPhoneMenu.php';
 require_once __DIR__ . '/src/UserSignatureTab.php';
-require_once __DIR__ . '/src/UserTelegramTab.php';
 
 function plugin_init_informeglpi(): void
 {
