@@ -1,3 +1,9 @@
+## 0.5.89
+- Elimina la configuración, el almacenamiento de tokens y Chat IDs, y los formularios propios de Telegram dentro de InformeGLPI.
+- Delega el encolado de avisos de firma técnica, aprobación, devolución y recordatorios al API público de FML Telegram.
+- Migra de forma idempotente los Chat IDs personales existentes a destinos de FML Telegram asociados al mismo usuario GLPI, cuando ambos plugins están instalados.
+- Mantiene los recordatorios por supervisor a las 07:00 y 17:00 (America/Guayaquil); la entrega y los reintentos quedan a cargo de la cola central.
+
 ## 0.5.73
 - Incorpora un módulo independiente de notificaciones Telegram configurable desde Configuración > General.
 - Envía aviso inmediato al firmar el técnico y recordatorios diarios configurables a las 07:00 y 17:00 (zona America/Guayaquil por defecto).
