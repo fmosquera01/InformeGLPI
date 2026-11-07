@@ -40,10 +40,7 @@ final class TelegramNotification extends CommonDBTM
     public static function cronReminders($task = null): int
     {
         $config = self::getConfig();
-        if ((int) ($config['telegram_enabled'] ?? 0) !== 1
-            || trim((string) ($config['telegram_chat_id'] ?? '')) === ''
-            || (int) ($config['telegram_reviewer_users_id'] ?? 0) < 1
-            || self::getToken($config) === '') {
+        if ((int) ($config['telegram_enabled'] ?? 0) !== 1 || self::getToken($config) === '') {
             return 0;
         }
 
@@ -65,55 +62,45 @@ final class TelegramNotification extends CommonDBTM
             $enabledKey = $period === 'morning' ? 'telegram_notify_morning' : 'telegram_notify_evening';
             $sentKey = $period === 'morning' ? 'telegram_last_morning_date' : 'telegram_last_evening_date';
             $attemptKey = $period === 'morning' ? 'telegram_last_morning_attempt' : 'telegram_last_evening_attempt';
-
             if ((int) ($config[$enabledKey] ?? 0) !== 1
                 || !preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $scheduledTime)
                 || $currentTime < $scheduledTime
                 || (string) ($config[$sentKey] ?? '') === $today) {
                 continue;
             }
-
             $lastAttempt = trim((string) ($config[$attemptKey] ?? ''));
-            if ($lastAttempt !== '') {
-                $lastAttemptTime = (int) $lastAttempt;
-                if ($lastAttemptTime > ($now->getTimestamp() - 900)) {
-                    continue;
-                }
-            }
-
-            \Config::setConfigurationValues('plugin:informeglpi', [
-                $attemptKey => (string) $now->getTimestamp(),
-            ]);
-
-            $pending = self::getPendingReports((int) $config['telegram_reviewer_users_id']);
-            if ($pending === []) {
-                \Config::setConfigurationValues('plugin:informeglpi', [
-                    $sentKey => $today,
-                    $attemptKey => '',
-                ]);
-                $config[$sentKey] = $today;
-                $config[$attemptKey] = '';
+            if ($lastAttempt !== '' && (int) $lastAttempt > ($now->getTimestamp() - 900)) {
                 continue;
             }
-
-            try {
-                self::sendMessage(
-                    self::getToken($config),
-                    (string) $config['telegram_chat_id'],
-                    self::buildDigestMessage($pending, $period, $config)
-                );
-                \Config::setConfigurationValues('plugin:informeglpi', [
-                    $sentKey => $today,
-                    $attemptKey => '',
-                ]);
-                $config[$sentKey] = $today;
-                $config[$attemptKey] = '';
-                $sent++;
-            } catch (Throwable $e) {
-                \Toolbox::logInFile('informeglopi', 'Telegram: fallo en recordatorio ' . $period . ': ' . $e->getMessage());
+            \Config::setConfigurationValues('plugin:informeglpi', [$attemptKey => (string) $now->getTimestamp()]);
+            $reviewers = [];
+            global $DB;
+            foreach ($DB->request([
+                'SELECT' => ['DISTINCT' => 'reviewer_users_id'],
+                'FROM' => 'glpi_plugin_informeglopi_reports',
+                'WHERE' => ['status' => 'pending_supervisor_signature'],
+            ]) as $row) {
+                $reviewerId = (int) ($row['reviewer_users_id'] ?? 0);
+                if ($reviewerId > 0 && self::getUserChatId($reviewerId) !== '') {
+                    $reviewers[$reviewerId] = true;
+                }
             }
+            foreach (array_keys($reviewers) as $reviewerId) {
+                $pending = self::getPendingReports((int) $reviewerId);
+                if ($pending === []) {
+                    continue;
+                }
+                try {
+                    self::sendMessage(self::getToken($config), self::getUserChatId((int) $reviewerId), self::buildDigestMessage($pending, $period, $config));
+                    $sent++;
+                } catch (Throwable $e) {
+                    \Toolbox::logInFile('informeglopi', 'Telegram: fallo en recordatorio ' . $period . ' para usuario #' . $reviewerId . ': ' . $e->getMessage());
+                }
+            }
+            \Config::setConfigurationValues('plugin:informeglpi', [$sentKey => $today, $attemptKey => '']);
+            $config[$sentKey] = $today;
+            $config[$attemptKey] = '';
         }
-
         return $sent;
     }
 
@@ -121,22 +108,123 @@ final class TelegramNotification extends CommonDBTM
     {
         $config = self::getConfig();
         if ((int) ($config['telegram_enabled'] ?? 0) !== 1
-            || (int) ($config['telegram_notify_immediate'] ?? 0) !== 1
-            || trim((string) ($config['telegram_chat_id'] ?? '')) === ''
-            || (int) ($config['telegram_reviewer_users_id'] ?? 0) < 1) {
+            || (int) ($config['telegram_notify_immediate'] ?? 0) !== 1) {
             return;
         }
-
-        $pending = self::getPendingReports((int) $config['telegram_reviewer_users_id'], $reportId);
+        global $DB;
+        $reviewerId = 0;
+        foreach ($DB->request([
+            'SELECT' => ['reviewer_users_id'],
+            'FROM' => 'glpi_plugin_informeglopi_reports',
+            'WHERE' => ['id' => $reportId],
+            'LIMIT' => 1,
+        ]) as $row) {
+            $reviewerId = (int) ($row['reviewer_users_id'] ?? 0);
+        }
+        if ($reviewerId < 1) {
+            return;
+        }
+        $pending = self::getPendingReports($reviewerId, $reportId);
         if ($pending === []) {
             return;
         }
+        self::sendToUser($reviewerId, self::buildDigestMessage($pending, 'immediate', $config), $config);
+    }
 
-        self::sendMessage(
-            self::getToken($config),
-            (string) $config['telegram_chat_id'],
-            self::buildDigestMessage($pending, 'immediate', $config)
-        );
+    /** Notify the report creator after the final PDF has been stored successfully. */
+    public static function notifyReportFinalized(int $reportId): void
+    {
+        global $DB;
+        $row = self::getReportActors($reportId);
+        if ($row === null) {
+            return;
+        }
+        $number = (string) $row['report_number'];
+        $url = self::reportUrl($reportId);
+        $message = '<b>Songa | Informe Técnico</b>' . "\n"
+            . '✅ <b>Informe aprobado y PDF generado</b>' . "\n"
+            . 'Informe: <b>' . self::escape($number) . '</b>' . "\n"
+            . 'El documento final ya está disponible para su descarga.' . "\n"
+            . ($url !== '' ? '<a href="' . self::escape($url) . '">Abrir informe y descargar PDF</a>' : '');
+        self::sendToUser((int) $row['users_id'], $message);
+    }
+
+    /** Notify the creator and assigned technical signer when the supervisor returns the report. */
+    public static function notifyReportReturned(int $reportId, string $comment): void
+    {
+        $row = self::getReportActors($reportId);
+        if ($row === null) {
+            return;
+        }
+        $url = self::reportUrl($reportId);
+        $message = '<b>Songa | Informe Técnico</b>' . "\n"
+            . '↩️ <b>Informe devuelto para corrección</b>' . "\n"
+            . 'Informe: <b>' . self::escape((string) $row['report_number']) . '</b>' . "\n"
+            . '<b>Motivo indicado por el supervisor:</b>' . "\n"
+            . self::escape($comment) . "\n"
+            . ($url !== '' ? '<a href="' . self::escape($url) . '">Abrir informe para corregir</a>' : '');
+        $recipients = array_unique([(int) $row['users_id'], (int) $row['prepared_by_users_id']]);
+        foreach ($recipients as $userId) {
+            self::sendToUser($userId, $message);
+        }
+    }
+
+    private static function getReportActors(int $reportId): ?array
+    {
+        global $DB;
+        foreach ($DB->request([
+            'SELECT' => ['id', 'report_number', 'users_id', 'prepared_by_users_id', 'reviewer_users_id'],
+            'FROM' => 'glpi_plugin_informeglopi_reports',
+            'WHERE' => ['id' => $reportId],
+            'LIMIT' => 1,
+        ]) as $row) {
+            return $row;
+        }
+        return null;
+    }
+
+    private static function getUserChatId(int $userId): string
+    {
+        global $DB;
+        if ($userId < 1 || !$DB->tableExists('glpi_plugin_informeglopi_user_telegram')) {
+            return '';
+        }
+        foreach ($DB->request([
+            'SELECT' => ['chat_id'],
+            'FROM' => 'glpi_plugin_informeglopi_user_telegram',
+            'WHERE' => ['users_id' => $userId],
+            'LIMIT' => 1,
+        ]) as $row) {
+            $chatId = trim((string) ($row['chat_id'] ?? ''));
+            return preg_match('/^-?[0-9]+$/', $chatId) ? $chatId : '';
+        }
+        return '';
+    }
+
+    private static function sendToUser(int $userId, string $message, ?array $config = null): void
+    {
+        $config ??= self::getConfig();
+        if ((int) ($config['telegram_enabled'] ?? 0) !== 1) {
+            return;
+        }
+        $chatId = self::getUserChatId($userId);
+        $token = self::getToken($config);
+        // Missing personal Chat ID is an intentional no-op, never a workflow error.
+        if ($chatId === '' || $token === '') {
+            return;
+        }
+        try {
+            self::sendMessage($token, $chatId, $message);
+        } catch (Throwable $e) {
+            \Toolbox::logInFile('informeglopi', 'Telegram: no se pudo notificar al usuario GLPI #' . $userId . ': ' . $e->getMessage());
+        }
+    }
+
+    private static function reportUrl(int $reportId): string
+    {
+        $config = self::getConfig();
+        $base = rtrim(trim((string) ($config['telegram_glpi_base_url'] ?? '')), '/');
+        return $base !== '' ? $base . '/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId : '';
     }
 
     public static function sendTestMessage(string $plainToken, string $chatId): void
