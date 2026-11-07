@@ -67,7 +67,10 @@ try {
         ];
 
         if ((int) $values['telegram_enabled'] === 1 && $encryptedToken === '') {
-            throw new RuntimeException(__('Para activar Telegram debe configurar el token del bot. Cada usuario registra su propio Chat ID en su perfil GLPI.', 'informeglpi'));
+            throw new RuntimeException(__('Para activar Telegram debe configurar el token del bot.', 'informeglpi'));
+        }
+        if ((int) $values['telegram_enabled'] === 1 && $baseUrl === '') {
+            throw new RuntimeException(__('Configure la URL base de GLPI para que los mensajes incluyan enlaces al informe y al PDF.', 'informeglpi'));
         }
 
         Config::setConfigurationValues('plugin:informeglpi', $values);
