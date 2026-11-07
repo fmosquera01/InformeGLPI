@@ -809,7 +809,7 @@ final class ReportTab extends CommonGLPI
             'width' => '100%',
         ]);
         echo "<small class='text-muted'>" . self::e(__('Seleccione uno o varios destinatarios; mínimo uno obligatorio.', 'informeglpi')) . "</small></div></div>";
-        $preparedById = (int) \\Session::getLoginUserID();
+        $preparedById = (int) \Session::getLoginUserID();
         echo "<div class='ig-row'><div class='ig-label'>" . self::e(__('DE: TÉCNICO QUE FIRMA:', 'informeglpi')) . "</div><div class='ig-value'>";
         echo self::e(getUserName($preparedById));
         echo "<input type='hidden' name='prepared_by_users_id' value='" . $preparedById . "'>";
