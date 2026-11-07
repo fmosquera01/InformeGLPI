@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace GlpiPlugin\\Informeglopi;
+namespace GlpiPlugin\Informeglopi;
 
 use CommonDBTM;
 use CronTask;
@@ -44,10 +44,10 @@ final class TelegramNotification extends CommonDBTM
      */
     public static function cronReminders($task = null): int
     {
-        if (!class_exists(\\GlpiPlugin\\Telegram\\NotificationService::class)) {
+        if (!class_exists(\GlpiPlugin\Telegram\NotificationService::class)) {
             return 0;
         }
-        $config = \\Config::getConfigurationValues('plugin:informeglpi');
+        $config = \Config::getConfigurationValues('plugin:informeglpi');
         try {
             $timezone = new DateTimeZone('America/Guayaquil');
         } catch (Throwable $e) {
@@ -77,7 +77,7 @@ final class TelegramNotification extends CommonDBTM
                 continue;
             }
 
-            \\Config::setConfigurationValues('plugin:informeglpi', [
+            \Config::setConfigurationValues('plugin:informeglpi', [
                 $attemptKey => (string) $now->getTimestamp(),
             ]);
 
@@ -117,7 +117,7 @@ final class TelegramNotification extends CommonDBTM
 
             // Mark this period after enqueue attempts. FML Telegram retains and
             // retries accepted messages independently of this reminder scheduler.
-            \\Config::setConfigurationValues('plugin:informeglpi', [
+            \Config::setConfigurationValues('plugin:informeglpi', [
                 $sentKey => $today,
                 $attemptKey => '',
             ]);
@@ -230,7 +230,7 @@ final class TelegramNotification extends CommonDBTM
         string $message,
         string $deduplicationKey
     ): array {
-        $serviceClass = \\GlpiPlugin\\Telegram\\NotificationService::class;
+        $serviceClass = \GlpiPlugin\Telegram\NotificationService::class;
         if ($userId < 1 || !class_exists($serviceClass)
             || !is_callable([$serviceClass, 'enqueue'])
             || !is_callable([$serviceClass, 'getApiVersion'])) {
@@ -251,7 +251,7 @@ final class TelegramNotification extends CommonDBTM
             ]);
         } catch (Throwable $exception) {
             try {
-                \\Toolbox::logInFile(
+                \Toolbox::logInFile(
                     'informeglopi',
                     'FML Telegram: no se pudo encolar notificación para usuario GLPI #' . $userId
                 );
@@ -298,7 +298,7 @@ final class TelegramNotification extends CommonDBTM
             'WHERE' => $where,
             'ORDER' => ['date_creation ASC'],
         ]) as $row) {
-            $user = new \\User();
+            $user = new \User();
             $technician = '';
             if ($user->getFromDB((int) $row['prepared_by_users_id'])) {
                 $technician = trim((string) ($user->fields['firstname'] ?? '') . ' ' . (string) ($user->fields['realname'] ?? ''));
@@ -373,13 +373,13 @@ final class TelegramNotification extends CommonDBTM
 
     private static function getConfig(): array
     {
-        return \\Config::getConfigurationValues('plugin:informeglpi');
+        return \Config::getConfigurationValues('plugin:informeglpi');
     }
 
     private static function getBaseUrl(): string
     {
         try {
-            $url = trim((string) \\Toolbox::getSystemURL());
+            $url = trim((string) \Toolbox::getSystemURL());
             if ($url !== '') {
                 return rtrim($url, '/');
             }
