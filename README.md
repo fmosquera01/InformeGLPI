@@ -104,7 +104,7 @@ La cobertura de componentes especializados continúa siendo específica de los a
 
 ## Integración con FML Telegram
 
-InformeGLPI no administra tokens, Chat IDs ni conexiones directas con Telegram. Las notificaciones de firma técnica, aprobación, devolución y recordatorios se encolan mediante la API pública `GlpiPlugin\\Telegram\\NotificationService::enqueue()` del plugin central **FML Telegram** (`fmosquera01/telegram`).
+InformeGLPI no administra tokens, Chat IDs ni conexiones directas con Telegram. Las notificaciones de firma técnica, aprobación, devolución y recordatorios se encolan mediante la API pública `GlpiPlugin\Telegram\NotificationService::enqueue()` del plugin central **FML Telegram** (`fmosquera01/telegram`).
 
 Los destinos privados deben configurarse en FML Telegram y asociarse al usuario GLPI correspondiente. InformeGLPI identifica al destinatario por su ID de usuario; FML Telegram administra el bot, destinos, cola, reintentos e historial de entrega. Si FML Telegram no está instalado o el usuario no tiene un destino activo, el flujo de informes continúa normalmente.
 
