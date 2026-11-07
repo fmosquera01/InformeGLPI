@@ -81,7 +81,7 @@ final class TelegramNotification extends CommonDBTM
             $reviewers = [];
             global $DB;
             foreach ($DB->request([
-                'SELECT' => ['DISTINCT' => 'reviewer_users_id'],
+                'SELECT' => ['reviewer_users_id'],
                 'FROM' => 'glpi_plugin_informeglopi_reports',
                 'WHERE' => ['status' => 'pending_supervisor_signature'],
             ]) as $row) {
@@ -227,12 +227,18 @@ final class TelegramNotification extends CommonDBTM
         string $message,
         string $deduplicationKey
     ): array {
-        if ($userId < 1 || !class_exists(\\GlpiPlugin\\Telegram\\NotificationService::class)) {
+        $serviceClass = \\GlpiPlugin\\Telegram\\NotificationService::class;
+        if ($userId < 1 || !class_exists($serviceClass)
+            || !is_callable([$serviceClass, 'enqueue'])
+            || !is_callable([$serviceClass, 'getApiVersion'])) {
             return ['queued' => 0, 'skipped' => 0, 'errors' => []];
         }
 
         try {
-            return \\GlpiPlugin\\Telegram\\NotificationService::enqueue([
+            if (version_compare($serviceClass::getApiVersion(), '1.0', '<')) {
+                return ['queued' => 0, 'skipped' => 0, 'errors' => []];
+            }
+            return $serviceClass::enqueue([
                 'source' => self::SOURCE,
                 'event' => $event,
                 'subject' => mb_substr($subject, 0, 180, 'UTF-8'),
