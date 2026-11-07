@@ -69,7 +69,7 @@ final class TelegramConfig extends \Config
         echo "</div>";
 
         echo "<div class='form-field mb-3'>";
-        echo "<label class='form-label' for='telegram_glpi_base_url'>" . $escape(__('URL base de GLPI (ambiente de pruebas)', 'informeglpi')) . "</label>";
+        echo "<label class='form-label' for='telegram_glpi_base_url'>" . $escape(__('URL base de GLPI', 'informeglpi')) . "</label>";
         echo "<input class='form-control' type='url' id='telegram_glpi_base_url' name='telegram_glpi_base_url' value='" . $escape($config['telegram_glpi_base_url'] ?? '') . "' placeholder='http://glpi.local'>";
         echo "</div>";
 
