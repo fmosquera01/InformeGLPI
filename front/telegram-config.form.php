@@ -14,7 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Html::displayErrorAndDie(__('Método no permitido.', 'informeglpi'));
 }
 
-Session::checkCSRF($_POST);
+// GLPI 11 valida automáticamente el token CSRF en CheckCsrfListener.
+// No repetir Session::checkCSRF() aquí: el token ya fue consumido por el listener.
 
 $action = (string) ($_POST['action'] ?? 'save');
 $config = Config::getConfigurationValues('plugin:informeglpi');
