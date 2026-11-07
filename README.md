@@ -1,6 +1,6 @@
 # Informe Técnico - Songa
 
-Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.89.**
+Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.90.**
 
 ## Objetivo
 
