@@ -200,6 +200,9 @@ final class ReportWorkflow
             $DB->rollBack();
             throw $e;
         }
+
+        // Optional Telegram notices are post-commit and cannot interrupt the GLPI workflow.
+        TelegramNotification::notifyReportReturned($reportId, $comment);
     }
 
     private static function verifyUserPin(int $userId, string $pin): array
