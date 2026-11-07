@@ -247,6 +247,7 @@ final class TelegramNotification extends CommonDBTM
                 'subject' => mb_substr($subject, 0, 180, 'UTF-8'),
                 'message' => mb_substr($message, 0, 3900, 'UTF-8'),
                 'recipients' => ['user:' . $userId],
+                'include_subscriptions' => true,
                 'deduplication_key' => mb_substr($deduplicationKey, 0, 191, 'UTF-8'),
             ]);
         } catch (Throwable $exception) {
