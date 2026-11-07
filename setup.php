@@ -1,13 +1,10 @@
 <?php
 declare(strict_types=1);
-
 /**
  * Informe Técnico - Songa.
  * Internal plugin key and installation directory: informeglopi.
  */
-
 define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.89');
-
 require_once __DIR__ . '/src/Report.php';
 require_once __DIR__ . '/src/AssetTypeRegistry.php';
 require_once __DIR__ . '/src/Profile.php';
@@ -19,16 +16,13 @@ require_once __DIR__ . '/src/TelegramNotification.php';
 require_once __DIR__ . '/src/ReportPdf.php';
 require_once __DIR__ . '/src/ManualPhoneMenu.php';
 require_once __DIR__ . '/src/UserSignatureTab.php';
-
 function plugin_init_informeglpi(): void
 {
     global $PLUGIN_HOOKS;
-
     $PLUGIN_HOOKS['csrf_compliant']['informeglpi'] = true;
     $PLUGIN_HOOKS['menu_entry']['informeglpi'] = true;
     $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => [\GlpiPlugin\Informeglopi\ManualPhoneMenu::class]];
     Plugin::registerClass(\GlpiPlugin\Informeglopi\ManualPhoneMenu::class);
-
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Profile::class, [
         'addtabon' => ['Profile'],
@@ -40,7 +34,6 @@ function plugin_init_informeglpi(): void
         'addtabon' => \GlpiPlugin\Informeglopi\AssetTypeRegistry::getItemtypes(),
     ]);
 }
-
 function plugin_version_informeglpi(): array
 {
     return [
@@ -60,17 +53,14 @@ function plugin_version_informeglpi(): array
         ],
     ];
 }
-
 function plugin_informeglpi_check_prerequisites(): bool
 {
     if (!defined('GLPI_VERSION')) {
         return false;
     }
-
     return version_compare(GLPI_VERSION, '11.0.0', '>=')
         && version_compare(GLPI_VERSION, '12.0.0', '<');
 }
-
 function plugin_informeglpi_check_config($verbose = false): bool
 {
     return true;
