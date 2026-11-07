@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $action = (string) ($_POST['action'] ?? 'save');
 $config = Config::getConfigurationValues('plugin:informeglpi');
 $tokenInput = trim((string) ($_POST['telegram_bot_token'] ?? ''));
-$chatId = trim((string) ($_POST['telegram_chat_id'] ?? ''));
+$chatId = '';
 
 try {
     if ($action === 'test') {
@@ -57,8 +57,6 @@ try {
         $values = [
             'telegram_enabled' => (int) ($_POST['telegram_enabled'] ?? 0) === 1 ? 1 : 0,
             'telegram_bot_token_encrypted' => $encryptedToken,
-            'telegram_chat_id' => $chatId,
-            'telegram_reviewer_users_id' => max(0, (int) ($_POST['telegram_reviewer_users_id'] ?? 0)),
             'telegram_glpi_base_url' => $baseUrl,
             'telegram_notify_immediate' => isset($_POST['telegram_notify_immediate']) ? 1 : 0,
             'telegram_notify_morning' => isset($_POST['telegram_notify_morning']) ? 1 : 0,
@@ -68,9 +66,8 @@ try {
             'telegram_timezone' => 'America/Guayaquil',
         ];
 
-        if ((int) $values['telegram_enabled'] === 1
-            && ($encryptedToken === '' || $chatId === '' || (int) $values['telegram_reviewer_users_id'] < 1)) {
-            throw new RuntimeException(__('Para activar Telegram configure token, Chat ID y usuario GLPI responsable de firmar.', 'informeglpi'));
+        if ((int) $values['telegram_enabled'] === 1 && $encryptedToken === '') {
+            throw new RuntimeException(__('Para activar Telegram debe configurar el token del bot. Cada usuario registra su propio Chat ID en su perfil GLPI.', 'informeglpi'));
         }
 
         Config::setConfigurationValues('plugin:informeglpi', $values);
