@@ -85,6 +85,7 @@ final class TelegramNotification extends CommonDBTM
                     $reviewers[$reviewerId] = true;
                 }
             }
+            $failed = false;
             foreach (array_keys($reviewers) as $reviewerId) {
                 $pending = self::getPendingReports((int) $reviewerId);
                 if ($pending === []) {
@@ -224,7 +225,7 @@ final class TelegramNotification extends CommonDBTM
     {
         $config = self::getConfig();
         $base = rtrim(trim((string) ($config['telegram_glpi_base_url'] ?? '')), '/');
-        return $base !== '' ? $base . '/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId : '';
+        return $base !== '' ? $base . '/plugins/informeglpi/front/report.pdf.php?id=' . $reportId : '';
     }
 
     public static function sendTestMessage(string $plainToken, string $chatId): void
