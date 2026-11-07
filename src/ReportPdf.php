@@ -146,6 +146,9 @@ final class ReportPdf
                 @unlink($absolute);
                 throw $e;
             }
+
+            // The PDF is present and the report is finalized before notifying its creator.
+            TelegramNotification::notifyReportFinalized($reportId);
         } finally {
             foreach ($tempFiles as $tmp) {
                 if (is_file($tmp)) @unlink($tmp);
