@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 global $DB;
 $targetId = (int) ($_POST['users_id'] ?? 0);
 $currentId = (int) Session::getLoginUserID();
-if ($targetId < 1 || ($targetId !== $currentId && !Session::haveRight('config', UPDATE))) {
+if ($targetId < 1 || ($targetId !== $currentId && !Session::haveRight('user', UPDATE))) {
     Html::displayRightError();
 }
 $chatId = trim((string) ($_POST['chat_id'] ?? ''));
