@@ -62,6 +62,16 @@ function plugin_informeglpi_install(): bool
             KEY `idx_report_creator` (`users_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}",
 
+        'glpi_plugin_informeglopi_user_telegram' => "CREATE TABLE IF NOT EXISTS `glpi_plugin_informeglopi_user_telegram` (
+            `id` int unsigned NOT NULL AUTO_INCREMENT,
+            `users_id` int unsigned NOT NULL,
+            `chat_id` varchar(64) NOT NULL,
+            `date_creation` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `date_mod` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `unicity_user_telegram` (`users_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}",
+
         'glpi_plugin_informeglopi_user_signatures' => "CREATE TABLE IF NOT EXISTS `glpi_plugin_informeglopi_user_signatures` (
             `id` int unsigned NOT NULL AUTO_INCREMENT,
             `users_id` int unsigned NOT NULL,
