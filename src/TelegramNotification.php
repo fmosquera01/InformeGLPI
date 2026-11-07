@@ -76,7 +76,7 @@ final class TelegramNotification extends CommonDBTM
             $reviewers = [];
             global $DB;
             foreach ($DB->request([
-                'SELECT' => ['DISTINCT' => 'reviewer_users_id'],
+                'SELECT' => ['reviewer_users_id'],
                 'FROM' => 'glpi_plugin_informeglopi_reports',
                 'WHERE' => ['status' => 'pending_supervisor_signature'],
             ]) as $row) {
