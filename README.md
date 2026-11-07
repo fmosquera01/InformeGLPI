@@ -1,6 +1,6 @@
 # Informe Técnico - Songa
 
-Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.91.**
+Plugin nativo para GLPI 11. Directorio interno: `informeglpi`. **Versión 0.5.92.**
 
 ## Objetivo
 
@@ -109,3 +109,5 @@ InformeGLPI no administra tokens, Chat IDs ni conexiones directas con Telegram. 
 Los destinos privados deben configurarse en FML Telegram y asociarse al usuario GLPI correspondiente. InformeGLPI identifica al destinatario por su ID de usuario; FML Telegram administra el bot, destinos, cola, reintentos e historial de entrega. Si FML Telegram no está instalado o el usuario no tiene un destino activo, el flujo de informes continúa normalmente.
 
 La tarea de InformeGLPI únicamente prepara los resúmenes diarios para cada supervisor con informes pendientes (07:00 y 17:00, zona `America/Guayaquil` por defecto) y los entrega a la cola central. La tarea de envío de FML Telegram procesa la cola cada minuto.
+
+Eventos publicados por InformeGLPI: `report.pending_signature`, `report.finalized`, `report.returned` y `report.pending_signature.reminder`. Se envían al destino privado FML Telegram asociado al usuario GLPI y, adicionalmente, a los destinos suscritos a cada evento.
