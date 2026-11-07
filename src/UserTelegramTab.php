@@ -19,7 +19,7 @@ final class UserTelegramTab extends CommonGLPI
             return '';
         }
         $targetId = (int) $item->getID();
-        if ($targetId !== (int) \Session::getLoginUserID() && !\Session::haveRight('config', UPDATE)) {
+        if ($targetId !== (int) \Session::getLoginUserID() && !\Session::haveRight('user', UPDATE)) {
             return '';
         }
         return self::createTabEntry(self::getTypeName());
@@ -31,7 +31,7 @@ final class UserTelegramTab extends CommonGLPI
             return true;
         }
         $targetId = (int) $item->getID();
-        if ($targetId !== (int) \Session::getLoginUserID() && !\Session::haveRight('config', UPDATE)) {
+        if ($targetId !== (int) \Session::getLoginUserID() && !\Session::haveRight('user', UPDATE)) {
             return true;
         }
         global $DB;
