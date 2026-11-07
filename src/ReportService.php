@@ -58,8 +58,8 @@ final class ReportService
         foreach ($recipients as $recipientId) {
             self::assertActiveUser($recipientId);
         }
-        // The creator (users_id) and the assigned technical signer are separate actors.
-        $preparedBy = (int) ($input['prepared_by_users_id'] ?? $userId);
+        // The creator is always the technical signer. Never trust a client-supplied signer ID.
+        $preparedBy = $userId;
         self::assertActiveUser($preparedBy);
         $reviewer = (int) ($input['reviewer_users_id'] ?? 0);
         if ($reviewer > 0) {
