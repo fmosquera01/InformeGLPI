@@ -1,4 +1,4 @@
-## 0.5.91
+## 0.5.92
 - Elimina la configuración, el almacenamiento de tokens y Chat IDs, y los formularios propios de Telegram dentro de InformeGLPI.
 - Delega el encolado de avisos de firma técnica, aprobación, devolución y recordatorios al API público de FML Telegram.
 - Migra de forma idempotente los Chat IDs personales existentes a destinos de FML Telegram asociados al mismo usuario GLPI, cuando ambos plugins están instalados.
