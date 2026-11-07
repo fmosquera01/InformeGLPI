@@ -212,6 +212,31 @@ final class AssetSnapshotBuilder
             }
         }
 
+        // Varias ranuras pueden apuntar al mismo componente de memoria del catálogo.
+        // En ese caso, consolidamos sus capacidades para informar la RAM total,
+        // sin mezclar componentes distintos instalados en el mismo equipo.
+        if ($relationClass === 'Item_DeviceMemory') {
+            $groupedRows = [];
+            foreach ($rows as $row) {
+                $deviceId = (int) ($row['id'] ?? 0);
+                $groupKey = $deviceId > 0
+                    ? 'device:' . $deviceId
+                    : implode('|', [
+                        (string) ($row['designation'] ?? $row['name'] ?? ''),
+                        (string) ($row['devicememorytypes_id'] ?? 0),
+                        (string) ($row['frequency'] ?? 0),
+                        (string) ($row['manufacturers_id'] ?? 0),
+                    ]);
+
+                if (!isset($groupedRows[$groupKey])) {
+                    $groupedRows[$groupKey] = $row;
+                    $groupedRows[$groupKey]['_relation_size'] = 0;
+                }
+                $groupedRows[$groupKey]['_relation_size'] += (float) ($row['_relation_size'] ?? 0);
+            }
+            $rows = array_values($groupedRows);
+        }
+
         $records = [];
         foreach ($rows as $row) {
             $deviceFields = self::scalarFields($row);
