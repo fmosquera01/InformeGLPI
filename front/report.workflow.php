@@ -21,16 +21,20 @@ try {
             Session::addMessageAfterRedirect(__('Firma técnica registrada. El informe fue enviado al supervisor.', 'informeglpi'), true, INFO);
             break;
         case 'sign_supervisor':
+            // Complete the supervisor's approval in one action: sign, generate,
+            // finalize and enqueue the existing FML Telegram notification.
             ReportWorkflow::signSupervisor($reportId, (string) ($_POST['pin'] ?? ''));
-            Session::addMessageAfterRedirect(__('Firma del supervisor registrada. El informe está pendiente de generar el PDF institucional.', 'informeglpi'), true, INFO);
+            ReportPdf::generate($reportId);
+            $pdfCreated = true;
             break;
         case 'return':
             ReportWorkflow::returnForCorrection($reportId, (string) ($_POST['comment'] ?? ''));
             Session::addMessageAfterRedirect(__('El informe fue devuelto al técnico para corrección.', 'informeglpi'), true, INFO);
             break;
         case 'generate_pdf':
+            // Recovery path only: used if automatic generation previously failed.
             ReportPdf::generate($reportId);
-            Session::addMessageAfterRedirect(__('PDF institucional generado y el informe finalizado correctamente.', 'informeglpi'), true, INFO);
+            $pdfCreated = true;
             break;
         default:
             throw new RuntimeException(__('Acción de flujo no válida.', 'informeglpi'));
@@ -39,5 +43,5 @@ try {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
 }
 
-Html::redirect('/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId);
+Html::redirect('/plugins/informeglpi/front/report.edit.form.php?id=' . $reportId . (!empty($pdfCreated) ? '&pdf_created=1' : ''));
 exit;
