@@ -551,6 +551,15 @@ final class ReportTab extends CommonGLPI
             && $userId === (int) ($report->fields['prepared_by_users_id'] ?? 0);
 
         self::renderStyles();
+        if ($reportStatus === 'finalized' && (string) ($_GET['pdf_created'] ?? '') === '1') {
+            $pdfUrl = '/plugins/informeglopi/front/report.pdf.php?id=' . $reportId;
+            echo "<dialog id='ig-pdf-created-dialog' style='border:0;border-radius:10px;padding:28px;max-width:480px;width:calc(100% - 32px);box-shadow:0 12px 40px rgba(0,0,0,.28)'>";
+            echo "<h3 class='h5 mb-2'>" . self::e(__('PDF creado correctamente', 'informeglpi')) . "</h3>";
+            echo "<p>" . self::e(__('El informe fue firmado, generado y finalizado. Si desea consultarlo ahora, utilice el siguiente enlace.', 'informeglpi')) . "</p>";
+            echo "<p><a class='btn btn-primary' target='_blank' rel='noopener' href='" . self::e($pdfUrl) . "'>" . self::e(__('Ver PDF institucional', 'informeglpi')) . "</a></p>";
+            echo "<form method='dialog' class='text-end'><button class='btn btn-outline-secondary' type='submit'>" . self::e(__('Cerrar', 'informeglpi')) . "</button></form></dialog>";
+            echo "<script>document.addEventListener('DOMContentLoaded',function(){var d=document.getElementById('ig-pdf-created-dialog');if(d&&typeof d.showModal==='function'){d.showModal();}});</script>";
+        }
         echo "<div class='container-fluid mt-3 ig-report-shell'><div class='d-flex justify-content-between align-items-center mb-3'>";
         echo "<h2 class='h4 mb-0'>" . self::e(($isEditable ? __('Editar informe técnico', 'informeglpi') : __('Consultar informe técnico', 'informeglpi'))) . "</h2>";
         if ($reportStatus === 'pending_supervisor_signature' && $userId === (int)($report->fields['reviewer_users_id'] ?? 0)) {
