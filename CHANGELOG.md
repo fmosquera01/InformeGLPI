@@ -1,3 +1,8 @@
+## 0.5.93
+- Al firmar el supervisor, genera automáticamente el PDF institucional y finaliza el informe en la misma operación.
+- Muestra una ventana de confirmación con acceso directo al PDF después de generarlo.
+- Conserva el aviso de finalización mediante FML Telegram; la generación manual queda únicamente como recuperación si falla el proceso automático.
+
 ## 0.5.92
 - Elimina la configuración, el almacenamiento de tokens y Chat IDs, y los formularios propios de Telegram dentro de InformeGLPI.
 - Delega el encolado de avisos de firma técnica, aprobación, devolución y recordatorios al API público de FML Telegram.
