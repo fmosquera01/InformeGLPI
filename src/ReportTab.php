@@ -552,7 +552,7 @@ final class ReportTab extends CommonGLPI
 
         self::renderStyles();
         if ($reportStatus === 'finalized' && (string) ($_GET['pdf_created'] ?? '') === '1') {
-            $pdfUrl = '/plugins/informeglopi/front/report.pdf.php?id=' . $reportId;
+            $pdfUrl = '/plugins/informeglpi/front/report.pdf.php?id=' . $reportId;
             echo "<dialog id='ig-pdf-created-dialog' style='border:0;border-radius:10px;padding:28px;max-width:480px;width:calc(100% - 32px);box-shadow:0 12px 40px rgba(0,0,0,.28)'>";
             echo "<h3 class='h5 mb-2'>" . self::e(__('PDF creado correctamente', 'informeglpi')) . "</h3>";
             echo "<p>" . self::e(__('El informe fue firmado, generado y finalizado. Si desea consultarlo ahora, utilice el siguiente enlace.', 'informeglpi')) . "</p>";
