@@ -4,7 +4,7 @@ declare(strict_types=1);
  * Informe Técnico - Songa.
  * Internal plugin key and installation directory: informeglopi.
  */
-define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.101');
+define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.102');
 require_once __DIR__ . '/src/Report.php';
 require_once __DIR__ . '/src/AssetTypeRegistry.php';
 require_once __DIR__ . '/src/Profile.php';
@@ -20,7 +20,6 @@ function plugin_init_informeglpi(): void
 {
     global $PLUGIN_HOOKS;
     $PLUGIN_HOOKS['csrf_compliant']['informeglpi'] = true;
-    $PLUGIN_HOOKS['menu_entry']['informeglpi'] = true;
     // Direct entry in GLPI's simplified Helpdesk menu.
     $PLUGIN_HOOKS['helpdesk_menu_entry']['informeglpi'] = '/plugins/informeglpi/front/my-signature.php';
     $PLUGIN_HOOKS['helpdesk_menu_entry_icon']['informeglpi'] = 'fas fa-signature';
