@@ -298,42 +298,74 @@ function plugin_informeglpi_uninstall(): bool
 
 
 /**
- * Show the personal-signature setup page the first time a Self-Service user
- * opens Helpdesk in a session, but never force it repeatedly in that session.
+ * Render the user's personal-signature entry point on GLPI's central home page.
+ * Uses the documented display_central hook; no GLPI core files are modified.
  */
-function plugin_informeglpi_prompt_personal_signature(): void
+function plugin_informeglpi_display_central(): void
 {
     global $DB, $CFG_GLPI;
 
-    if (!Session::getLoginUserID()
-        || Session::getCurrentInterface() !== 'helpdesk'
-        || !preg_match('~/(?:Helpdesk|ServiceCatalog|front/helpdesk\\.public\\.php)/?$~i', (string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH))
-        || !empty($_SESSION['informeglpi_signature_prompt_seen'])) {
+    $userId = (int) Session::getLoginUserID();
+    if ($userId < 1 || Session::getCurrentInterface() !== 'central') {
         return;
     }
-
-    $_SESSION['informeglpi_signature_prompt_seen'] = true;
 
     $table = 'glpi_plugin_informeglopi_user_signatures';
-    if (!$DB->tableExists($table)) {
+    $configured = false;
+    if ($DB->tableExists($table)) {
+        foreach ($DB->request([
+            'SELECT' => ['id'],
+            'FROM' => $table,
+            'WHERE' => ['users_id' => $userId],
+            'LIMIT' => 1,
+        ]) as $signature) {
+            $configured = true;
+            break;
+        }
+    }
+
+    $rootDoc = rtrim((string) ($CFG_GLPI['root_doc'] ?? ''), '/');
+    $signatureUrl = $rootDoc . '/plugins/informeglpi/front/my-signature.php';
+    $url = htmlspecialchars($signatureUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $cookieName = 'ig_signature_prompt_dismissed_' . $userId;
+    $dismissed = isset($_COOKIE[$cookieName]) && $_COOKIE[$cookieName] === '1';
+
+    echo "<section class='container-fluid mb-3' id='ig-personal-signature-entry'>";
+    echo "<div class='card border-primary-subtle'><div class='card-body d-flex flex-wrap align-items-center justify-content-between gap-3'>";
+    echo "<div><h3 class='h5 mb-1'>Mi firma personal</h3>";
+    if ($configured) {
+        echo "<p class='mb-0 text-muted'>Consulte o actualice su firma manuscrita y su PIN personal.</p>";
+    } else {
+        echo "<p class='mb-0 text-muted'>Registre su firma personal para autorizar documentos institucionales.</p>";
+    }
+    echo "</div><a class='btn btn-primary' href='{$url}'>";
+    echo $configured ? 'Ver o cambiar mi firma' : 'Crear mi firma personal';
+    echo "</a></div></div></section>";
+
+    if ($configured || $dismissed) {
         return;
     }
 
-    $userId = (int) Session::getLoginUserID();
-    $configured = false;
-    foreach ($DB->request([
-        'SELECT' => ['id'],
-        'FROM' => $table,
-        'WHERE' => ['users_id' => $userId],
-        'LIMIT' => 1,
-    ]) as $signature) {
-        $configured = true;
-        break;
-    }
-
-    if (!$configured) {
-        $rootDoc = rtrim((string) ($CFG_GLPI['root_doc'] ?? ''), '/');
-        Html::redirect($rootDoc . '/plugins/informeglpi/front/my-signature.php?welcome=1');
-        exit;
-    }
+    echo "<div class='modal fade' id='ig-personal-signature-modal' tabindex='-1' aria-labelledby='ig-personal-signature-title' aria-hidden='true'>";
+    echo "<div class='modal-dialog modal-dialog-centered'><div class='modal-content'>";
+    echo "<div class='modal-header'><h2 class='modal-title fs-5' id='ig-personal-signature-title'>Configure su firma personal</h2></div>";
+    echo "<div class='modal-body'><p>Para agilizar la autorización de informes técnicos y actas de entrega, registre su firma manuscrita y cree un PIN personal.</p>";
+    echo "<p class='mb-0 text-muted'>La firma y el PIN son personales. No los comparta con otras personas.</p></div>";
+    echo "<div class='modal-footer'><button type='button' class='btn btn-outline-secondary' data-bs-dismiss='modal' id='ig-signature-remind-later'>Recordármelo después</button>";
+    echo "<a class='btn btn-primary' href='{$url}'>Crear mi firma personal</a></div>";
+    echo "</div></div></div>";
+    echo "<script>
+    (() => {
+        const modalElement = document.getElementById('ig-personal-signature-modal');
+        if (!modalElement) return;
+        const cookie = " . json_encode($cookieName) . ";
+        const later = document.getElementById('ig-signature-remind-later');
+        later?.addEventListener('click', () => {
+            document.cookie = cookie + '=1; Max-Age=28800; Path=/; SameSite=Lax';
+        });
+        if (window.bootstrap?.Modal) {
+            window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        }
+    })();
+    </script>";
 }
