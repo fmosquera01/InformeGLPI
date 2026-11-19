@@ -13,7 +13,7 @@ if ($userId < 1) {
     exit;
 }
 
-if (!empty($_SESSION['informeglpi_signature_prompt_seen'])) {
+if (!empty($_SESSION['informeglpi_signature_prompt_seen_v101'])) {
     echo json_encode(['pending' => false]);
     exit;
 }
@@ -36,6 +36,6 @@ foreach ($DB->request([
 }
 
 // Mark this session before returning, so page reloads/navigation never repeat the prompt.
-$_SESSION['informeglpi_signature_prompt_seen'] = true;
+$_SESSION['informeglpi_signature_prompt_seen_v101'] = true;
 
 echo json_encode(['pending' => !$configured], JSON_UNESCAPED_SLASHES);
