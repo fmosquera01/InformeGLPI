@@ -38,7 +38,7 @@ final class UserSignatureTab extends CommonGLPI
     {
         global $DB, $CFG_GLPI;
 
-        $userId = (int) \\Session::getLoginUserID();
+        $userId = (int) \Session::getLoginUserID();
         $configured = false;
         $signatureHash = '';
         if ($DB->tableExists('glpi_plugin_informeglopi_user_signatures')) {
@@ -69,7 +69,7 @@ final class UserSignatureTab extends CommonGLPI
         }
 
         echo "<form method='post' action='" . self::e($formUrl) . "' id='ig-user-signature-form'>";
-        echo \\Html::hidden('_glpi_csrf_token', ['value' => \\Session::getNewCSRFToken(true)]);
+        echo \Html::hidden('_glpi_csrf_token', ['value' => \Session::getNewCSRFToken(true)]);
         if (!$configured) {
             echo "<input type='hidden' name='change_type' value='both'>";
         } else {
