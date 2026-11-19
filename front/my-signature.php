@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use GlpiPlugin\\Informeglopi\\UserSignatureTab;
+use GlpiPlugin\Informeglopi\UserSignatureTab;
 
 include('../../../inc/includes.php');
 Session::checkLoginUser();
