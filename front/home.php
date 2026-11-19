@@ -80,5 +80,11 @@ if ($canReview) {
 <p><?= htmlspecialchars(__('Consulte los informes que completaron el proceso de revisión y firma.','informeglpi'),ENT_QUOTES,'UTF-8') ?></p>
 <a class="ig-home-action" href="/plugins/informeglpi/front/report-finalized.php"><?= htmlspecialchars(__('Ver informes finalizados','informeglpi'),ENT_QUOTES,'UTF-8') ?> <span aria-hidden="true">→</span></a>
 </section>
+<section class="ig-home-card">
+<div class="ig-home-card-top"><span class="ig-home-icon" aria-hidden="true">✍</span></div>
+<h3><?= htmlspecialchars(__('Mi firma personal','informeglpi'),ENT_QUOTES,'UTF-8') ?></h3>
+<p><?= htmlspecialchars(__('Registre o actualice su firma manuscrita y su PIN personal. Esta firma podrá utilizarse cuando usted autorice documentos institucionales.','informeglpi'),ENT_QUOTES,'UTF-8') ?></p>
+<a class="ig-home-action" href="/plugins/informeglpi/front/my-signature.php"><?= htmlspecialchars(__('Configurar mi firma','informeglpi'),ENT_QUOTES,'UTF-8') ?> <span aria-hidden="true">→</span></a>
+</section>
 </div></div>
 <?php Html::footer(); ?>
