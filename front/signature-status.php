@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 include('../../../inc/includes.php');
 
+global $DB; // GLPI expone el objeto de base de datos en el ámbito global.
+
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
