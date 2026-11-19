@@ -18,6 +18,9 @@ final class ManualPhoneMenu extends CommonGLPI
         return [
             'title' => __('Informe Técnico', 'informeglpi'),
             'page'  => '/plugins/informeglpi/front/home.php',
+            'links' => [
+                'my_signature' => '/plugins/informeglpi/front/my-signature.php',
+            ],
         ];
     }
 }
