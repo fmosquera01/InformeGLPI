@@ -306,7 +306,7 @@ function plugin_informeglpi_display_central(): void
     global $DB, $CFG_GLPI;
 
     $userId = (int) Session::getLoginUserID();
-    if ($userId < 1 || Session::getCurrentInterface() !== 'central') {
+    if ($userId < 1) {
         return;
     }
 
