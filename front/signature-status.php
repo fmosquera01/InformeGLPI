@@ -7,7 +7,7 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 $userId = (int) Session::getLoginUserID();
-if ($userId < 1 || Session::getCurrentInterface() !== 'helpdesk') {
+if ($userId < 1) {
     http_response_code(403);
     echo json_encode(['pending' => false]);
     exit;
