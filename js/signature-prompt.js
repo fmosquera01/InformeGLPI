@@ -27,7 +27,7 @@
         const item = link.closest('li') || link.parentElement;
         const homeLink = Array.from(document.querySelectorAll('a[href]')).find((item) => {
             try {
-                return /\\/Helpdesk\\/?$/i.test(new URL(item.href, window.location.origin).pathname);
+                return /\/Helpdesk\/?$/i.test(new URL(item.href, window.location.origin).pathname);
             } catch (error) {
                 return false;
             }
@@ -83,7 +83,7 @@
     }
 
     async function showPendingSignaturePrompt() {
-        if (!/\\/(?:Helpdesk|ServiceCatalog|front\\/helpdesk\\.public\\.php)\\/?$/i.test(window.location.pathname)) return;
+        if (!/\/(?:Helpdesk|ServiceCatalog|front\/helpdesk\.public\.php)\/?$/i.test(window.location.pathname)) return;
 
         moveSignatureShortcut();
 
