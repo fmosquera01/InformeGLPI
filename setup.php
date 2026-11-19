@@ -4,7 +4,7 @@ declare(strict_types=1);
  * Informe Técnico - Songa.
  * Internal plugin key and installation directory: informeglopi.
  */
-define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.98');
+define('PLUGIN_INFORMEGLOPI_VERSION', '0.5.99');
 require_once __DIR__ . '/src/Report.php';
 require_once __DIR__ . '/src/AssetTypeRegistry.php';
 require_once __DIR__ . '/src/Profile.php';
@@ -24,8 +24,13 @@ function plugin_init_informeglpi(): void
     // Direct entry in GLPI's simplified Helpdesk menu.
     $PLUGIN_HOOKS['helpdesk_menu_entry']['informeglpi'] = '/plugins/informeglpi/front/my-signature.php';
     $PLUGIN_HOOKS['helpdesk_menu_entry_icon']['informeglpi'] = 'fas fa-signature';
-    // Prompt once per authenticated session when a Self-Service user has no signature.
-    $PLUGIN_HOOKS['post_init']['informeglpi'] = 'plugin_informeglpi_prompt_personal_signature';
+    // Elegant first-login signature prompt, limited to Helpdesk pages.
+    $requestPath = (string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    if (Session::getCurrentInterface() === 'helpdesk'
+        && preg_match('~/(?:Helpdesk|ServiceCatalog|front/helpdesk\\.public\\.php)/?$~i', $requestPath)) {
+        $PLUGIN_HOOKS['add_javascript']['informeglpi'][] = 'js/signature-prompt.js';
+        $PLUGIN_HOOKS['add_css']['informeglpi'][] = 'css/signature-prompt.css';
+    }
     $PLUGIN_HOOKS['menu_toadd']['informeglpi'] = ['plugins' => [\GlpiPlugin\Informeglopi\ManualPhoneMenu::class]];
     Plugin::registerClass(\GlpiPlugin\Informeglopi\ManualPhoneMenu::class);
     Plugin::registerClass(\GlpiPlugin\Informeglopi\Report::class);
