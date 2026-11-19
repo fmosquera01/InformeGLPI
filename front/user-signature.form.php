@@ -109,5 +109,5 @@ try {
     Session::addMessageAfterRedirect($e->getMessage(), false, ERROR);
 }
 
-Html::redirect('/front/user.form.php?id=' . $userId);
+Html::redirect('/plugins/informeglpi/front/my-signature.php');
 exit;
