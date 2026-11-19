@@ -307,7 +307,7 @@ function plugin_informeglpi_prompt_personal_signature(): void
 
     if (!Session::getLoginUserID()
         || Session::getCurrentInterface() !== 'helpdesk'
-        || !preg_match('~/Helpdesk/?$~i', (string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH))
+        || !preg_match('~/(?:Helpdesk|ServiceCatalog|front/helpdesk\\.public\\.php)/?$~i', (string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH))
         || !empty($_SESSION['informeglpi_signature_prompt_seen'])) {
         return;
     }
