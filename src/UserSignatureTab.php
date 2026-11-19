@@ -34,7 +34,7 @@ final class UserSignatureTab extends CommonGLPI
         return true;
     }
 
-    private static function render(): void
+    public static function render(): void
     {
         global $DB;
 
